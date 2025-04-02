@@ -1,0 +1,14 @@
+{
+    "delay": {
+        "mul": 2,
+        "sub": 1,
+        "add": 1,
+        "les": 1
+    },
+    "resource": {
+        "mul": 2,
+        "sub": 1,
+        "add": 1,
+        "les": 1
+    }
+}
