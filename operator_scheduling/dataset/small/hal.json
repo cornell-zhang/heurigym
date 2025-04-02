@@ -1,0 +1,10 @@
+{
+    "delay": {
+        "mul": 3,
+        "sub": 1
+    },
+    "resource": {
+        "mul": 2,
+        "sub": 1
+    }
+}

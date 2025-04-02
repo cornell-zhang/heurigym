@@ -1,0 +1,22 @@
+digraph hal1 {
+    node [fontcolor=white,style=filled,color="160,60,176"];
+    1 [label = mul];
+    2 [label = mul];
+    3 [label = mul];
+    4 [label = sub];
+    5 [label = sub];
+    6 [label = mul];
+    7 [label = mul];
+    8 [label = mul];
+    9 [label = add];
+    10 [label = add];
+    11 [label = les];
+    1 -> 3 [name=16];
+    2 -> 3 [name=14];
+    3 -> 4 [name=20];
+    4 -> 5 [name=24];
+    6 -> 7 [name=17];
+    7 -> 5 [name=22];
+    8 -> 9 [name=15];
+    10 -> 11 [name=18];
+}
