@@ -69,6 +69,84 @@ std::pair<std::map<std::string, int>, std::map<std::string, int>> parseJSON(cons
     return {delay, resource};
 }
 
+// Verification function: checks dependency and resource constraints.
+// Dependency: For each edge, finish time of predecessor (start + delay)
+// must be less than or equal to the start time of the successor.
+// Resource: At each cycle, the active operations for a resource type must
+// not exceed the available functional units.
+bool verify(const std::map<std::string, Node>& nodes,
+                    const std::map<std::string, int>& schedule,
+                    const std::map<std::string, int>& delay,
+                    const std::map<std::string, int>& resourceConstraints) {
+    bool valid = true;
+    // Check data dependency constraints.
+    for (const auto& pair : nodes) {
+        const std::string &nodeID = pair.first;
+        const Node &node = pair.second;
+        int nodeDelay = delay.at(node.resource);
+        for (const auto &succID : node.succs) {
+            if (schedule.at(nodeID) + nodeDelay > schedule.at(succID)) {
+                std::cerr << "Dependency constraint violated: " << nodeID 
+                          << " finishes at " << (schedule.at(nodeID) + nodeDelay)
+                          << " but " << succID << " starts at " 
+                          << schedule.at(succID) << std::endl;
+                valid = false;
+            }
+        }
+    }
+    
+    // Determine overall latency (final cycle when operations end).
+    int finalCycle = 0;
+    for (const auto& pair : nodes) {
+        int finishTime = schedule.at(pair.first) + delay.at(pair.second.resource);
+        finalCycle = std::max(finalCycle, finishTime);
+    }
+    
+    // Check resource constraints at each cycle from 0 to finalCycle.
+    for (int t = 0; t <= finalCycle; t++) {
+        // Count active operations per resource type.
+        std::map<std::string, int> resourceUsage;
+        // Initialize counts to zero.
+        for (const auto &rc : resourceConstraints) {
+            resourceUsage[rc.first] = 0;
+        }
+        // For each node, if its active time covers cycle t, increment usage.
+        for (const auto& pair : nodes) {
+            const std::string &nodeID = pair.first;
+            const Node &node = pair.second;
+            int start = schedule.at(nodeID);
+            int finish = schedule.at(nodeID) + delay.at(node.resource);
+            if (t >= start && t <= finish) {
+                resourceUsage[node.resource]++;
+            }
+        }
+        // Verify that usage does not exceed available units.
+        for (const auto &rc : resourceConstraints) {
+            if (resourceUsage[rc.first] > rc.second) {
+                std::cerr << "Resource constraint violated for resource " 
+                          << rc.first << " at time " << t 
+                          << ": used " << resourceUsage[rc.first] 
+                          << ", available " << rc.second << std::endl;
+                valid = false;
+            }
+        }
+    }
+    return valid;
+}
+
+// Cost calculation function: calculates the final latency.
+// Final latency is defined as the maximum over operations of (start cycle + delay).
+int calculateCost(const std::map<std::string, Node>& nodes,
+                  const std::map<std::string, int>& schedule,
+                  const std::map<std::string, int>& delay) {
+    int latency = 0;
+    for (const auto &pair : nodes) {
+        int finishTime = schedule.at(pair.first) + delay.at(pair.second.resource);
+        latency = std::max(latency, finishTime);
+    }
+    return latency;
+}
+
 int main(int argc, char* argv[]) {
     // Expect the DOT file and JSON file names as command line arguments.
     if (argc < 3) {
@@ -82,14 +160,24 @@ int main(int argc, char* argv[]) {
     auto nodes = parseDot(dotFile);
     auto jsonData = parseJSON(jsonFile);
     std::map<std::string, int> delay = jsonData.first;
-    // The resource availability (jsonData.second) is parsed but not used in this ASAP demo.
+    std::map<std::string, int> resourceConstraints = jsonData.second;
 
     // Compute the schedule using ASAP scheduling.
     auto schedule = solve(nodes, delay);
 
     // Output the schedule in the format: node:cycle
+    std::cout << "Schedule:" << std::endl;
     for (const auto &entry : schedule) {
         std::cout << entry.first << ":" << entry.second << std::endl;
     }
+
+    // Verify that the schedule satisfies all constraints.
+    bool valid = verify(nodes, schedule, delay, resourceConstraints);
+    std::cout << "Schedule verification: " << (valid ? "Valid" : "Invalid") << std::endl;
+
+    // Calculate and report the final latency of the schedule.
+    int finalLatency = calculateCost(nodes, schedule, delay);
+    std::cout << "Final latency: " << finalLatency << std::endl;
+
     return 0;
 }
