@@ -17,9 +17,9 @@ Let $S$ denote the set of all feasible schedules. For a given schedule $s$, let 
 ## Objective
 
 Given a bound $G_r$ on the number of available instances for each resource type $r \in R$, the operator scheduling problem is to find a feasible schedule $s \in S$ that minimizes the overall latency $L$, defined as  
-$\min_{s \in S} \max_{i \in O} (t_i + d_i - 1)$,  
+$\min_{s \in S} \max_{i \in O} (t_i + d_i)$,  
 subject to the resource constraints  
-$\forall r \in R, \forall t \in T: N_r(t) \leq G_r$.
+$\forall r \in R, t \in T: N_r(t) \leq G_r$.
 
 ## Input Format
 The input graph is stored in DOT format as shown below. Each node is represented as `<node> [label = <resource>]`, and each edge is defined as `<src node> -> <dst node> [name = <name>]`:
@@ -59,3 +59,4 @@ n3:3
 ## References
 1. Jason Cong, Zhiru Zhang, "An Efficient and Versatile Scheduling Algorithm Based on SDC Formulation", Design Automation Conference (DAC), 2006.
 2. Minghua Shen, Hongzheng Chen, Nong Xiao, "Entropy-Directed Scheduling for FPGA High-Level Synthesis", IEEE Transactions on Computer Aided Design of Integrated Circuits & Systems (TCAD), 2020.
+3. https://web.ece.ucsb.edu/EXPRESS/benchmark/
