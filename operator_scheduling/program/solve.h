@@ -21,6 +21,9 @@ struct Node {
     int in_degree = 0;           // Number of incoming edges (for topological ordering)
 };
 
-std::map<std::string, int> solve(std::map<std::string, Node> &nodes, const std::map<std::string, int> &delay);
+std::map<std::string, int> solve(
+    std::map<std::string, Node> &nodes,
+    const std::map<std::string, int> &delay,
+    const std::map<std::string, int> &resourceConstraints);
 
 #endif // SOLVE_H
