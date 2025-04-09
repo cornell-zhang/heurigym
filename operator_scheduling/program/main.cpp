@@ -1,3 +1,4 @@
+// main.cpp
 // solver header
 #include "solve.h"
 
@@ -162,8 +163,7 @@ int main(int argc, char* argv[]) {
     std::map<std::string, int> delay = jsonData.first;
     std::map<std::string, int> resourceConstraints = jsonData.second;
 
-    // Compute the schedule using ASAP scheduling.
-    auto schedule = solve(nodes, delay);
+    auto schedule = solve(nodes, delay, resourceConstraints);
 
     // Output the schedule in the format: node:cycle
     std::cout << "Schedule:" << std::endl;

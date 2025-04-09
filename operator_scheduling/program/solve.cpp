@@ -2,7 +2,7 @@
 
 // The solve function takes the graph (nodes) and the delay constraints, and returns the schedule
 // as a mapping from node id to its start cycle. It performs an ASAP (as soon as possible) schedule.
-std::map<std::string, int> solve(std::map<std::string, Node> &nodes, const std::map<std::string, int> &delay) {
+std::map<std::string, int> solve(std::map<std::string, Node> &nodes, const std::map<std::string, int> &delay, const std::map<std::string, int> &resourceConstraints) {
     std::map<std::string, int> schedule;
     std::queue<std::string> q;
     
