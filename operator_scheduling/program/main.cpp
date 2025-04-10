@@ -166,10 +166,10 @@ int main(int argc, char* argv[]) {
     auto schedule = solve(nodes, delay, resourceConstraints);
 
     // Output the schedule in the format: node:cycle
-    std::cout << "Schedule:" << std::endl;
-    for (const auto &entry : schedule) {
-        std::cout << entry.first << ":" << entry.second << std::endl;
-    }
+    // std::cout << "Schedule:" << std::endl;
+    // for (const auto &entry : schedule) {
+    //     std::cout << entry.first << ":" << entry.second << std::endl;
+    // }
 
     // Verify that the schedule satisfies all constraints.
     bool valid = verify(nodes, schedule, delay, resourceConstraints);
