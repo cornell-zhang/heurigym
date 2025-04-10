@@ -2,6 +2,7 @@
   "name": "feedback_points_dfg__7",
   "delay": {
     "MUL": 2,
+    "DIV": 1,
     "STR": 1,
     "LOD": 1,
     "BGE": 1,
@@ -9,6 +10,7 @@
   },
   "resource": {
     "MUL": 3,
+    "DIV": 3,
     "STR": 2,
     "LOD": 1,
     "BGE": 1,

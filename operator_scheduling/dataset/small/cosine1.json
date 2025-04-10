@@ -1,14 +1,14 @@
 {
   "name": "cosine1",
   "delay": {
-    "MUL": 2,
+    "mul": 2,
     "imp": 1,
     "sub": 1,
     "exp": 1,
     "add": 1
   },
   "resource": {
-    "MUL": 4,
+    "mul": 4,
     "imp": 6,
     "sub": 1,
     "exp": 2,

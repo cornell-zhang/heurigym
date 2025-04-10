@@ -1,13 +1,13 @@
 {
   "name": "fir2",
   "delay": {
-    "MUL": 2,
+    "mul": 2,
     "add": 1,
     "exp": 1,
     "imp": 1
   },
   "resource": {
-    "MUL": 2,
+    "mul": 2,
     "add": 1,
     "exp": 1,
     "imp": 2
