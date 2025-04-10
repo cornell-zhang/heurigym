@@ -1,0 +1,15 @@
+{
+  "name": "horner_bezier_surf_dfg__12",
+  "delay": {
+    "MUL": 2,
+    "ADD": 1,
+    "LOD": 1,
+    "STR": 1
+  },
+  "resource": {
+    "MUL": 1,
+    "ADD": 1,
+    "LOD": 1,
+    "STR": 1
+  }
+}

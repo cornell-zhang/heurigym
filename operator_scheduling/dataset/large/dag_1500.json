@@ -1,0 +1,11 @@
+{
+  "name": "dag_1500",
+  "delay": {
+    "MUL": 2,
+    "add": 1
+  },
+  "resource": {
+    "MUL": 7,
+    "add": 13
+  }
+}

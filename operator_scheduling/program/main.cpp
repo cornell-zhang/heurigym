@@ -150,12 +150,12 @@ int calculateCost(const std::map<std::string, Node>& nodes,
 
 int main(int argc, char* argv[]) {
     // Expect the DOT file and JSON file names as command line arguments.
-    if (argc < 3) {
-        std::cerr << "Usage: " << argv[0] << " <dot file> <json file>" << std::endl;
+    if (argc != 2) {
+        std::cerr << "Usage: " << argv[0] << " <dataset>" << std::endl;
         return 1;
     }
-    std::string dotFile = argv[1];
-    std::string jsonFile = argv[2];
+    std::string dotFile = std::string(argv[1]) + ".dot";
+    std::string jsonFile = std::string(argv[1]) + ".json";
 
     // Parse the input graph and the JSON configuration.
     auto nodes = parseDot(dotFile);

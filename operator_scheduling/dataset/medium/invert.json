@@ -1,0 +1,20 @@
+{
+    "delay": {
+        "DIV": 1,
+        "MUL": 2,
+        "ADD": 1,
+        "SUB": 1,
+        "LOD": 1,
+        "STR": 1,
+        "NEG": 1
+    },
+    "resource": {
+        "DIV": 11,
+        "MUL": 14,
+        "ADD": 8,
+        "SUB": 3,
+        "LOD": 8,
+        "STR": 3,
+        "NEG": 2
+    }
+}

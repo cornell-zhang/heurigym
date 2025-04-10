@@ -1,0 +1,15 @@
+{
+    "name": "motion_vectors_dfg__7",
+    "delay": {
+        "MUL": 2,
+        "LOD": 1,
+        "ADD": 1,
+        "STR": 1
+    },
+    "resource": {
+        "MUL": 3,
+        "LOD": 1,
+        "ADD": 2,
+        "STR": 1
+    }
+}

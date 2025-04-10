@@ -1,0 +1,17 @@
+{
+  "name": "h2v2_smooth_downsample_dfg__6",
+  "delay": {
+    "MUL": 2,
+    "ADD": 1,
+    "ASR": 1,
+    "STR": 1,
+    "LOD": 1
+  },
+  "resource": {
+    "MUL": 1,
+    "ADD": 2,
+    "ASR": 1,
+    "STR": 1,
+    "LOD": 1
+  }
+}

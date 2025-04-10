@@ -1,0 +1,15 @@
+{
+  "name": "fir1",
+  "delay": {
+    "MUL": 2,
+    "ADD": 1,
+    "MemR": 1,
+    "MemW": 1
+  },
+  "resource": {
+    "MUL": 2,
+    "ADD": 2,
+    "MemR": 2,
+    "MemW": 1
+  }
+}

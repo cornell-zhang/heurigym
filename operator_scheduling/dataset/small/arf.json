@@ -1,0 +1,11 @@
+{
+  "name": "arf",
+  "delay": {
+    "MUL": 2,
+    "ADD": 1
+  },
+  "resource": {
+    "MUL": 3,
+    "ADD": 1
+  }
+}

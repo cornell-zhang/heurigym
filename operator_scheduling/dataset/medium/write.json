@@ -1,0 +1,23 @@
+{
+  "name": "write_bmp_header_dfg__7",
+  "delay": {
+    "MUL": 2,
+    "STR": 1,
+    "LSR": 1,
+    "LOD": 1,
+    "BNE": 1,
+    "ASR": 1,
+    "AND": 1,
+    "ADD": 1
+  },
+  "resource": {
+    "MUL": 1,
+    "STR": 3,
+    "LSR": 1,
+    "LOD": 4,
+    "BNE": 1,
+    "ASR": 2,
+    "AND": 2,
+    "ADD": 4
+  }
+}

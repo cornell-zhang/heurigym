@@ -1,0 +1,21 @@
+{
+  "name": "idctcol_dfg__3",
+  "delay": {
+    "MUL": 2,
+    "SUB": 1,
+    "STR": 1,
+    "LSL": 1,
+    "LOD": 1,
+    "ASR": 1,
+    "ADD": 1
+  },
+  "resource": {
+    "MUL": 4,
+    "SUB": 2,
+    "STR": 2,
+    "LSL": 1,
+    "LOD": 2,
+    "ASR": 2,
+    "ADD": 2
+  }
+}

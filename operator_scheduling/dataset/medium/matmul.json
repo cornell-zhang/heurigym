@@ -1,0 +1,15 @@
+{
+  "name": "matmul_dfg__3",
+  "delay": {
+    "MUL": 2,
+    "STR": 1,
+    "LOD": 1,
+    "ADD": 1
+  },
+  "resource": {
+    "MUL": 8,
+    "STR": 2,
+    "LOD": 3,
+    "ADD": 3
+  }
+}

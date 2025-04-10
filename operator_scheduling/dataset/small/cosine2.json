@@ -1,0 +1,17 @@
+{
+  "name": "cosine2",
+  "delay": {
+    "MUL": 2,
+    "add": 1,
+    "exp": 1,
+    "imp": 1,
+    "sub": 1
+  },
+  "resource": {
+    "MUL": 4,
+    "add": 1,
+    "exp": 2,
+    "imp": 2,
+    "sub": 2
+  }
+}

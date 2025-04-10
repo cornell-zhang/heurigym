@@ -1,0 +1,11 @@
+{
+  "name": "ewf",
+  "delay": {
+    "MUL": 2,
+    "ADD": 1
+  },
+  "resource": {
+    "MUL": 1,
+    "ADD": 2
+  }
+}

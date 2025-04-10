@@ -1,0 +1,15 @@
+{
+  "name": "smooth_color_z_triangle_dfg__31",
+  "delay": {
+    "MUL": 2,
+    "SUB": 1,
+    "ADD": 1,
+    "LOD": 1
+  },
+  "resource": {
+    "MUL": 8,
+    "SUB": 3,
+    "ADD": 6,
+    "LOD": 6
+  }
+}

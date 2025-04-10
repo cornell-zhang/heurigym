@@ -1,0 +1,19 @@
+{
+    "name": "jpeg_idct_ifast_dfg__5",
+    "delay": {
+        "MUL": 2,
+        "SUB": 1,
+        "STR": 1,
+        "LOD": 1,
+        "ASR": 1,
+        "ADD": 1
+    },
+    "resource": {
+        "MUL": 4,
+        "SUB": 1,
+        "STR": 2,
+        "LOD": 4,
+        "ASR": 1,
+        "ADD": 4
+    }
+}

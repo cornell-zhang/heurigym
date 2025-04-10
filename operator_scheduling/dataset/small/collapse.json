@@ -1,0 +1,21 @@
+{
+  "name": "collapse_pyr_dfg__113",
+  "delay": {
+    "MUL": 2,
+    "ADD": 1,
+    "SUB": 1,
+    "STR": 1,
+    "LSL": 1,
+    "LOD": 1,
+    "ASR": 1
+  },
+  "resource": {
+    "MUL": 3,
+    "ADD": 3,
+    "SUB": 1,
+    "STR": 3,
+    "LSL": 1,
+    "LOD": 3,
+    "ASR": 1
+  }
+}

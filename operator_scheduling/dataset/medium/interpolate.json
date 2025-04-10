@@ -1,0 +1,17 @@
+{
+  "name": "interpolate_aux_dfg__12",
+  "delay": {
+    "MUL": 2,
+    "ADD": 1,
+    "SUB": 1,
+    "STR": 1,
+    "LOD": 1
+  },
+  "resource": {
+    "MUL": 9,
+    "ADD": 4,
+    "SUB": 2,
+    "STR": 2,
+    "LOD": 5
+  }
+}
