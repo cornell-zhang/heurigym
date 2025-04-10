@@ -1,6 +1,5 @@
 // main.cpp
-// solver header
-#include "solve.h"
+#include "solver.h"
 
 // We use the nlohmann/json library for JSON parsing.
 // You can get it from https://github.com/nlohmann/json
@@ -165,15 +164,17 @@ int main(int argc, char* argv[]) {
 
     auto schedule = solve(nodes, delay, resourceConstraints);
 
-    // Output the schedule in the format: node:cycle
-    // std::cout << "Schedule:" << std::endl;
-    // for (const auto &entry : schedule) {
-    //     std::cout << entry.first << ":" << entry.second << std::endl;
-    // }
-
     // Verify that the schedule satisfies all constraints.
     bool valid = verify(nodes, schedule, delay, resourceConstraints);
-    std::cout << "Schedule verification: " << (valid ? "Valid" : "Invalid") << std::endl;
+    if (!valid) {
+        std::cerr << "Failed verification" << std::endl;
+        // Output the schedule in the format: node:cycle
+        std::cout << "Schedule:" << std::endl;
+        for (const auto &entry : schedule) {
+            std::cout << entry.first << ":" << entry.second << std::endl;
+        }
+        return 1;
+    }
 
     // Calculate and report the final latency of the schedule.
     int finalLatency = calculateCost(nodes, schedule, delay);
