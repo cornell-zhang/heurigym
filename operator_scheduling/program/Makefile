@@ -1,12 +1,17 @@
 CXX = g++
 CXXFLAGS = -std=c++11 -Wall -Wextra -Ijson/include
-TARGET = main.out
-SRC = main.cpp solve.cpp
+MAIN_TARGET = main.out
+EVALUATOR_TARGET = evaluator.out
+MAIN_SRC = main.cpp solver.cpp
+EVALUATOR_SRC = evaluator.cpp solver.cpp
 
-all: $(TARGET)
+all: $(MAIN_TARGET) $(EVALUATOR_TARGET)
 
-$(TARGET): $(SRC)
-	$(CXX) $(CXXFLAGS) -o $(TARGET) $(SRC)
+$(MAIN_TARGET): $(MAIN_SRC)
+	$(CXX) $(CXXFLAGS) -o $(MAIN_TARGET) $(MAIN_SRC)
+
+$(EVALUATOR_TARGET): $(EVALUATOR_SRC)
+	$(CXX) $(CXXFLAGS) -o $(EVALUATOR_TARGET) $(EVALUATOR_SRC)
 
 clean:
-	rm -f $(TARGET)
+	rm -f $(MAIN_TARGET) $(EVALUATOR_TARGET)
