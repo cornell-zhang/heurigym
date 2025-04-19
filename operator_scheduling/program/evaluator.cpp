@@ -1,8 +1,4 @@
-// main.cpp
 #include "solver.h"
-
-// We use the nlohmann/json library for JSON parsing.
-// You can get it from https://github.com/nlohmann/json
 #include "nlohmann/json.hpp"
 using json = nlohmann::json;
 
@@ -55,38 +51,11 @@ std::map<std::string, Node> parseDot(const std::string &filename) {
     return nodes;
 }
 
-// Function to parse the JSON file.
-// It returns a pair of maps:
-// - first: mapping resource types (e.g., "mul", "sub") to their delays,
-// - second: mapping resource types to the number of available functional units.
-std::pair<std::map<std::string, int>, std::map<std::string, int>> parseJSON(const std::string &filename) {
-    std::ifstream file(filename);
-    if (!file) {
-        std::cerr << "Error opening JSON file: " << filename << std::endl;
-        exit(1);
-    }
-    json j;
-    file >> j;
-    std::map<std::string, int> delay;
-    std::map<std::string, int> resource;
-    for (auto& element : j["delay"].items()) {
-        delay[element.key()] = element.value();
-    }
-    for (auto& element : j["resource"].items()) {
-        resource[element.key()] = element.value();
-    }
-    return {delay, resource};
-}
-
 // Verification function: checks dependency and resource constraints.
-// Dependency: For each edge, finish time of predecessor (start + delay)
-// must be less than or equal to the start time of the successor.
-// Resource: At each cycle, the active operations for a resource type must
-// not exceed the available functional units.
 bool verify(const std::map<std::string, Node>& nodes,
-                    const std::map<std::string, int>& schedule,
-                    const std::map<std::string, int>& delay,
-                    const std::map<std::string, int>& resourceConstraints) {
+           const std::map<std::string, int>& schedule,
+           const std::map<std::string, int>& delay,
+           const std::map<std::string, int>& resourceConstraints) {
     bool valid = true;
     // Check data dependency constraints.
     for (const auto& pair : nodes) {
@@ -144,10 +113,9 @@ bool verify(const std::map<std::string, Node>& nodes,
 }
 
 // Cost calculation function: calculates the final latency.
-// Final latency is defined as the maximum over operations of (start cycle + delay).
 int calculateCost(const std::map<std::string, Node>& nodes,
-                  const std::map<std::string, int>& schedule,
-                  const std::map<std::string, int>& delay) {
+                 const std::map<std::string, int>& schedule,
+                 const std::map<std::string, int>& delay) {
     int latency = 0;
     for (const auto &pair : nodes) {
         int finishTime = schedule.at(pair.first) + delay.at(pair.second.resource);
@@ -157,36 +125,64 @@ int calculateCost(const std::map<std::string, Node>& nodes,
 }
 
 int main(int argc, char* argv[]) {
-    if (argc != 2) {
-        std::cerr << "Usage: " << argv[0] << " <dataset>" << std::endl;
+    if (argc != 3) {
+        std::cerr << "Usage: " << argv[0] << " <dataset> <schedule_file>" << std::endl;
         return 1;
     }
 
     std::string datasetPath = argv[1];
-    std::string dataset = getFilename(datasetPath);
+    std::string scheduleFile = argv[2];
     std::string dotFile = datasetPath + ".dot";
     std::string jsonFile = datasetPath + ".json";
-    std::string outputFile = "output/" + dataset + ".schedule";
 
     // Parse the input graph and the JSON configuration
     auto nodes = parseDot(dotFile);
-    auto jsonData = parseJSON(jsonFile);
-    std::map<std::string, int> delay = jsonData.first;
-    std::map<std::string, int> resourceConstraints = jsonData.second;
 
-    // Generate the schedule
-    auto schedule = solve(nodes, delay, resourceConstraints);
+    // Parse the JSON configuration
+    std::ifstream file(jsonFile);
+    if (!file) {
+        std::cerr << "Error opening JSON file: " << jsonFile << std::endl;
+        return 1;
+    }
+    json j;
+    file >> j;
+    std::map<std::string, int> delay;
+    std::map<std::string, int> resourceConstraints;
+    for (auto& element : j["delay"].items()) {
+        delay[element.key()] = element.value();
+    }
+    for (auto& element : j["resource"].items()) {
+        resourceConstraints[element.key()] = element.value();
+    }
 
-    // Write the schedule to the output file
-    std::ofstream outFile(outputFile);
-    if (!outFile) {
-        std::cerr << "Error opening output file: " << outputFile << std::endl;
+    // Read the schedule from file
+    std::ifstream scheduleStream(scheduleFile);
+    if (!scheduleStream) {
+        std::cerr << "Error opening schedule file: " << scheduleFile << std::endl;
         return 1;
     }
 
-    for (const auto &entry : schedule) {
-        outFile << entry.first << ":" << entry.second << std::endl;
+    std::map<std::string, int> schedule;
+    std::string line;
+    while (std::getline(scheduleStream, line)) {
+        size_t colonPos = line.find(':');
+        if (colonPos != std::string::npos) {
+            std::string nodeId = line.substr(0, colonPos);
+            int cycle = std::stoi(line.substr(colonPos + 1));
+            schedule[nodeId] = cycle;
+        }
     }
 
+    // Verify the schedule
+    bool valid = verify(nodes, schedule, delay, resourceConstraints);
+    if (!valid) {
+        std::cerr << "Schedule verification failed" << std::endl;
+        return 1;
+    }
+
+    // Calculate and report the final latency
+    int finalLatency = calculateCost(nodes, schedule, delay);
+    std::cout << "Cost: " << finalLatency << std::endl;
+
     return 0;
-}
+} 
