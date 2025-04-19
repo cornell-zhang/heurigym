@@ -30,3 +30,9 @@
 *.exe
 *.out
 *.app
+
+*.result
+.env
+output/*
+.vscode
+*.txt
