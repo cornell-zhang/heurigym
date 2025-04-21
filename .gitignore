@@ -33,6 +33,9 @@
 
 *.result
 .env
-output/*
 .vscode
 *.txt
+**/output/
+**/_programs/
+*.png
+llm_solutions
