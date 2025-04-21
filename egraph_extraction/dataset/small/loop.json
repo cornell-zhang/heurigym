@@ -1,0 +1,71 @@
+{
+  "nodes": {
+    "Mul-5040379952546458196": {
+      "op": "Mul",
+      "children": [
+        "One-0",
+        "Mul-5040379952546458196"
+      ],
+      "eclass": "5",
+      "cost": 1.0
+    },
+    "One-0": {
+      "op": "One",
+      "children": [],
+      "eclass": "0",
+      "cost": 1.0
+    },
+    "foo-0": {
+      "op": "foo",
+      "children": [
+        "One-0"
+      ],
+      "eclass": "1",
+      "cost": 1.0
+    },
+    "foo-5871781006564002453": {
+      "op": "foo",
+      "children": [
+        "foo-0"
+      ],
+      "eclass": "2",
+      "cost": 1.0
+    },
+    "foo-11743562013128004906": {
+      "op": "foo",
+      "children": [
+        "foo-5871781006564002453"
+      ],
+      "eclass": "3",
+      "cost": 1.0
+    },
+    "foo-17615343019692007359": {
+      "op": "foo",
+      "children": [
+        "foo-11743562013128004906"
+      ],
+      "eclass": "5",
+      "cost": 1.0
+    }
+  },
+  "root_eclasses": [
+    "5"
+  ],
+  "class_data": {
+    "5": {
+      "type": "Math"
+    },
+    "0": {
+      "type": "Math"
+    },
+    "1": {
+      "type": "Math"
+    },
+    "2": {
+      "type": "Math"
+    },
+    "3": {
+      "type": "Math"
+    }
+  }
+}
