@@ -1,10 +1,20 @@
 {
-    "delay": {
-        "mul": 3,
-        "sub": 1
-    },
-    "resource": {
-        "mul": 2,
-        "sub": 1
-    }
+  "name": "input",
+  "delay": {
+    "mul": 3,
+    "sub": 1
+  },
+  "resource": {
+    "mul": 2,
+    "sub": 1
+  },
+  "nodes": [
+    ["n1", "mul"],
+    ["n2", "mul"],
+    ["n3", "sub"]
+  ],
+  "edges": [
+    ["n1", "n3", "lhs"],
+    ["n2", "n3", "rhs"]
+  ]
 }

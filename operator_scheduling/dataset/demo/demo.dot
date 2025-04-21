@@ -1,7 +1,0 @@
-digraph input {
-    n1 [label = mul];
-    n2 [label = mul];
-    n3 [label = sub];
-    n1 -> n3 [name = lhs];
-    n2 -> n3 [name = rhs];
-}
