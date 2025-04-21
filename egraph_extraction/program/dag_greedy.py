@@ -185,7 +185,7 @@ def get_args():
 
 def greedy(egraph):  #egraph's type is EGraphData or BaseEGraph
     "use int index, needs some preprocess for EGraphData/BaseEGraph"
-    cost = egraph.cost_per_node.cpu().numpy().tolist()  #calculate on cpu
+    cost = egraph.cost_per_node.tolist()  #calculate on cpu
     start_time = time.time()
     extractor = FasterGreedyDagExtractor()
     result, cost_history = extractor.extract(cost, egraph.enodes,
@@ -210,7 +210,7 @@ def main():
     choose_enodes = greedy(egraph)
     input_file = args.input_file.split("/")[-1]
     input_file = input_file.split(".")[0]
-    saved_file_path = os.path.join("output_log", f'greedy_{input_file}.json')
+    saved_file_path = os.path.join("output_log", f'greedy_{input_file}.pkl')
     os.makedirs(os.path.dirname(saved_file_path), exist_ok=True)
     with open(saved_file_path, "wb") as f:
         pickle.dump(choose_enodes, f)

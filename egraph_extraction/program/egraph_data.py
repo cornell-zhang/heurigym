@@ -3,12 +3,8 @@ import os
 import json
 import pickle
 import logging
+import numpy as np
 from collections import defaultdict
-from graphviz import Source
-
-import torch
-import torch.nn as nn
-import torch.distributions as dist
 
 
 class ENode:
@@ -56,7 +52,7 @@ class EGraphData:
                  load_cost=False,
                  compress=False,
                  drop_self_loops=False,
-                 device='cuda'):
+                 device='cpu'):
         self.eclasses = {}
         self.enodes = {}
         self.hidden_dim = hidden_dim
@@ -121,22 +117,6 @@ class EGraphData:
             if not v:
                 enode_map[enode] = enode_count
                 enode_count += 1
-        nodes2raw_key = []
-        nodes2raw_value = []
-        for k, vs in self.raw_nodes_mapping.items():
-            for v in vs:
-                nodes2raw_key.append(enode_map[k])
-                nodes2raw_value.append(enode_map[v])
-        nodes2raw_key = torch.tensor(nodes2raw_key,
-                                     dtype=torch.long,
-                                     device=self.device)
-        nodes2raw_value = torch.tensor(nodes2raw_value,
-                                       dtype=torch.long,
-                                       device=self.device)
-        self.nodes2raw = torch.sparse_coo_tensor(
-            indices=torch.stack([nodes2raw_key, nodes2raw_value]),
-            values=torch.ones(len(nodes2raw_key), device=self.device),
-            size=(preprocessed_num_nodes, self.raw_num_enodes))
 
         for eclass_id, enode_id in input_dict['classes'].items():
             # map enode_id (str) to enode_num_id (int)
@@ -167,8 +147,6 @@ class EGraphData:
             self.enode_cost[enode_map[enode_id]] = enode_cost[enode_id]
 
         self.enode_map = enode_map
-        self.processed_cost_per_node = self.nodes2raw @ torch.tensor(
-            self.enode_cost, dtype=torch.float, device=self.device)
 
         return self
 
@@ -192,12 +170,8 @@ class EGraphData:
                 }
             self.from_dict(input_dict)
         else:
-            # enode_map = {}
-            # assert 'root_eclasses' in input_dict
-            # self.enode_cost = [0] * len(input_dict['nodes'])
             class_out_list = defaultdict(list)
             label_cost = defaultdict(int)
-            # class_in_list = defaultdict(list)
 
             new_dict = {'nodes': {}, 'classes': {}, 'labels': {}}
             for i, node in enumerate(input_dict['nodes']):
@@ -213,12 +187,10 @@ class EGraphData:
                     else:
                         eclass_list.append(p2_result[0])
                 new_dict['nodes'][node] = eclass_list
-                # new_dict['labels'][node] = cur_enode['op']
                 new_dict['labels'][node] = node
 
                 class_out_list[cur_enode['eclass']].append(node)
                 label_cost[node] = cur_enode['cost']
-                # self.enode_cost[i] = cur_enode['cost']
             new_dict['classes'] = class_out_list
             self.label_cost = label_cost
 
@@ -238,7 +210,6 @@ class EGraphData:
 
     def node_to_id(self, nodes):
         node_ids = []
-        # for enode in bool_to_index(nodes):
         for enode in nodes:
             for k, v in self.enode_map.items():
                 if v == enode:
@@ -249,13 +220,12 @@ class EGraphData:
     def set_cost_per_node(self):
         cost_per_node = []
         if hasattr(self, 'enode_cost'):
-            cost_per_node = torch.tensor(self.enode_cost).float().to(
-                self.device)
+            cost_per_node = np.array(self.enode_cost)
         else:
-            cost_per_node = torch.empty(len(self.enodes)).to(self.device)
+            cost_per_node = np.array(len(self.enodes))
             cost_per_node.zero_()
             cost_per_node += 1
-        self.cost_per_node = nn.Parameter(cost_per_node, requires_grad=False)
+        self.cost_per_node = cost_per_node
 
     def linear_cost(self, enodes):
         linear_loss = (self.cost_per_node * enodes).sum(dim=1)
