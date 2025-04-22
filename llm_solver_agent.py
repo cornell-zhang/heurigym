@@ -307,10 +307,19 @@ Output Format:
         # Read Python template files
         with open(program_folder / "main.py", 'r') as f:
             main_py = f.read()
+        # if utils.py exists, read it
+        if (program_folder / "utils.py").exists():
+            with open(program_folder / "utils.py", 'r') as f:
+                utils_py = f.read()
+        else:
+            utils_py = ""
         with open(program_folder / "solver.py", 'r') as f:
             solver_py = f.read()
         return f"""# Main program:
 {main_py}
+
+# Utils module:
+{utils_py}
 
 # Solver module:
 {solver_py}
@@ -478,8 +487,7 @@ Your goal is to improve the solution for as many test cases as possible, with sp
             # Generate content with Gemini
             response = self.gemini_client.models.generate_content(
                 model=model,
-                contents=full_prompt,
-                generation_config={"max_output_tokens": 8192}
+                contents=full_prompt
             )
             
             # Extract the text from the response
