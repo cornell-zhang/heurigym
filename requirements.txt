@@ -5,3 +5,4 @@ markdown>=3.5.2
 numpy
 scipy
 google-genai
+matplotlib
