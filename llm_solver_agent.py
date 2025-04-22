@@ -6,7 +6,7 @@ import time
 import argparse
 import subprocess
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 from dotenv import load_dotenv
 from openai import OpenAI
 from anthropic import Anthropic
@@ -96,8 +96,8 @@ class ProgramExecutor:
         
         # Save the LLM's program to solver.py
         target_file = self.solution_folder / "solver.py"
-        # with open(target_file, 'w') as f:
-        #     f.write(program)
+        with open(target_file, 'w') as f:
+            f.write(program)
         logger.info(f"Saved program to {target_file}")
         return target_file
         
@@ -128,7 +128,17 @@ class ProgramExecutor:
                     text=True
                 )
                 
+                # Create output directory if it doesn't exist
+                os.makedirs(self.solution_folder / "output", exist_ok=True)
+                cost_file = self.solution_folder / "output" / f"{base_name}.cost"
+                
                 if run_result.returncode != 0:
+                    # Save error message directly to cost file
+                    error_data = {
+                        "message": f"Python execution error: {run_result.stderr}"
+                    }
+                    with open(cost_file, 'w') as f:
+                        json.dump(error_data, f, indent=2)
                     all_outputs.append(f"Test case {base_name}:\n{run_result.stderr}")
                     continue
                 
@@ -141,22 +151,35 @@ class ProgramExecutor:
                 )
                 
                 if eval_result.returncode != 0:
+                    # Save evaluator error to cost file
+                    error_data = {
+                        "message": f"Evaluator error: {eval_result.stderr}"
+                    }
+                    with open(cost_file, 'w') as f:
+                        json.dump(error_data, f, indent=2)
                     all_outputs.append(f"Test case {base_name}:\n{eval_result.stderr}")
                     continue
                 
                 # Read the cost file
-                cost_file = self.solution_folder / f"output/{base_name}.cost"
                 if cost_file.exists():
                     with open(cost_file, 'r') as f:
                         cost_data = json.load(f)
                         output = f"Test case {base_name}:\n"
-                        if cost_data['validity']:
-                            output += f"Valid solution with cost: {cost_data['cost']}"
+                        if 'validity' in cost_data and 'cost' in cost_data:
+                            if cost_data['validity']:
+                                output += f"Valid solution with cost: {cost_data['cost']}"
+                            else:
+                                output += f"Invalid solution with cost: {cost_data['cost']}\n"
+                                output += f"Error: {cost_data['message']}"
                         else:
-                            output += f"Invalid solution with cost: {cost_data['cost']}\n"
                             output += f"Error: {cost_data['message']}"
                         all_outputs.append(output)
                 else:
+                    error_data = {
+                        "message": "No cost file generated"
+                    }
+                    with open(cost_file, 'w') as f:
+                        json.dump(error_data, f, indent=2)
                     all_outputs.append(f"Test case {base_name}: No cost file generated")
             
             # Combine all outputs
@@ -340,10 +363,14 @@ This is the program you generated in the previous iteration:
                     if cost_file.exists():
                         with open(cost_file, 'r') as f:
                             cost_data = json.load(f)
-                            if cost_data['validity']:
-                                prompt += f"**Result:** Valid solution with cost {cost_data['cost']}\n\n"
+                            if 'validity' in cost_data and 'cost' in cost_data:
+                                if cost_data['validity']:
+                                    prompt += f"**Result:** Valid solution with cost {cost_data['cost']}\n\n"
+                                else:
+                                    prompt += f"**Result:** Invalid solution with cost {cost_data['cost']}\n"
+                                    prompt += f"**Error:** {cost_data['message']}\n\n"
                             else:
-                                prompt += f"**Result:** Invalid solution with cost {cost_data['cost']}\n"
+                                prompt += f"**Result:** Error occurred\n"
                                 prompt += f"**Error:** {cost_data['message']}\n\n"
                     else:
                         prompt += "**Result:** No output generated\n\n"
@@ -351,7 +378,10 @@ This is the program you generated in the previous iteration:
                 prompt += f"\nNo test cases found in the demo dataset folder: {demo_folder}\n\n"
 
             # Add improvement guidance
-            any_failed = any(not json.load(open(f))['validity'] for f in (solution_dir / "output").glob("*.cost"))
+            any_failed = any(
+                not json.load(open(f))['validity'] if 'validity' in json.load(open(f)) else True 
+                for f in (solution_dir / "output").glob("*.cost")
+            )
             
             if any_failed:
                 prompt += """
@@ -395,7 +425,7 @@ Your goal is to improve the solution for as many test cases as possible, with sp
             response = self.openai_client.chat.completions.create(
                 model=model,
                 messages=[
-                    {"role": "system", "content": "You are an expert optimization algorithm designer."},
+                    {"role": "system", "content": "You are an expert optimization algorithm designer. You are given a problem and try to solve it. Please only output the code for the solver."},
                     {"role": "user", "content": prompt}
                 ]
             )
@@ -421,7 +451,7 @@ Your goal is to improve the solution for as many test cases as possible, with sp
             response = self.deepseek_client.chat.completions.create(
                 model=model,
                 messages=[
-                    {"role": "system", "content": "You are an expert optimization algorithm designer."},
+                    {"role": "system", "content": "You are an expert optimization algorithm designer. You are given a problem and try to solve it. Please only output the code for the solver."},
                     {"role": "user", "content": prompt}
                 ]
             )
@@ -461,13 +491,13 @@ Your goal is to improve the solution for as many test cases as possible, with sp
                 logger.info(f"Getting program from {model} (iteration {iteration+1}/{max_iterations})")
                 
                 # Get program from LLM
-                # current_program = self.get_program(
-                #     problem_desc, 
-                #     model, 
-                #     iteration, 
-                #     previous_program,
-                #     solution_dir
-                # )
+                current_program = self.get_program(
+                    problem_desc, 
+                    model, 
+                    iteration, 
+                    previous_program,
+                    solution_dir
+                )
                 
                 # Append the program to the log file
                 with open(log_file, 'a') as f:
@@ -477,7 +507,7 @@ Your goal is to improve the solution for as many test cases as possible, with sp
                     f.write("\n\n")
                 
                 # Save and execute the program
-                program_file = executor.save_program("test")
+                program_file = executor.save_program(current_program)
                 success, output = executor.compile_and_run()
                 
                 # Store the program for the next iteration
