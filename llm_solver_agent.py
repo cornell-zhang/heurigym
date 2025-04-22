@@ -275,9 +275,7 @@ class LLMInterface:
         
     def _format_problem_info(self, problem_desc: Dict[str, str]) -> str:
         """Formats the problem information section for the prompt."""
-        return f"""Problem: {problem_desc['name']}
-
-Description:
+        return f"""Description:
 {problem_desc['sections'].get('background', '')}
 
 Formalization:
@@ -424,6 +422,7 @@ Your goal is to improve the solution for as many test cases as possible, with sp
                 raise ValueError("OpenAI client not initialized. OPENAI_API_KEY is required for OpenAI models.")
             response = self.openai_client.chat.completions.create(
                 model=model,
+                max_tokens=8192,
                 messages=[
                     {"role": "system", "content": "You are an expert optimization algorithm designer. You are given a problem and try to solve it. Please only output the code for the solver."},
                     {"role": "user", "content": prompt}
@@ -436,7 +435,7 @@ Your goal is to improve the solution for as many test cases as possible, with sp
                 raise ValueError("Anthropic client not initialized. ANTHROPIC_API_KEY is required for Claude models.")
             response = self.anthropic_client.messages.create(
                 model=model,
-                max_tokens=4000,
+                max_tokens=8192,
                 messages=[{
                     "role": "user",
                     "content": prompt
@@ -450,6 +449,7 @@ Your goal is to improve the solution for as many test cases as possible, with sp
             # Use OpenAI SDK with DeepSeek's base URL
             response = self.deepseek_client.chat.completions.create(
                 model=model,
+                max_tokens=8192,
                 messages=[
                     {"role": "system", "content": "You are an expert optimization algorithm designer. You are given a problem and try to solve it. Please only output the code for the solver."},
                     {"role": "user", "content": prompt}
@@ -472,8 +472,12 @@ Your goal is to improve the solution for as many test cases as possible, with sp
         current_program = None
         previous_program = None
         
+        # Create log directory for this run
+        log_dir = solution_dir / "logs"
+        log_dir.mkdir(parents=True, exist_ok=True)
+        
         # Create a log file for this run
-        log_file = solution_dir / f"{model}.log"
+        log_file = log_dir / f"{model}.log"
         
         # Store the log file path in the LLMInterface instance
         self.current_log_file = log_file
@@ -498,6 +502,11 @@ Your goal is to improve the solution for as many test cases as possible, with sp
                     previous_program,
                     solution_dir
                 )
+                
+                # Save the program to a separate file
+                program_file = log_dir / f"solver{iteration}.py"
+                with open(program_file, 'w') as f:
+                    f.write(current_program)
                 
                 # Append the program to the log file
                 with open(log_file, 'a') as f:
@@ -546,7 +555,7 @@ def parse_arguments():
     parser = argparse.ArgumentParser(description='LLM Solver Agent for optimization problems')
     
     parser.add_argument('--models', type=str, nargs='+', 
-                        default=["gpt-4-turbo-preview", "claude-3-opus-20240229", "deepseek-chat", "deepseek-coder"],
+                        default=["deepseek-chat", "deepseek-reasoner"],
                         help='List of models to use (default: all supported models)')
     
     parser.add_argument('--iterations', type=int, default=3,
