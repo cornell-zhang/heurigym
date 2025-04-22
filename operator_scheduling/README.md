@@ -8,7 +8,7 @@ One of the core challenges in HLS is operator scheduling, which determines the e
 
 ## Formalization
 
-Consider a CDFG with $n$ operation nodes $o_i$, where $i \in O = \{1, 2, \ldots, n\}$, and a precedence relation $\prec$ on $O$ that captures operation dependencies. Each operation $o_i$ is associated with a cycle delay $d_i \in \mathbb{Z}^+$ and a resource type $r_i \in R = \{1, 2, \ldots, k\}$. Let $T = \{1, 2, \ldots, L\}$ represent the set of control steps (c-steps), and define a schedule as an $n$-tuple $s = (t_1, t_2, \ldots, t_n)$, where $t_i \in T$ denotes the start time (c-step) of operation $o_i$.
+Consider a CDFG with $n$ operation nodes $o_i$, where $i \in O = \{1, 2, \ldots, n\}$, and a precedence relation $\prec$ on $O$ that captures operation dependencies. Each operation $o_i$ is associated with a cycle delay $d_i \in \mathbb{Z}^+$ and a resource type $r_i \in R = \{1, 2, \ldots, k\}$. Let $T = \{0, 1, 2, \ldots, L\}$ represent the set of control steps (c-steps), and define a schedule as an $n$-tuple $s = (t_1, t_2, \ldots, t_n)$, where $t_i \in T$ denotes the start time (c-step) of operation $o_i$.
 
 A schedule $s$ is feasible if it satisfies all data dependencies:  
 $\forall i, j \in O: i \prec j \Rightarrow t_i + d_i \leq t_j$.  
