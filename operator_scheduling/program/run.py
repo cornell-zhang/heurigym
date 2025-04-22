@@ -2,40 +2,67 @@ import os
 import subprocess
 import re
 import sys
+import json
 
-def run_optimization(executable, dataset_path):
+def run_optimization(dataset_path, output_dir="output"):
     """
     Run the optimization program on the given dataset and return the result.
     
     Args:
-        executable (str): Path to the optimization program
         dataset_path (str): Path to the dataset
+        output_dir (str): Directory to store output files
         
     Returns:
-        tuple: (success, latency) where success is a boolean and latency is an integer or None
+        tuple: (success, cost) where success is a boolean and cost is an integer or None
     """
     try:
-        # Run the executable with the dataset path as argument
-        result = subprocess.run([executable, dataset_path], 
-                                capture_output=True, 
-                                text=True, 
-                                check=False)
+        # Create output directory if it doesn't exist
+        os.makedirs(output_dir, exist_ok=True)
         
-        # Check if the output contains "Final latency"
-        latency_match = re.search(r"Final latency: (\d+)", result.stdout)
-        if latency_match:
-            return True, int(latency_match.group(1))
+        # Extract dataset name from path
+        dataset_name = os.path.basename(dataset_path)
+        if dataset_name.endswith('.json'):
+            dataset_name = dataset_name[:-5]  # Remove .json extension
         
-        # If no latency found but contains "Failed verification", it's a failed verification
-        if "Failed verification" in result.stdout:
+        # Define output file paths
+        output_file = os.path.join(output_dir, f"{dataset_name}.output")
+        cost_file = os.path.join(output_dir, f"{dataset_name}.cost")
+        
+        # Run the main program to generate output
+        main_result = subprocess.run(["python3", "main.py", dataset_path], 
+                                    capture_output=True, 
+                                    text=True, 
+                                    check=False)
+        
+        # Check if main.py executed successfully
+        if main_result.returncode != 0:
+            print(f"Error running main.py on {dataset_path}: {main_result.stderr}")
             return False, None
         
-        # If neither pattern is found, print a warning and assume failure
-        print(f"Warning: Unexpected output for {dataset_path}:\n{result.stdout}")
+        # Run the evaluator to evaluate the output
+        eval_result = subprocess.run(["python3", "evaluator.py", dataset_path, output_file], 
+                                    capture_output=True, 
+                                    text=True, 
+                                    check=False)
+        
+        # Check if evaluator.py executed successfully
+        if eval_result.returncode != 0:
+            print(f"Error running evaluator.py on {dataset_path}: {eval_result.stderr}")
+            return False, None
+        
+        # Read the cost from the cost file
+        if os.path.exists(cost_file):
+            with open(cost_file, 'r') as f:
+                cost_data = json.load(f)
+                if cost_data.get("validity", False):
+                    return True, cost_data.get("cost")
+        
+        # If we get here, something went wrong
+        print(f"Warning: Could not extract cost for {dataset_path}")
         return False, None
     
     except Exception as e:
-        print(f"Error running optimization on {dataset_path}: {e}")
+        print(f"Error processing {dataset_path}: {e}")
         return False, None
 
 def find_all_datasets(base_dir):
@@ -54,20 +81,15 @@ def find_all_datasets(base_dir):
         # Skip hidden directories
         dirs[:] = [d for d in dirs if not d.startswith('.')]
         
-        # Add all files in this directory
+        # Add all JSON files in this directory
         for file in files:
-            datasets.add(os.path.join(root, file).rsplit('.', 1)[0])
-        
-        # Add directories that might be datasets themselves
-        # for dir_name in dirs:
-        #     dir_path = os.path.join(root, dir_name)
-        #     datasets.append(dir_path)
+            if file.endswith('.json'):
+                datasets.add(os.path.join(root, file))
     
     return list(datasets)
 
 def main():
-    # Path to executable and dataset directory
-    executable = "./main.out"
+    # Path to dataset directory
     dataset_dir = "../dataset"
     
     # Allow dataset directory to be specified via command line
@@ -79,11 +101,6 @@ def main():
         print(f"Error: Dataset directory '{dataset_dir}' not found.")
         return
     
-    # Make sure executable exists
-    if not os.path.isfile(executable):
-        print(f"Error: Executable '{executable}' not found.")
-        return
-    
     # Get all potential datasets
     datasets = find_all_datasets(dataset_dir)
     
@@ -92,27 +109,27 @@ def main():
         print(f"Warning: No datasets found under '{dataset_dir}'.")
         return
     
-    # Results will be stored as (dataset_name, latency) tuples
+    # Results will be stored as (dataset_name, cost) tuples
     results = []
     
     # Run optimization on each dataset
     for dataset_path in sorted(datasets):
         dataset_name = os.path.relpath(dataset_path, start=dataset_dir)
-        success, latency = run_optimization(executable, dataset_path)
+        success, cost = run_optimization(dataset_path)
         
         if success:
-            results.append((dataset_name, str(latency)))
+            results.append((dataset_name, str(cost)))
         else:
             results.append((dataset_name, "X"))
     
     # Print results as a table
     print("\nResults Summary:")
     print("=" * 50)
-    print(f"{'Dataset':<30} | {'Latency':<10}")
+    print(f"{'Dataset':<30} | {'Cost':<10}")
     print("-" * 50)
     
-    for dataset_name, latency in results:
-        print(f"{dataset_name:<30} | {latency:<10}")
+    for dataset_name, cost in results:
+        print(f"{dataset_name:<30} | {cost:<10}")
     
     print("=" * 50)
 
