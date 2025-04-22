@@ -96,7 +96,7 @@ def verify(nodes: Dict[str, Node],
         for node_id, node in nodes.items():
             start = schedule[node_id]
             finish = schedule[node_id] + delay[node.resource]
-            if start <= t <= finish:
+            if start <= t < finish:
                 resource_usage[node.resource] += 1
         
         # Verify that usage does not exceed available units
