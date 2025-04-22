@@ -22,31 +22,37 @@ subject to the resource constraints
 $\forall r \in R, t \in T: N_r(t) \leq G_r$.
 
 ## Input Format
-The input graph is stored in DOT format as shown below. Each node is represented as `<node> [label = <resource>]`, and each edge is defined as `<src node> -> <dst node> [name = <name>]`:
+The input is provided in JSON format with the following structure:
 
-```dot
-digraph input {
-    n1 [label = mul];
-    n2 [label = mul];
-    n3 [label = sub];
-    n1 -> n3 [name = lhs];
-    n2 -> n3 [name = rhs];
-}
-```
-
-A separate JSON file specifies the execution delay and the number of available functional units for each type of resource:
 ```json
 {
-    "delay": {
-        "mul": 3,
-        "sub": 1
-    },
-    "resource": {
-        "mul": 2,
-        "sub": 1
-    }
+  "name": "input",
+  "delay": {
+    "mul": 3,
+    "sub": 1
+  },
+  "resource": {
+    "mul": 2,
+    "sub": 1
+  },
+  "nodes": [
+    ["n1", "mul"],
+    ["n2", "mul"],
+    ["n3", "sub"]
+  ],
+  "edges": [
+    ["n1", "n3", "lhs"],
+    ["n2", "n3", "rhs"]
+  ]
 }
 ```
+
+Where:
+- `name`: Name of the input graph
+- `delay`: Maps each resource type to its execution delay in cycles
+- `resource`: Maps each resource type to the number of available functional units
+- `nodes`: List of nodes, where each node is represented as `[node_id, resource_type]`
+- `edges`: List of edges, where each edge is represented as `[source_node, target_node, edge_name]`
 
 ## Output Format
 The output should provide the execution schedule of the program, indicating the start cycle of each operation. For example, the following output means that `n1` and `n2` start at cycle 0, while `n3` starts at cycle 3:

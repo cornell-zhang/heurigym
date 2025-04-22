@@ -26,7 +26,10 @@ def main():
         valid = verify(nodes, schedule, delay, resource_constraints)
     
     # Calculate the cost
-    cost = calculate_cost(nodes, schedule, delay)
+    if valid:
+        cost = calculate_cost(nodes, schedule, delay)
+    else:
+        cost = float('inf')
     
     # Prepare the output data
     output_data = {
