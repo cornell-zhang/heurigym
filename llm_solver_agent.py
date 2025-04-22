@@ -289,9 +289,6 @@ class LLMInterface:
 Formalization:
 {problem_desc['sections'].get('formalization', '')}
 
-Objective:
-{problem_desc['sections'].get('objective', '')}
-
 Input Format:
 {problem_desc['sections'].get('input_format', '')}
 

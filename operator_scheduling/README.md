@@ -14,8 +14,6 @@ A schedule $s$ is feasible if it satisfies all data dependencies:
 $\forall i, j \in O: i \prec j \Rightarrow t_i + d_i \leq t_j$.  
 Let $S$ denote the set of all feasible schedules. For a given schedule $s$, let $N_r(t)$ be the number of operations that use resource $r$ in control step $t$, and define the total usage of resource $r$ as $N_r = \sum_{t \in T} N_r(t)$.
 
-## Objective
-
 Given a bound $G_r$ on the number of available instances for each resource type $r \in R$, the operator scheduling problem is to find a feasible schedule $s \in S$ that minimizes the overall latency $L$, defined as  
 $\min_{s \in S} \max_{i \in O} (t_i + d_i)$,  
 subject to the resource constraints  
