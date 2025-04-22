@@ -66,6 +66,7 @@ class ProgramExecutor:
     
     def __init__(self, problem_folder: Path, solution_folder: Path):
         self.problem_folder = problem_folder
+        self.program_folder = problem_folder / "program"
         self.solution_folder = solution_folder
         
     def save_program(self, program: str) -> Path:
@@ -86,18 +87,17 @@ class ProgramExecutor:
         # Create output directory in the solution folder
         os.makedirs(self.solution_folder / "output", exist_ok=True)
         
-        # Copy all Python files from the original problem folder to the solution folder
-        for py_file in self.problem_folder.glob("*.py"):
-            if py_file.name != "solver.py":  # Skip solver.py as we'll write it separately
+        # Copy all Python files from the original program folder to the solution folder
+        for py_file in self.program_folder.glob("*.py"):
+            if py_file.name != "solve.py":  # Skip solve.py as we'll write it separately
                 target_file = self.solution_folder / py_file.name
                 with open(py_file, 'r') as src, open(target_file, 'w') as dst:
                     dst.write(src.read())
-                logger.info(f"Copied {py_file.name} to solution folder")
         
         # Save the LLM's program to solver.py
         target_file = self.solution_folder / "solver.py"
-        with open(target_file, 'w') as f:
-            f.write(program)
+        # with open(target_file, 'w') as f:
+        #     f.write(program)
         logger.info(f"Saved program to {target_file}")
         return target_file
         
@@ -105,7 +105,7 @@ class ProgramExecutor:
         """Runs the Python program and returns success status and output."""
         try:
             # Get all test cases from the problem's dataset folder
-            dataset_folder = self.problem_folder.parent / "dataset" / "demo"
+            dataset_folder = self.problem_folder / "dataset" / "demo"
             if not dataset_folder.exists():
                 return False, f"Dataset folder not found: {dataset_folder}"
             
@@ -271,12 +271,14 @@ Output Format:
         
     def _get_example_program(self, problem_desc: Dict[str, str]) -> str:
         """Gets an example program template for the problem."""
-        problem_folder = Path(problem_desc['name']) / "program"
+        workspace_root = Path(os.getcwd())
+        problem_folder = workspace_root / problem_desc['name']
+        program_folder = problem_folder / "program"
         
         # Read Python template files
-        with open(problem_folder / "main.py", 'r') as f:
+        with open(program_folder / "main.py", 'r') as f:
             main_py = f.read()
-        with open(problem_folder / "solver.py", 'r') as f:
+        with open(program_folder / "solver.py", 'r') as f:
             solver_py = f.read()
         return f"""# Main program:
 {main_py}
@@ -312,8 +314,10 @@ This is the program you generated in the previous iteration:
 
 ## Test Cases and Results"""
 
-            # Get the path to the demo folder
-            demo_folder = Path(str(Path(problem_desc['name'])) + "/dataset/demo")
+            # Get the absolute path to the demo folder
+            workspace_root = Path(os.getcwd())
+            problem_folder = workspace_root / problem_desc['name']
+            demo_folder = problem_folder / "dataset" / "demo"
             if demo_folder.exists():
                 # Find all .json files in the demo folder
                 json_files = [f for f in demo_folder.iterdir() if f.is_file() and f.suffix == '.json']
@@ -344,7 +348,7 @@ This is the program you generated in the previous iteration:
                     else:
                         prompt += "**Result:** No output generated\n\n"
             else:
-                prompt += "\nNo test cases found in the demo dataset folder.\n\n"
+                prompt += f"\nNo test cases found in the demo dataset folder: {demo_folder}\n\n"
 
             # Add improvement guidance
             any_failed = any(not json.load(open(f))['validity'] for f in (solution_dir / "output").glob("*.cost"))
@@ -457,13 +461,13 @@ Your goal is to improve the solution for as many test cases as possible, with sp
                 logger.info(f"Getting program from {model} (iteration {iteration+1}/{max_iterations})")
                 
                 # Get program from LLM
-                current_program = self.get_program(
-                    problem_desc, 
-                    model, 
-                    iteration, 
-                    previous_program,
-                    solution_dir
-                )
+                # current_program = self.get_program(
+                #     problem_desc, 
+                #     model, 
+                #     iteration, 
+                #     previous_program,
+                #     solution_dir
+                # )
                 
                 # Append the program to the log file
                 with open(log_file, 'a') as f:
@@ -473,7 +477,7 @@ Your goal is to improve the solution for as many test cases as possible, with sp
                     f.write("\n\n")
                 
                 # Save and execute the program
-                program_file = executor.save_program(current_program)
+                program_file = executor.save_program("test")
                 success, output = executor.compile_and_run()
                 
                 # Store the program for the next iteration
@@ -560,11 +564,12 @@ def main():
             # Get solutions from each model
             for model in args.models:
                 # Create the solution directory for this model
-                solution_dir = Path("llm_solutions") / timestamp / problem_desc['name'] / model
+                workspace_root = Path(os.getcwd())
+                solution_dir = workspace_root / "llm_solutions" / timestamp / problem_desc['name'] / model
                 solution_dir.mkdir(parents=True, exist_ok=True)
                 
                 # Initialize program executor with the solution directory
-                executor = ProgramExecutor(Path(problem_desc['name']) / "program", solution_dir)
+                executor = ProgramExecutor(workspace_root / problem_desc['name'], solution_dir)
                 
                 # Get iterative program
                 logger.info(f"Getting iterative program from {model}")
