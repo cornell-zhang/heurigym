@@ -10,6 +10,7 @@ from typing import Dict, List, Tuple
 from dotenv import load_dotenv
 from openai import OpenAI
 from anthropic import Anthropic
+from google import genai
 from datetime import datetime
 
 # Configure logging
@@ -232,11 +233,13 @@ class LLMInterface:
         self.openai_client = None
         self.deepseek_client = None
         self.anthropic_client = None
+        self.gemini_client = None
         
         # Check which models are being used and initialize appropriate clients
         openai_models = [m for m in models_to_use if m.startswith("gpt")]
         deepseek_models = [m for m in models_to_use if m.startswith("deepseek")]
         anthropic_models = [m for m in models_to_use if m.startswith("claude")]
+        gemini_models = [m for m in models_to_use if m.startswith("gemini")]
         
         if openai_models:
             if not os.getenv('OPENAI_API_KEY'):
@@ -255,6 +258,11 @@ class LLMInterface:
             if not os.getenv('ANTHROPIC_API_KEY'):
                 raise ValueError("ANTHROPIC_API_KEY is required for Anthropic models but not provided")
             self.anthropic_client = Anthropic(api_key=os.getenv('ANTHROPIC_API_KEY'))
+            
+        if gemini_models:
+            if not os.getenv('GOOGLE_API_KEY'):
+                raise ValueError("GOOGLE_API_KEY is required for Gemini models but not provided")
+            self.gemini_client = genai.Client(api_key=os.getenv('GOOGLE_API_KEY'))
         
         # Load prompt template
         self.prompt_template = self._load_prompt_template()
@@ -456,6 +464,26 @@ Your goal is to improve the solution for as many test cases as possible, with sp
                 ]
             )
             raw_response = response.choices[0].message.content
+            
+        elif model.startswith("gemini"):
+            if not self.gemini_client:
+                raise ValueError("Gemini client not initialized. GOOGLE_API_KEY is required for Gemini models.")
+            
+            # Create a system prompt for Gemini
+            system_prompt = "You are an expert optimization algorithm designer. You are given a problem and try to solve it. Please only output the code for the solver."
+            
+            # Combine system prompt and user prompt
+            full_prompt = f"{system_prompt}\n\n{prompt}"
+            
+            # Generate content with Gemini
+            response = self.gemini_client.models.generate_content(
+                model=model,
+                contents=full_prompt,
+                generation_config={"max_output_tokens": 8192}
+            )
+            
+            # Extract the text from the response
+            raw_response = response.text
         
         else:
             raise ValueError(f"Unsupported model: {model}")
@@ -555,8 +583,8 @@ def parse_arguments():
     parser = argparse.ArgumentParser(description='LLM Solver Agent for optimization problems')
     
     parser.add_argument('--models', type=str, nargs='+', 
-                        default=["deepseek-chat", "deepseek-reasoner"],
-                        help='List of models to use (default: all supported models)')
+                        default=["deepseek-chat", "deepseek-reasoner", "gemini-2.0-flash"],
+                        help='List of models to use (default: deepseek-chat, deepseek-reasoner, gemini-2.0-flash)')
     
     parser.add_argument('--iterations', type=int, default=3,
                         help='Maximum number of iterations for each model (default: 3)')
