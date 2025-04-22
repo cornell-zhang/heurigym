@@ -4,3 +4,4 @@ python-dotenv>=1.0.0
 markdown>=3.5.2
 numpy
 scipy
+google-genai
