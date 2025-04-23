@@ -311,26 +311,43 @@ Output Format:
         problem_folder = workspace_root / problem_desc['name']
         program_folder = problem_folder / "program"
         
-        # Read Python template files
-        with open(program_folder / "main.py", 'r') as f:
-            main_py = f.read()
-        # if utils.py exists, read it
-        if (program_folder / "utils.py").exists():
-            with open(program_folder / "utils.py", 'r') as f:
-                utils_py = f.read()
-        else:
-            utils_py = ""
-        with open(program_folder / "solver.py", 'r') as f:
-            solver_py = f.read()
-        return f"""# Main program:
-{main_py}
-
-# Utils module:
-{utils_py}
-
-# Solver module:
-{solver_py}
-"""
+        # Read all Python template files
+        program_files = {}
+        
+        # First read main.py and solver.py
+        main_path = program_folder / "main.py"
+        solver_path = program_folder / "solver.py"
+        if main_path.exists():
+            with open(main_path, 'r') as f:
+                program_files["main.py"] = f.read()
+        if solver_path.exists():
+            with open(solver_path, 'r') as f:
+                program_files["solver.py"] = f.read()
+        
+        # Then read all other Python files
+        for py_file in program_folder.glob("*.py"):
+            if py_file.name not in ["main.py", "solver.py"]:
+                with open(py_file, 'r') as f:
+                    program_files[py_file.name] = f.read()
+        
+        # Build output string with all program files
+        output = []
+        
+        # First add main.py and solver.py
+        for filename in ["main.py", "solver.py"]:
+            if filename in program_files:
+                output.append(f"# {filename}:")
+                output.append(program_files[filename])
+                output.append("")  # Add blank line between files
+        
+        # Then add all other files
+        for filename, content in program_files.items():
+            if filename not in ["main.py", "solver.py"]:
+                output.append(f"# {filename}:")
+                output.append(content)
+                output.append("")  # Add blank line between files
+            
+        return "\n".join(output)
         
     def format_prompt(self, 
                      problem_desc: Dict[str, str], 

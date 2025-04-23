@@ -7,7 +7,7 @@ You are an optimization expert tasked with solving the following problem by writ
 {EXAMPLE_PROGRAM}
 
 ## Instructions
-1. A problem template is provided above. You only need to implement the `solve` function. Do NOT modify the function signature including the data types of the input arguments. You are free to use any data structures or algorithms within this function, but please make sure you have imported necessary libraries and modules.
+1. A problem template is provided above. You only need to implement the `solve` function. Do NOT modify the function signature including the data types of the input arguments. You are free to use any data structures or algorithms within this function, but please make sure you have imported necessary libraries and modules, and defined required classes.
 2. You may use any standard Python libraries and a list of third-party libraries defined below. Other external libraries are strictly prohibited.
     - numpy
     - scipy
