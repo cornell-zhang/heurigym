@@ -31,10 +31,10 @@ $\min_{M} Cost(M)$
 
 For an alternative optimization target focusing on performance, we can define the depth of a node $v$ under mapping $M$ as:
 
-$Depth_M(v) = \begin{cases}
+$$Depth_M(v) = \begin{cases}
 0, & \text{if}\ v \in PI \\
 \max_{u \in M(v)} (Depth_M(u) + 1), & \text{otherwise}
-\end{cases}$
+\end{cases}$$
 
 Then, the depth-oriented mapping problem becomes:
 
