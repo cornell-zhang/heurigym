@@ -5,6 +5,7 @@ import logging
 import time
 import argparse
 import subprocess
+import shutil
 from pathlib import Path
 from typing import Dict, List, Tuple
 from dotenv import load_dotenv
@@ -149,8 +150,12 @@ class ProgramExecutor:
                     continue
                 
                 # Run the evaluator
+                shutil.copy(
+                    "scripts/feedback.py",
+                    self.solution_folder / "feedback.py"
+                )
                 eval_result = subprocess.run(
-                    ['python3', 'evaluator.py', str(input_file), f'output/{base_name}.output'],
+                    ['python3', 'feedback.py', str(input_file), f'output/{base_name}.output'],
                     cwd=str(self.solution_folder),
                     capture_output=True,
                     text=True
