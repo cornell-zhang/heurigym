@@ -107,7 +107,7 @@ class ProgramExecutor:
         logger.info(f"Saved program to {target_file}")
         return target_file
         
-    def compile_and_run(self) -> Tuple[bool, str]:
+    def execute_program(self) -> Tuple[bool, str]:
         """Runs the Python program and returns success status and output."""
         try:
             # Get all test cases from the problem's dataset folder
@@ -115,20 +115,20 @@ class ProgramExecutor:
             if not dataset_folder.exists():
                 return False, f"Dataset folder not found: {dataset_folder}"
             
-            # Find all .json files in the dataset folder
-            json_files = [f for f in dataset_folder.iterdir() if f.is_file() and f.suffix == '.json']
+            # Find all files in the dataset folder
+            input_files = [f for f in dataset_folder.iterdir() if f.is_file()]
             
-            if not json_files:
+            if not input_files:
                 return False, f"No test cases found in {dataset_folder}"
             
             # Run the program for each test case
             all_outputs = []
-            for json_file in json_files:
-                base_name = json_file.stem
+            for input_file in input_files:
+                base_name = input_file.stem
                 
                 # Run the main program
                 run_result = subprocess.run(
-                    ['python3', 'main.py', json_file],
+                    ['python3', 'main.py', str(input_file)],
                     cwd=str(self.solution_folder),
                     capture_output=True,
                     text=True
@@ -150,7 +150,7 @@ class ProgramExecutor:
                 
                 # Run the evaluator
                 eval_result = subprocess.run(
-                    ['python3', 'evaluator.py', json_file, f'output/{base_name}.output'],
+                    ['python3', 'evaluator.py', str(input_file), f'output/{base_name}.output'],
                     cwd=str(self.solution_folder),
                     capture_output=True,
                     text=True
@@ -555,7 +555,7 @@ Your goal is to improve the solution for as many test cases as possible, with sp
                 
                 # Save and execute the program
                 program_file = executor.save_program(current_program)
-                success, output = executor.compile_and_run()
+                success, output = executor.execute_program()
                 
                 # Store the program for the next iteration
                 previous_program = current_program
