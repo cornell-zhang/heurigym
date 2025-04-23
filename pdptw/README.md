@@ -18,6 +18,7 @@ Even within the PDPTW domain, there are many variations of the problem regarding
 
 **Objective**:
 - Find a set of vehicle routes to minimize the total travel time, while satisfying the following constraints:
+  - All locations must be visited exactly once.
   - Each vehicle starts and ends at the depot.
   - Each pick-up location must be visited before its corresponding delivery location.
   - The total demand on each vehicle's route must not exceed its capacity.
