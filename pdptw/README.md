@@ -16,8 +16,9 @@ Even within the PDPTW domain, there are many variations of the problem regarding
 - Each location $i \in N_p \cup N_d$ has a visit time window $[e_i, l_i]$, where $e_i$ is the earliest visit time and $l_i$ is the latest visit time.
 - Each location $i \in N_p \cup N_d$ has a service time $\Delta_i \in \mathbb{R}_+$.
 
-**Ojective**:
+**Objective**:
 - Find a set of vehicle routes to minimize the total travel time, while satisfying the following constraints:
+  - All locations must be visited exactly once.
   - Each vehicle starts and ends at the depot.
   - Each pick-up location must be visited before its corresponding delivery location.
   - The total demand on each vehicle's route must not exceed its capacity.

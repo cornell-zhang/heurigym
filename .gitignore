@@ -32,13 +32,47 @@
 *.app
 
 *.result
-.env
-output/*
 .vscode
 *.txt
-
-# tech mapping ABC history
-abc.history
+**/output/
+**/_programs/
+*.png
+llm_solutions
 
 # Python
 __pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+.pytest_cache/
+.coverage
+htmlcov/
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+
+# tech mapping ABC history
+abc.history

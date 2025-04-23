@@ -36,7 +36,9 @@ def parse_result_file(file_path):
                         if latency_str != "X":
                             try:
                                 latency = int(latency_str)
-                                results[dataset] = latency
+                                # Normalize dataset name by removing .json extension
+                                normalized_dataset = dataset.replace('.json', '')
+                                results[normalized_dataset] = latency
                             except ValueError:
                                 # Skip entries with non-integer latency
                                 pass
@@ -63,14 +65,25 @@ def generate_latency_plot(all_results):
     
     # Sort datasets by category and name
     def sort_key(dataset):
-        if dataset.startswith('small/'):
-            return (0, dataset)
-        elif dataset.startswith('medium/'):
-            return (1, dataset)
-        elif dataset.startswith('large/'):
-            return (2, dataset)
+        # Extract category and name
+        parts = dataset.split('/', 1)
+        if len(parts) == 1:
+            category = "other"
+            name = parts[0]
         else:
-            return (3, dataset)
+            category = parts[0]
+            name = parts[1]
+            
+        # Map categories to priority
+        category_priority = {
+            "demo": 0,
+            "small": 1,
+            "medium": 2,
+            "large": 3,
+            "other": 4
+        }
+        
+        return (category_priority.get(category, 4), name)
     
     all_datasets = sorted(list(all_datasets), key=sort_key)
     
@@ -103,19 +116,25 @@ def generate_latency_plot(all_results):
     methods = list(all_results.keys())
     
     # Group datasets by category (small, medium, large)
-    dataset_categories = {"small": [], "medium": [], "large": []}
+    dataset_categories = {"demo": [], "small": [], "medium": [], "large": [], "other": []}
     for dataset in all_datasets:
-        if "small/" in dataset:
-            dataset_categories["small"].append(dataset)
-        elif "medium/" in dataset:
-            dataset_categories["medium"].append(dataset)
-        elif "large/" in dataset:
-            dataset_categories["large"].append(dataset)
+        # Extract category
+        parts = dataset.split('/', 1)
+        if len(parts) == 1:
+            category = "other"
+        else:
+            category = parts[0]
+            
+        # Add to appropriate category
+        if category in dataset_categories:
+            dataset_categories[category].append(dataset)
+        else:
+            dataset_categories["other"].append(dataset)
             
     # Add category dividers and labels to the plot
     category_dividers = []
     last_idx = 0
-    category_order = ["small", "medium", "large"]
+    category_order = ["demo", "small", "medium", "large", "other"]
     
     for category in category_order:
         if dataset_categories[category]:

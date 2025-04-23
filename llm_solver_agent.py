@@ -5,11 +5,13 @@ import logging
 import time
 import argparse
 import subprocess
+import shutil
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 from dotenv import load_dotenv
 from openai import OpenAI
 from anthropic import Anthropic
+from google import genai
 from datetime import datetime
 
 # Configure logging
@@ -62,133 +64,138 @@ class ProblemReader:
         }
 
 class ProgramExecutor:
-    """Handles program compilation, execution, and result extraction."""
+    """Handles program execution and result extraction."""
     
-    def __init__(self, problem_folder: Path):
+    def __init__(self, problem_folder: Path, solution_folder: Path):
         self.problem_folder = problem_folder
+        self.program_folder = problem_folder / "program"
+        self.solution_folder = solution_folder
         
-    def save_program(self, program: str, language: str) -> Path:
-        """Saves the LLM's program to the appropriate file."""
-        # Remove markdown code block formatting if present
+    def save_program(self, program: str) -> Path:
+        """Saves the LLM's program to solver.py in the solution folder and copies all necessary Python files."""
+        # Find the first code block enclosed with ``` in the generated text
         program = program.strip()
-        if program.startswith("```"):
-            # Find the first newline after the opening ```
-            first_newline = program.find("\n")
-            if first_newline != -1:
-                # Remove the opening ``` and language identifier
-                program = program[first_newline + 1:]
-                # Remove the closing ``` if present
-                if program.endswith("```"):
-                    program = program[:-3]
-                program = program.strip()
         
-        if language == "cpp":
-            target_file = self.problem_folder / "solver.cpp"
-            # Check if solver.h is included
-            if "#include \"solver.h\"" not in program and "#include 'solver.h'" not in program:
-                # Insert solver.h include at the beginning of the file
-                program = "#include \"solver.h\"\n\n" + program
-        else:  # python
-            target_file = self.problem_folder / "solver.py"
-            
+        # Look for the first code block
+        start_marker = "```"
+        end_marker = "```"
+        
+        start_idx = program.find(start_marker)
+        if start_idx != -1:
+            # Find the end of the language identifier (if any)
+            first_newline = program.find("\n", start_idx)
+            if first_newline != -1:
+                # Find the closing ```
+                end_idx = program.find(end_marker, first_newline)
+                if end_idx != -1:
+                    # Extract just the code between the markers
+                    program = program[first_newline + 1:end_idx].strip()
+        
+        # Create output directory in the solution folder
+        os.makedirs(self.solution_folder / "output", exist_ok=True)
+        
+        # Copy all Python files from the original program folder to the solution folder
+        for py_file in self.program_folder.glob("*.py"):
+            if py_file.name != "solve.py":  # Skip solve.py as we'll write it separately
+                target_file = self.solution_folder / py_file.name
+                with open(py_file, 'r') as src, open(target_file, 'w') as dst:
+                    dst.write(src.read())
+        
+        # Save the LLM's program to solver.py
+        target_file = self.solution_folder / "solver.py"
         with open(target_file, 'w') as f:
             f.write(program)
         logger.info(f"Saved program to {target_file}")
         return target_file
         
-    def compile_and_run(self, language: str) -> Tuple[bool, str]:
-        """Compiles and runs the program, returns success status and output."""
+    def execute_program(self) -> Tuple[bool, str]:
+        """Runs the Python program and returns success status and output."""
         try:
-            if language == "cpp":
-                # Compile C++ program
-                compile_result = subprocess.run(
-                    ['make', '-C', str(self.problem_folder)],
-                    capture_output=True,
-                    text=True
-                )
-                if compile_result.returncode != 0:
-                    return False, f"Compilation failed: {compile_result.stderr}"
-                
-                # Get all test cases from the demo folder
-                demo_folder = Path(str(self.problem_folder.parent) + "/dataset/demo")
-                if not demo_folder.exists():
-                    return False, f"Demo folder not found: {demo_folder}"
-                
-                # Find all .dot and .json files in the demo folder
-                dot_files = [f for f in demo_folder.iterdir() if f.is_file() and f.suffix == '.dot']
-                json_files = [f for f in demo_folder.iterdir() if f.is_file() and f.suffix == '.json']
-                
-                if not dot_files and not json_files:
-                    return False, f"No test cases found in {demo_folder}"
-                
-                # Create a mapping of base names to file pairs
-                file_pairs = {}
-                
-                # Process .dot files
-                for dot_file in dot_files:
-                    base_name = dot_file.stem
-                    file_pairs[base_name] = {'input': dot_file, 'constraint': None}
-                
-                # Process .json files and match with .dot files
-                for json_file in json_files:
-                    base_name = json_file.stem
-                    if base_name in file_pairs:
-                        file_pairs[base_name]['constraint'] = json_file
-                    else:
-                        # If no matching .dot file, add it as a standalone constraint file
-                        file_pairs[base_name] = {'input': None, 'constraint': json_file}
-                
-                # Run the program for each file pair
-                all_outputs = []
-                for base_name, files in file_pairs.items():
-                    # Skip if no input file
-                    if not files['input']:
-                        all_outputs.append(f"Test case {base_name}: No input file found")
-                        continue
-                    
-                    # Run the compiled program
-                    run_result = subprocess.run(
-                        ['./main.out', f'../dataset/demo/{base_name}'],
-                        cwd=str(self.problem_folder),
-                        capture_output=True,
-                        text=True
-                    )
-                    
-                    if run_result.returncode != 0:
-                        all_outputs.append(f"Test case {base_name}:\n{run_result.stderr}")
-                        continue
-                    
-                    # Run the verifier and evaluator
-                    eval_result = subprocess.run(
-                        ['./evaluator.out', f'../dataset/demo/{base_name}', f'output/{base_name}.schedule'],
-                        cwd=str(self.problem_folder),
-                        capture_output=True,
-                        text=True
-                    )
-                    
-                    if eval_result.returncode != 0:
-                        all_outputs.append(f"Test case {base_name}:\n{eval_result.stderr}")
-                        continue
-                    
-                    all_outputs.append(f"Test case {base_name}:\n{eval_result.stdout}")
-                
-                # Combine all outputs
-                combined_output = "\n\n".join(all_outputs)
-                return True, combined_output
-                
-            else:  # python
-                # Run Python program directly
-                run_result = subprocess.run(
-                    ['python3', 'main.py'],
-                    cwd=str(self.problem_folder),
-                    capture_output=True,
-                    text=True
-                )
+            # Get all test cases from the problem's dataset folder
+            dataset_folder = self.problem_folder / "dataset" / "demo"
+            if not dataset_folder.exists():
+                return False, f"Dataset folder not found: {dataset_folder}"
             
-            if run_result.returncode != 0:
-                return False, f"Execution failed: {run_result.stderr}"
+            # Find all files in the dataset folder
+            input_files = [f for f in dataset_folder.iterdir() if f.is_file()]
+            
+            if not input_files:
+                return False, f"No test cases found in {dataset_folder}"
+            
+            # Run the program for each test case
+            all_outputs = []
+            for input_file in input_files:
+                base_name = input_file.stem
                 
-            return True, run_result.stdout
+                # Run the main program
+                run_result = subprocess.run(
+                    ['python3', 'main.py', str(input_file)],
+                    cwd=str(self.solution_folder),
+                    capture_output=True,
+                    text=True
+                )
+                
+                # Create output directory if it doesn't exist
+                os.makedirs(self.solution_folder / "output", exist_ok=True)
+                cost_file = self.solution_folder / "output" / f"{base_name}.cost"
+                
+                if run_result.returncode != 0:
+                    # Save error message directly to cost file
+                    error_data = {
+                        "message": f"Python execution error: {run_result.stderr}"
+                    }
+                    with open(cost_file, 'w') as f:
+                        json.dump(error_data, f, indent=2)
+                    all_outputs.append(f"Test case {base_name}:\n{run_result.stderr}")
+                    continue
+                
+                # Run the evaluator
+                shutil.copy(
+                    "scripts/feedback.py",
+                    self.solution_folder / "feedback.py"
+                )
+                eval_result = subprocess.run(
+                    ['python3', 'feedback.py', str(input_file), f'output/{base_name}.output'],
+                    cwd=str(self.solution_folder),
+                    capture_output=True,
+                    text=True
+                )
+                
+                if eval_result.returncode != 0:
+                    # Save evaluator error to cost file
+                    error_data = {
+                        "message": f"Evaluator error: {eval_result.stderr}"
+                    }
+                    with open(cost_file, 'w') as f:
+                        json.dump(error_data, f, indent=2)
+                    all_outputs.append(f"Test case {base_name}:\n{eval_result.stderr}")
+                    continue
+                
+                # Read the cost file
+                if cost_file.exists():
+                    with open(cost_file, 'r') as f:
+                        cost_data = json.load(f)
+                        output = f"Test case {base_name}:\n"
+                        if 'validity' in cost_data and 'cost' in cost_data:
+                            if cost_data['validity']:
+                                output += f"Valid solution with cost: {cost_data['cost']}"
+                            else:
+                                output += f"Invalid solution with cost: {cost_data['cost']}\n"
+                                output += f"Error: {cost_data['message']}"
+                        else:
+                            output += f"Error: {cost_data['message']}"
+                        all_outputs.append(output)
+                else:
+                    error_data = {
+                        "message": "No cost file generated"
+                    }
+                    with open(cost_file, 'w') as f:
+                        json.dump(error_data, f, indent=2)
+                    all_outputs.append(f"Test case {base_name}: No cost file generated")
+            
+            # Combine all outputs
+            combined_output = "\n\n".join(all_outputs)
+            return True, combined_output
             
         except Exception as e:
             return False, f"Error: {str(e)}"
@@ -211,8 +218,9 @@ class ProgramExecutor:
                     continue
                 
                 test_case_name = name_match.group(1).strip()
+                
                 # Extract the cost for this test case
-                cost_match = re.search(r'Cost: (\d+)', test_output)
+                cost_match = re.search(r'cost: (\d+)', test_output.lower())
                 if cost_match:
                     cost = int(cost_match.group(1))
                     results[test_case_name] = cost
@@ -235,11 +243,13 @@ class LLMInterface:
         self.openai_client = None
         self.deepseek_client = None
         self.anthropic_client = None
+        self.gemini_client = None
         
         # Check which models are being used and initialize appropriate clients
         openai_models = [m for m in models_to_use if m.startswith("gpt")]
         deepseek_models = [m for m in models_to_use if m.startswith("deepseek")]
         anthropic_models = [m for m in models_to_use if m.startswith("claude")]
+        gemini_models = [m for m in models_to_use if m.startswith("gemini")]
         
         if openai_models:
             if not os.getenv('OPENAI_API_KEY'):
@@ -258,6 +268,11 @@ class LLMInterface:
             if not os.getenv('ANTHROPIC_API_KEY'):
                 raise ValueError("ANTHROPIC_API_KEY is required for Anthropic models but not provided")
             self.anthropic_client = Anthropic(api_key=os.getenv('ANTHROPIC_API_KEY'))
+            
+        if gemini_models:
+            if not os.getenv('GOOGLE_API_KEY'):
+                raise ValueError("GOOGLE_API_KEY is required for Gemini models but not provided")
+            self.gemini_client = genai.Client(api_key=os.getenv('GOOGLE_API_KEY'))
         
         # Load prompt template
         self.prompt_template = self._load_prompt_template()
@@ -278,16 +293,11 @@ class LLMInterface:
         
     def _format_problem_info(self, problem_desc: Dict[str, str]) -> str:
         """Formats the problem information section for the prompt."""
-        return f"""Problem: {problem_desc['name']}
-
-Description:
+        return f"""Description:
 {problem_desc['sections'].get('background', '')}
 
 Formalization:
 {problem_desc['sections'].get('formalization', '')}
-
-Objective:
-{problem_desc['sections'].get('objective', '')}
 
 Input Format:
 {problem_desc['sections'].get('input_format', '')}
@@ -297,113 +307,53 @@ Output Format:
         
     def _get_example_program(self, problem_desc: Dict[str, str]) -> str:
         """Gets an example program template for the problem."""
-        problem_folder = Path(problem_desc['name']) / "program"
+        workspace_root = Path(os.getcwd())
+        problem_folder = workspace_root / problem_desc['name']
+        program_folder = problem_folder / "program"
         
-        # Check if it's a C++ problem
-        if (problem_folder / "main.cpp").exists() and (problem_folder / "solver.h").exists():
-            # Read C++ template files
-            with open(problem_folder / "main.cpp", 'r') as f:
-                main_cpp = f.read()
-            with open(problem_folder / "solver.h", 'r') as f:
-                solver_h = f.read()
-            return f"""// Main program:
-{main_cpp}
-
-// Solver header:
-{solver_h}
-"""
-        else:
-            # Read Python template files
-            with open(problem_folder / "main.py", 'r') as f:
-                main_py = f.read()
-            with open(problem_folder / "solver.py", 'r') as f:
-                solver_py = f.read()
-            return f"""# Main program:
-{main_py}
-
-# Solver module:
-{solver_py}
-"""
+        # Read all Python template files
+        program_files = {}
         
-    def _get_demo_dataset_info(self, problem_desc: Dict[str, str]) -> str:
-        """Loads and formats information about the demo dataset files."""
-        # Get the path to the demo folder
-        demo_folder = Path(str(Path(problem_desc['name'])) + "/dataset/demo")
-        if not demo_folder.exists():
-            return "Demo dataset folder not found."
+        # First read main.py and solver.py
+        main_path = program_folder / "main.py"
+        solver_path = program_folder / "solver.py"
+        if main_path.exists():
+            with open(main_path, 'r') as f:
+                program_files["main.py"] = f.read()
+        if solver_path.exists():
+            with open(solver_path, 'r') as f:
+                program_files["solver.py"] = f.read()
         
-        # Find all .dot and .json files in the demo folder
-        dot_files = [f for f in demo_folder.iterdir() if f.is_file() and f.suffix == '.dot']
-        json_files = [f for f in demo_folder.iterdir() if f.is_file() and f.suffix == '.json']
+        # Then read all other Python files
+        for py_file in program_folder.glob("*.py"):
+            if py_file.name not in ["main.py", "solver.py"]:
+                with open(py_file, 'r') as f:
+                    program_files[py_file.name] = f.read()
         
-        if not dot_files and not json_files:
-            return "No input or constraint files found in the demo dataset folder."
+        # Build output string with all program files
+        output = []
         
-        # Format information about the files
-        dataset_info = "## Demo Dataset Information\n\n"
+        # First add main.py and solver.py
+        for filename in ["main.py", "solver.py"]:
+            if filename in program_files:
+                output.append(f"# {filename}:")
+                output.append(program_files[filename])
+                output.append("")  # Add blank line between files
         
-        # Create a mapping of base names to file pairs
-        file_pairs = {}
-        
-        # Process .dot files
-        for dot_file in dot_files:
-            base_name = dot_file.stem
-            file_pairs[base_name] = {'input': dot_file, 'constraint': None}
-        
-        # Process .json files and match with .dot files
-        for json_file in json_files:
-            base_name = json_file.stem
-            if base_name in file_pairs:
-                file_pairs[base_name]['constraint'] = json_file
-            else:
-                # If no matching .dot file, add it as a standalone constraint file
-                file_pairs[base_name] = {'input': None, 'constraint': json_file}
-        
-        # Add information about each file pair
-        for base_name, files in file_pairs.items():
-            dataset_info += f"### Input-Constraint Pair: {base_name}\n\n"
+        # Then add all other files
+        for filename, content in program_files.items():
+            if filename not in ["main.py", "solver.py"]:
+                output.append(f"# {filename}:")
+                output.append(content)
+                output.append("")  # Add blank line between files
             
-            # Add input file content
-            if files['input']:
-                try:
-                    with open(files['input'], 'r') as f:
-                        content = f.read()
-                        
-                    # Truncate very large files
-                    if len(content) > 1000:
-                        content = content[:1000] + "...\n[Content truncated]"
-                        
-                    dataset_info += f"**Input File ({files['input'].name}):**\n```\n{content}\n```\n\n"
-                except Exception as e:
-                    dataset_info += f"**Input File ({files['input'].name}):** Error reading file: {str(e)}\n\n"
-            else:
-                dataset_info += "**Input File:** Not found\n\n"
-            
-            # Add constraint file content
-            if files['constraint']:
-                try:
-                    with open(files['constraint'], 'r') as f:
-                        content = f.read()
-                        
-                    # Truncate very large files
-                    if len(content) > 1000:
-                        content = content[:1000] + "...\n[Content truncated]"
-                        
-                    dataset_info += f"**Constraint File ({files['constraint'].name}):**\n```\n{content}\n```\n\n"
-                except Exception as e:
-                    dataset_info += f"**Constraint File ({files['constraint'].name}):** Error reading file: {str(e)}\n\n"
-            else:
-                dataset_info += "**Constraint File:** Not found\n\n"
-        
-        return dataset_info
+        return "\n".join(output)
         
     def format_prompt(self, 
                      problem_desc: Dict[str, str], 
                      iteration: int = 0, 
                      previous_program: str = None,
-                     previous_output: str = None,
-                     previous_costs: Dict = None,
-                     language: str = None) -> str:
+                     solution_dir: Path = None) -> str:
         """Formats the problem description into a prompt for the LLM."""
         # Format the problem information
         problem_info = self._format_problem_info(problem_desc)
@@ -415,70 +365,80 @@ Output Format:
         prompt = self.prompt_template.replace("{PROBLEM}", problem_info)
         prompt = prompt.replace("{EXAMPLE_PROGRAM}", example_program)
         
-        # If this is an iteration beyond the first, add the previous program, its costs, and dataset information
-        if iteration > 0 and previous_program:
-            # Get the demo dataset information
-            dataset_info = self._get_demo_dataset_info(problem_desc)
-            
+        # If this is an iteration beyond the first, add the previous program and its results
+        if iteration > 0 and previous_program and solution_dir:
             prompt += f"""
 ## Feedback from Previous Iteration (Iteration {iteration-1})
 This is the program you generated in the previous iteration:
-```{language}
+```python
 {previous_program}
 ```
 
-This is the demo dataset we just executed:
-{dataset_info}
+## Test Cases and Results"""
 
-This is the execution output on the demo dataset from the previous iteration:
-{previous_output}
-
-The program achieved the following costs for each test case:"""
-
-            # Add costs for each test case
-            if previous_costs:
-                for test_case, cost in previous_costs.items():
-                    # Skip non-test case keys
-                    if test_case in ['Cost', 'Average_Cost', 'Total_Cost', 'Test_Case_Count']:
-                        continue
-                    
-                    if cost == float('inf'):
-                        prompt += f"\n- {test_case}: Failed to produce a valid solution"
-                    else:
-                        prompt += f"\n- {test_case}: {cost}"
-            else:
-                prompt += "\nNo cost information available."
-
-            # Add error message if any costs are infinity
-            if previous_costs:
-                any_failed = any(cost == float('inf') for cost in previous_costs.values() 
-                                if cost not in ['Cost', 'Average_Cost', 'Total_Cost', 'Test_Case_Count'])
+            # Get the absolute path to the demo folder
+            workspace_root = Path(os.getcwd())
+            problem_folder = workspace_root / problem_desc['name']
+            demo_folder = problem_folder / "dataset" / "demo"
+            if demo_folder.exists():
+                # Find all .json files in the demo folder
+                json_files = [f for f in demo_folder.iterdir() if f.is_file() and f.suffix == '.json']
                 
-                if any_failed:
-                    prompt += """
+                # For each test case, show input and its result
+                for json_file in json_files:
+                    test_case = json_file.stem
+                    prompt += f"\n### Test Case: {test_case}\n\n"
+                    
+                    # Show input data
+                    try:
+                        with open(json_file, 'r') as f:
+                            content = f.read()
+                        prompt += f"**Input Data:**\n```json\n{content}\n```\n\n"
+                    except Exception as e:
+                        prompt += f"**Input Data:** Error reading file: {str(e)}\n\n"
+                    
+                    # Show result
+                    cost_file = solution_dir / "output" / f"{test_case}.cost"
+                    if cost_file.exists():
+                        with open(cost_file, 'r') as f:
+                            cost_data = json.load(f)
+                            if 'validity' in cost_data and 'cost' in cost_data:
+                                if cost_data['validity']:
+                                    prompt += f"**Result:** Valid solution with cost {cost_data['cost']}\n\n"
+                                else:
+                                    prompt += f"**Result:** Invalid solution with cost {cost_data['cost']}\n"
+                                    prompt += f"**Error:** {cost_data['message']}\n\n"
+                            else:
+                                prompt += f"**Result:** Error occurred\n"
+                                prompt += f"**Error:** {cost_data['message']}\n\n"
+                    else:
+                        prompt += "**Result:** No output generated\n\n"
+            else:
+                prompt += f"\nNo test cases found in the demo dataset folder: {demo_folder}\n\n"
 
+            # Add improvement guidance
+            any_failed = any(
+                not json.load(open(f))['validity'] if 'validity' in json.load(open(f)) else True 
+                for f in (solution_dir / "output").glob("*.cost")
+            )
+            
+            if any_failed:
+                prompt += """
+## Improvement Guidance
 The program failed to produce valid solutions for some test cases. Please fix the following issues:
 1. Check for compilation errors or runtime exceptions
 2. Ensure the program handles all edge cases and meets the problem constraints correctly
 3. Verify that the output format matches the expected format
 4. Make sure all required functions are implemented correctly"""
-                else:
-                    prompt += """
-
+            else:
+                prompt += """
+## Improvement Guidance
 Please carefully observe the problem structure and improve upon this program by:
 1. Addressing any weaknesses in the previous approach
 2. Introducing more advanced or efficient algorithms
 3. Focusing on improving performance for test cases with higher costs
 
 Your goal is to improve the solution for as many test cases as possible, with special attention to those where the previous solution performed poorly."""
-            else:
-                prompt += """
-
-Please carefully observe the problem structure and improve upon this program by:
-1. Addressing any weaknesses in the previous approach
-2. Introducing more advanced or efficient algorithms
-
-Your goal is to improve the solution for all test cases."""
         
         return prompt
     
@@ -487,15 +447,9 @@ Your goal is to improve the solution for all test cases."""
                     model: str = "gpt-4-turbo-preview",
                     iteration: int = 0,
                     previous_program: str = None,
-                    previous_output: str = None,
-                    previous_costs: Dict = None,
-                    language: str = None) -> str:
+                    solution_dir: Path = None) -> str:
         """Gets a program from the specified LLM."""
-        prompt = self.format_prompt(problem_desc, iteration, previous_program, previous_output, previous_costs, language)
-        
-        # Create solutions directory if it doesn't exist
-        solutions_dir = Path("llm_solutions")
-        solutions_dir.mkdir(exist_ok=True)
+        prompt = self.format_prompt(problem_desc, iteration, previous_program, solution_dir)
         
         # Save the prompt to the log file if it's provided
         if hasattr(self, 'current_log_file'):
@@ -509,8 +463,9 @@ Your goal is to improve the solution for all test cases."""
                 raise ValueError("OpenAI client not initialized. OPENAI_API_KEY is required for OpenAI models.")
             response = self.openai_client.chat.completions.create(
                 model=model,
+                max_tokens=8192,
                 messages=[
-                    {"role": "system", "content": "You are an expert optimization algorithm designer."},
+                    {"role": "system", "content": "You are an expert optimization algorithm designer. You are given a problem and try to solve it. Please only output the code for the solver."},
                     {"role": "user", "content": prompt}
                 ]
             )
@@ -521,7 +476,7 @@ Your goal is to improve the solution for all test cases."""
                 raise ValueError("Anthropic client not initialized. ANTHROPIC_API_KEY is required for Claude models.")
             response = self.anthropic_client.messages.create(
                 model=model,
-                max_tokens=4000,
+                max_tokens=8192,
                 messages=[{
                     "role": "user",
                     "content": prompt
@@ -535,12 +490,32 @@ Your goal is to improve the solution for all test cases."""
             # Use OpenAI SDK with DeepSeek's base URL
             response = self.deepseek_client.chat.completions.create(
                 model=model,
+                max_tokens=8192,
                 messages=[
-                    {"role": "system", "content": "You are an expert optimization algorithm designer."},
+                    {"role": "system", "content": "You are an expert optimization algorithm designer. You are given a problem and try to solve it. Please only output the code for the solver."},
                     {"role": "user", "content": prompt}
                 ]
             )
             raw_response = response.choices[0].message.content
+            
+        elif model.startswith("gemini"):
+            if not self.gemini_client:
+                raise ValueError("Gemini client not initialized. GOOGLE_API_KEY is required for Gemini models.")
+            
+            # Create a system prompt for Gemini
+            system_prompt = "You are an expert optimization algorithm designer. You are given a problem and try to solve it. Please only output the code for the solver."
+            
+            # Combine system prompt and user prompt
+            full_prompt = f"{system_prompt}\n\n{prompt}"
+            
+            # Generate content with Gemini
+            response = self.gemini_client.models.generate_content(
+                model=model,
+                contents=full_prompt
+            )
+            
+            # Extract the text from the response
+            raw_response = response.text
         
         else:
             raise ValueError(f"Unsupported model: {model}")
@@ -551,25 +526,18 @@ Your goal is to improve the solution for all test cases."""
                               problem_desc: Dict[str, str],
                               model: str,
                               executor: ProgramExecutor,
-                              language: str,
+                              solution_dir: Path,
                               max_iterations: int = 3) -> Tuple[str, int]:
         """Gets an iteratively improved program from the specified LLM."""
         current_program = None
         previous_program = None
-        previous_output = None
-        best_program = None
-        best_costs = {}  # Dictionary to store costs for each test case
-        best_iteration = 0
         
-        # Create solutions directory if it doesn't exist
-        solutions_dir = Path("llm_solutions")
-        solutions_dir.mkdir(exist_ok=True)
+        # Create log directory for this run
+        log_dir = solution_dir / "logs"
+        log_dir.mkdir(parents=True, exist_ok=True)
         
-        # Create a timestamp for the log file
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        
-        # Create a single log file for this problem and model with timestamp
-        log_file = solutions_dir / f"{problem_desc['name']}_{model}_{timestamp}_log.txt"
+        # Create a log file for this run
+        log_file = log_dir / f"{model}.log"
         
         # Store the log file path in the LLMInterface instance
         self.current_log_file = log_file
@@ -578,7 +546,6 @@ Your goal is to improve the solution for all test cases."""
         with open(log_file, 'w') as f:
             f.write(f"Problem: {problem_desc['name']}\n")
             f.write(f"Model: {model}\n")
-            f.write(f"Language: {language}\n")
             f.write(f"Max Iterations: {max_iterations}\n")
             f.write(f"Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
             f.write("=" * 80 + "\n\n")
@@ -593,10 +560,13 @@ Your goal is to improve the solution for all test cases."""
                     model, 
                     iteration, 
                     previous_program,
-                    previous_output,
-                    best_costs if iteration > 0 else None,
-                    language
+                    solution_dir
                 )
+                
+                # Save the program to a separate file
+                program_file = log_dir / f"solver{iteration}.txt"
+                with open(program_file, 'w') as f:
+                    f.write(current_program)
                 
                 # Append the program to the log file
                 with open(log_file, 'a') as f:
@@ -606,11 +576,10 @@ Your goal is to improve the solution for all test cases."""
                     f.write("\n\n")
                 
                 # Save and execute the program
-                program_file = executor.save_program(current_program, language)
-                success, output = executor.compile_and_run(language)
+                program_file = executor.save_program(current_program)
+                success, output = executor.execute_program()
                 
-                # Store the output and program for the next iteration
-                previous_output = output
+                # Store the program for the next iteration
                 previous_program = current_program
                 
                 # Append the execution output to the log file
@@ -621,52 +590,7 @@ Your goal is to improve the solution for all test cases."""
                 
                 if not success:
                     logger.error(f"Failed to run program: {output}")
-                    # Otherwise, keep the previous best program
                     continue
-                
-                # Extract and parse results
-                results = executor.extract_results(output)
-                
-                # Check if this program is better than the best so far
-                is_better = False
-                
-                # If this is the first iteration, initialize best_costs
-                if iteration == 0:
-                    best_costs = results
-                    is_better = True
-                else:
-                    # Compare costs for each test case
-                    for test_case, cost in results.items():
-                        # Skip non-test case keys
-                        if test_case in ['Cost', 'Average_Cost', 'Total_Cost', 'Test_Case_Count']:
-                            continue
-                            
-                        # If this test case is better than the best so far
-                        if test_case not in best_costs or cost < best_costs[test_case]:
-                            is_better = True
-                            best_costs[test_case] = cost
-                
-                # Log the current costs
-                logger.info(f"Current costs: {results}")
-                
-                # Append the results to the log file
-                with open(log_file, 'a') as f:
-                    f.write("RESULTS:\n")
-                    f.write(json.dumps(results, indent=2))
-                    f.write("\n\n")
-                
-                # Update best program if this one is better
-                if is_better:
-                    best_program = current_program
-                    best_iteration = iteration
-                    logger.info(f"New best program found! Costs: {best_costs}")
-                    
-                    # Append the best program info to the log file
-                    with open(log_file, 'a') as f:
-                        f.write("NEW BEST PROGRAM FOUND!\n")
-                        f.write(f"Best Iteration: {best_iteration}\n")
-                        f.write(f"Best Costs: {json.dumps(best_costs, indent=2)}\n")
-                        f.write("=" * 80 + "\n\n")
                 
                 # Add a delay to avoid rate limiting
                 time.sleep(2)
@@ -677,34 +601,25 @@ Your goal is to improve the solution for all test cases."""
                 with open(log_file, 'a') as f:
                     f.write(f"ERROR IN ITERATION {iteration+1}: {str(e)}\n")
                     f.write("=" * 80 + "\n\n")
-                # If we have a program from a previous iteration, return that
-                if best_program:
-                    return best_program, best_iteration
-                else:
-                    raise
+                raise
         
         # Append a summary to the log file
         with open(log_file, 'a') as f:
             f.write(f"\n{'=' * 40} FINAL SUMMARY {'=' * 40}\n\n")
-            f.write(f"Best Iteration: {best_iteration}\n")
-            f.write(f"Best Costs: {json.dumps(best_costs, indent=2)}\n")
             f.write("=" * 80 + "\n")
         
-        return best_program, best_iteration
+        return current_program, max_iterations - 1
 
 def parse_arguments():
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(description='LLM Solver Agent for optimization problems')
     
     parser.add_argument('--models', type=str, nargs='+', 
-                        default=["gpt-4-turbo-preview", "claude-3-opus-20240229", "deepseek-chat", "deepseek-coder"],
-                        help='List of models to use (default: all supported models)')
+                        default=["deepseek-chat", "deepseek-reasoner", "gemini-2.0-flash"],
+                        help='List of models to use (default: deepseek-chat, deepseek-reasoner, gemini-2.0-flash)')
     
     parser.add_argument('--iterations', type=int, default=3,
                         help='Maximum number of iterations for each model (default: 3)')
-    
-    parser.add_argument('--skip-existing', action='store_true',
-                        help='Skip problems that already have solutions')
     
     parser.add_argument('--problem', type=str,
                         default='operator_scheduling',
@@ -739,21 +654,18 @@ def main():
             problem_desc = problem_reader.read_problem_description(problem_folder)
             logger.info(f"Processing problem: {problem_desc['name']}")
             
-            # Initialize program executor
-            executor = ProgramExecutor(Path(problem_desc['name']) / "program")
-            
-            # Determine language from problem folder
-            language = "cpp" if (Path(problem_desc['name']) / "program" / "Makefile").exists() else "python"
+            # Create timestamp for this run
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             
             # Get solutions from each model
             for model in args.models:
-                # Check if we already have a solution
-                if args.skip_existing:
-                    solutions_dir = Path("llm_solutions")
-                    # We can't check for existing logs with timestamps, so we'll skip this check
-                    # and let the user decide if they want to run again
-                    logger.info(f"Skip-existing flag is set, but we can't check for existing logs with timestamps")
-                    continue
+                # Create the solution directory for this model
+                workspace_root = Path(os.getcwd())
+                solution_dir = workspace_root / "llm_solutions" / timestamp / problem_desc['name'] / model
+                solution_dir.mkdir(parents=True, exist_ok=True)
+                
+                # Initialize program executor with the solution directory
+                executor = ProgramExecutor(workspace_root / problem_desc['name'], solution_dir)
                 
                 # Get iterative program
                 logger.info(f"Getting iterative program from {model}")
@@ -761,7 +673,7 @@ def main():
                     problem_desc, 
                     model,
                     executor,
-                    language,
+                    solution_dir,
                     args.iterations
                 )
                 
