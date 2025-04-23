@@ -564,7 +564,7 @@ Your goal is to improve the solution for as many test cases as possible, with sp
                 )
                 
                 # Save the program to a separate file
-                program_file = log_dir / f"solver{iteration}.py"
+                program_file = log_dir / f"solver{iteration}.txt"
                 with open(program_file, 'w') as f:
                     f.write(current_program)
                 
