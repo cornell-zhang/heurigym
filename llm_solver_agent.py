@@ -72,18 +72,23 @@ class ProgramExecutor:
         
     def save_program(self, program: str) -> Path:
         """Saves the LLM's program to solver.py in the solution folder and copies all necessary Python files."""
-        # Remove markdown code block formatting if present
+        # Find the first code block enclosed with ``` in the generated text
         program = program.strip()
-        if program.startswith("```"):
-            # Find the first newline after the opening ```
-            first_newline = program.find("\n")
+        
+        # Look for the first code block
+        start_marker = "```"
+        end_marker = "```"
+        
+        start_idx = program.find(start_marker)
+        if start_idx != -1:
+            # Find the end of the language identifier (if any)
+            first_newline = program.find("\n", start_idx)
             if first_newline != -1:
-                # Remove the opening ``` and language identifier
-                program = program[first_newline + 1:]
-                # Remove the closing ``` if present
-                if program.endswith("```"):
-                    program = program[:-3]
-                program = program.strip()
+                # Find the closing ```
+                end_idx = program.find(end_marker, first_newline)
+                if end_idx != -1:
+                    # Extract just the code between the markers
+                    program = program[first_newline + 1:end_idx].strip()
         
         # Create output directory in the solution folder
         os.makedirs(self.solution_folder / "output", exist_ok=True)
