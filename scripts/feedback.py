@@ -4,50 +4,49 @@ import json
 import os
 import io
 from contextlib import redirect_stderr
-from utils import parse_json, verify, evaluate, parse_schedule
+
+# evaluator and verifier need to be provided by the user
+from evaluator import evaluate
+from verifier import verify
+
 
 def main():
     if len(sys.argv) != 3:
-        print(f"Usage: {sys.argv[0]} <dataset> <output_file>", file=sys.stderr)
+        print(f"Usage: {sys.argv[0]} <input_file> <output_file>", file=sys.stderr)
         return 1
-    
-    json_file = sys.argv[1]
+
+    input_file = sys.argv[1]
     output_file = sys.argv[2]
-    
-    # Parse the input graph and the JSON configuration
-    nodes, delay, resource_constraints = parse_json(json_file)
-    
-    # Parse the schedule
-    schedule = parse_schedule(output_file)
-    
+
     # Capture stderr output during verification
     stderr_capture = io.StringIO()
     with redirect_stderr(stderr_capture):
-        valid = verify(nodes, schedule, delay, resource_constraints)
-    
+        valid = verify(input_file, output_file)
+
     # Calculate the cost
     if valid:
-        cost = evaluate(nodes, schedule, delay)
+        cost = evaluate(input_file, output_file)
     else:
-        cost = float('inf')
-    
+        cost = float("inf")
+
     # Prepare the output data
     output_data = {
         "validity": valid,
         "cost": cost,
-        "message": stderr_capture.getvalue().strip()
+        "message": stderr_capture.getvalue().strip(),
     }
-    
+
     # Write the output to a JSON file
     output_file = f"{os.path.splitext(output_file)[0]}.cost"
     try:
-        with open(output_file, 'w') as out_file:
+        with open(output_file, "w") as out_file:
             json.dump(output_data, out_file, indent=2)
     except IOError:
         print(f"Error opening output file: {output_file}", file=sys.stderr)
         return 1
-    
+
     return 0
 
+
 if __name__ == "__main__":
-    sys.exit(main()) 
+    sys.exit(main())
