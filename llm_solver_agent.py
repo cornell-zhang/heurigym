@@ -621,9 +621,6 @@ def parse_arguments():
     parser.add_argument('--iterations', type=int, default=3,
                         help='Maximum number of iterations for each model (default: 3)')
     
-    parser.add_argument('--skip-existing', action='store_true',
-                        help='Skip problems that already have solutions')
-    
     parser.add_argument('--problem', type=str,
                         default='operator_scheduling',
                         help='Specific problem to solve (folder name)')
