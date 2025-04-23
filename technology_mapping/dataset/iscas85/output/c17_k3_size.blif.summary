@@ -1,0 +1,5 @@
+# total area: 4
+22 -> LUT3(3,new_16,1)
+new_16 -> LUT3(3,2,6)
+23 -> LUT3(2,new_11,7)
+new_11 -> LUT2(3,6)

@@ -1,0 +1,3362 @@
+# Benchmark "c3540" written by ABC on Tue Apr 22 14:49:18 2025
+.model c3540
+.inputs 1 13 20 33 41 45 50 58 68 77 87 97 107 116 124 125 128 132 137 143 \
+ 150 159 169 179 190 200 213 222 223 226 232 238 244 250 257 264 270 274 \
+ 283 294 303 311 317 322 326 329 330 343 349 350
+.outputs 1713 1947 3195 3833 3987 4028 4145 4589 4667 4815 4944 5002 5045 \
+ 5047 5078 5102 5120 5121 5192 5231 5360 5361
+.names 50 new_655
+1 1
+.names 50 new_665
+0 1
+.names 58 new_670
+1 1
+.names 58 new_679
+0 1
+.names 68 new_683
+1 1
+.names 68 new_686
+0 1
+.names 68 new_690
+1 1
+.names 77 new_699
+1 1
+.names 77 new_702
+0 1
+.names 77 new_706
+1 1
+.names 87 new_715
+1 1
+.names 87 new_724
+0 1
+.names 97 new_727
+1 1
+.names 97 new_736
+0 1
+.names 107 new_740
+1 1
+.names 107 new_749
+0 1
+.names 116 new_753
+1 1
+.names 116 new_763
+0 1
+.names 257 264 new_768
+00 0
+.names 1 new_769
+0 1
+.names 1 new_772
+1 1
+.names 1 new_779
+0 1
+.names 13 new_782
+1 1
+.names 13 new_786
+0 1
+.names 13 20 new_793
+11 1
+.names 20 new_794
+0 1
+.names 20 new_798
+1 1
+.names 20 new_803
+0 1
+.names 33 new_820
+0 1
+.names 33 new_821
+1 1
+.names 33 new_825
+0 1
+.names 33 41 new_829
+11 1
+.names 41 new_832
+0 1
+.names 41 45 new_835
+00 0
+.names 45 new_836
+1 1
+.names 45 new_839
+0 1
+.names 50 new_842
+0 1
+.names 58 new_845
+1 1
+.names 58 new_848
+0 1
+.names 68 new_851
+1 1
+.names 68 new_854
+0 1
+.names 87 new_858
+1 1
+.names 87 new_861
+0 1
+.names 97 new_864
+1 1
+.names 97 new_867
+0 1
+.names 107 new_870
+0 1
+.names 1 new_874
+1 1
+.names 68 new_877
+1 1
+.names 107 new_880
+1 1
+.names 20 new_883
+0 1
+.names 190 new_886
+1 1
+.names 200 new_889
+0 1
+.names 20 200 new_890
+11 1
+.names 20 200 new_891
+11 0
+.names 20 179 new_892
+11 1
+.names 20 new_895
+0 1
+.names 349 33 new_896
+00 0
+.names 1 13 new_913
+11 0
+.names 1 20 33 new_914
+111 0
+.names 20 new_915
+0 1
+.names 33 new_916
+0 1
+.names 179 new_917
+1 1
+.names 213 new_920
+0 1
+.names 343 new_923
+1 1
+.names 226 new_926
+1 1
+.names 232 new_929
+1 1
+.names 238 new_932
+1 1
+.names 244 new_935
+1 1
+.names 250 new_938
+1 1
+.names 257 new_941
+1 1
+.names 264 new_944
+1 1
+.names 270 new_947
+1 1
+.names 50 new_950
+1 1
+.names 58 new_953
+1 1
+.names 58 new_956
+1 1
+.names 97 new_959
+1 1
+.names 97 new_962
+1 1
+.names 330 new_965
+1 1
+.names 250 new_768 new_1067
+11 1
+.names new_820 20 new_1117
+00 0
+.names new_895 169 new_1179
+00 0
+.names new_793 new_1196
+0 1
+.names new_915 1 new_1197
+00 0
+.names new_913 new_914 new_1202
+11 1
+.names new_916 1 new_1219
+00 0
+.names new_842 new_848 new_854 new_1250
+111 1
+.names 226 new_655 new_1251
+11 0
+.names 232 new_670 new_1252
+11 0
+.names 238 new_690 new_1253
+11 0
+.names 244 new_706 new_1254
+11 0
+.names 250 new_715 new_1255
+11 0
+.names 257 new_727 new_1256
+11 0
+.names 264 new_740 new_1257
+11 0
+.names 270 new_753 new_1258
+11 0
+.names new_926 new_1259
+0 1
+.names new_929 new_1260
+0 1
+.names new_932 new_1261
+0 1
+.names new_935 new_1262
+0 1
+.names new_679 new_686 new_1263
+11 0
+.names new_736 new_749 new_1264
+11 0
+.names new_683 new_699 new_1267
+11 0
+.names new_665 new_1268
+1 1
+.names new_953 new_1271
+0 1
+.names new_959 new_1272
+0 1
+.names new_839 new_1273
+1 1
+.names new_839 new_1276
+1 1
+.names new_782 new_1279
+1 1
+.names new_825 new_1298
+1 1
+.names new_832 new_1302
+1 1
+.names new_779 new_835 new_1306
+11 1
+.names new_779 new_836 new_832 new_1315
+111 1
+.names new_769 new_836 new_1322
+11 1
+.names new_772 new_786 new_798 new_1325
+111 1
+.names new_772 new_786 new_798 new_1328
+111 0
+.names new_772 new_786 new_1331
+11 0
+.names new_874 new_1334
+1 1
+.names new_782 new_794 45 new_1337
+111 0
+.names new_842 new_848 new_854 new_1338
+111 0
+.names new_956 new_1339
+0 1
+.names new_861 new_867 new_870 new_1340
+111 1
+.names new_861 new_867 new_870 new_1343
+111 0
+.names new_962 new_1344
+0 1
+.names new_803 new_1345
+0 1
+.names new_803 new_1346
+0 1
+.names new_803 new_1347
+0 1
+.names new_803 new_1348
+0 1
+.names new_803 new_1349
+0 1
+.names new_803 new_1350
+0 1
+.names new_803 new_1351
+0 1
+.names new_803 new_1352
+0 1
+.names new_883 new_886 new_1353
+00 0
+.names new_883 new_886 new_1358
+00 1
+.names new_892 new_1363
+1 1
+.names new_892 new_1366
+0 1
+.names new_821 new_1369
+1 1
+.names new_825 new_1384
+1 1
+.names new_896 new_1401
+0 1
+.names new_896 new_1402
+0 1
+.names new_896 new_1403
+0 1
+.names new_896 new_1404
+0 1
+.names new_896 new_1405
+0 1
+.names new_896 new_1406
+0 1
+.names new_896 new_1407
+0 1
+.names new_896 new_1408
+0 1
+.names 1 new_1196 new_1409
+00 0
+.names new_829 new_1426
+0 1
+.names new_829 new_1427
+0 1
+.names new_769 new_782 new_794 new_1452
+111 1
+.names new_917 new_1459
+0 1
+.names new_965 new_1460
+0 1
+.names new_920 new_923 new_1461
+00 0
+.names new_920 new_923 new_1464
+00 1
+.names new_938 new_1467
+0 1
+.names new_941 new_1468
+0 1
+.names new_944 new_1469
+0 1
+.names new_947 new_1470
+0 1
+.names new_679 new_1471
+1 1
+.names new_950 new_1474
+0 1
+.names new_686 new_1475
+1 1
+.names new_702 new_1478
+1 1
+.names new_724 new_1481
+1 1
+.names new_736 new_1484
+1 1
+.names new_749 new_1487
+1 1
+.names new_763 new_1490
+1 1
+.names new_877 new_1493
+1 1
+.names new_877 new_1496
+1 1
+.names new_880 new_1499
+1 1
+.names new_880 new_1502
+1 1
+.names new_702 new_1250 new_1505
+11 0
+.names new_1251 new_1252 new_1253 new_1254 new_1507
+1111 1
+.names new_1255 new_1256 new_1257 new_1258 new_1508
+1111 1
+.names new_929 new_1259 new_1509
+11 0
+.names new_926 new_1260 new_1510
+11 0
+.names new_935 new_1261 new_1511
+11 0
+.names new_932 new_1262 new_1512
+11 0
+.names new_655 new_1263 new_1520
+11 1
+.names new_874 new_1337 new_1562
+11 1
+.names new_1117 new_1579
+0 1
+.names new_803 new_1117 new_1580
+11 1
+.names new_1338 new_1345 new_1581
+11 1
+.names new_1117 new_1582
+0 1
+.names new_803 new_1117 new_1583
+11 1
+.names new_1117 new_1584
+0 1
+.names new_803 new_1117 new_1585
+11 1
+.names new_854 new_1347 new_1586
+11 1
+.names new_1117 new_1587
+0 1
+.names new_803 new_1117 new_1588
+11 1
+.names 77 new_1348 new_1589
+11 1
+.names new_1117 new_1590
+0 1
+.names new_803 new_1117 new_1591
+11 1
+.names new_1343 new_1349 new_1592
+11 1
+.names new_1117 new_1593
+0 1
+.names new_803 new_1117 new_1594
+11 1
+.names new_1117 new_1595
+0 1
+.names new_803 new_1117 new_1596
+11 1
+.names new_870 new_1351 new_1597
+11 1
+.names new_1117 new_1598
+0 1
+.names new_803 new_1117 new_1599
+11 1
+.names 116 new_1352 new_1600
+11 1
+.names 222 new_1401 new_1643
+11 1
+.names 223 new_1402 new_1644
+11 1
+.names 226 new_1403 new_1645
+11 1
+.names 232 new_1404 new_1646
+11 1
+.names 238 new_1405 new_1647
+11 1
+.names 244 new_1406 new_1648
+11 1
+.names 250 new_1407 new_1649
+11 1
+.names 257 new_1408 new_1650
+11 1
+.names 1 13 new_1426 new_1667
+111 1
+.names 1 13 new_1427 new_1670
+111 1
+.names new_1202 new_1673
+0 1
+.names new_1202 new_1674
+0 1
+.names new_1202 new_1675
+0 1
+.names new_1202 new_1676
+0 1
+.names new_1202 new_1677
+0 1
+.names new_1202 new_1678
+0 1
+.names new_1202 new_1679
+0 1
+.names new_1202 new_1680
+0 1
+.names new_941 new_1467 new_1691
+11 0
+.names new_938 new_1468 new_1692
+11 0
+.names new_947 new_1469 new_1693
+11 0
+.names new_944 new_1470 new_1694
+11 0
+.names new_1505 1713
+0 1
+.names 87 new_1264 new_1714
+11 1
+.names new_1509 new_1510 new_1715
+11 0
+.names new_1511 new_1512 new_1718
+11 0
+.names new_1507 new_1508 new_1721
+11 0
+.names new_763 new_1340 new_1722
+11 1
+.names new_763 new_1340 new_1725
+11 0
+.names new_1268 new_1726
+0 1
+.names new_1493 new_1271 new_1727
+11 0
+.names new_1493 new_1728
+0 1
+.names new_683 new_1268 new_1729
+11 1
+.names new_1499 new_1272 new_1730
+11 0
+.names new_1499 new_1731
+0 1
+.names 87 new_1264 new_1735
+11 0
+.names new_1273 new_1736
+0 1
+.names new_1276 new_1737
+0 1
+.names new_1325 new_821 new_1738
+11 0
+.names new_1325 new_825 new_1747
+11 0
+.names new_772 new_1279 new_798 new_1756
+111 0
+.names new_772 new_786 new_798 new_1302 new_1761
+1111 0
+.names new_1496 new_1339 new_1764
+11 0
+.names new_1496 new_1765
+0 1
+.names new_1502 new_1344 new_1766
+11 0
+.names new_1502 new_1767
+0 1
+.names new_1328 new_1768
+0 1
+.names new_1334 new_1769
+0 1
+.names new_1331 new_1770
+0 1
+.names new_845 new_1579 new_1787
+11 1
+.names 150 new_1580 new_1788
+11 1
+.names new_851 new_1582 new_1789
+11 1
+.names 159 new_1583 new_1790
+11 1
+.names 77 new_1584 new_1791
+11 1
+.names 50 new_1585 new_1792
+11 1
+.names new_858 new_1587 new_1793
+11 1
+.names new_845 new_1588 new_1794
+11 1
+.names new_864 new_1590 new_1795
+11 1
+.names new_851 new_1591 new_1796
+11 1
+.names 107 new_1593 new_1797
+11 1
+.names 77 new_1594 new_1798
+11 1
+.names 116 new_1595 new_1799
+11 1
+.names new_858 new_1596 new_1800
+11 1
+.names 283 new_1598 new_1801
+11 1
+.names new_864 new_1599 new_1802
+11 1
+.names 200 new_1363 new_1803
+11 1
+.names new_889 new_1363 new_1806
+11 1
+.names new_890 new_1366 new_1809
+11 1
+.names new_891 new_1366 new_1812
+11 1
+.names new_1298 new_1302 new_1815
+11 0
+.names new_821 new_1302 new_1818
+11 0
+.names new_772 new_1279 new_1179 new_1821
+111 0
+.names new_786 new_794 new_1298 new_1824
+111 0
+.names new_786 new_1298 new_1833
+11 0
+.names new_1369 new_1842
+0 1
+.names new_1369 new_1843
+0 1
+.names new_1369 new_1844
+0 1
+.names new_1369 new_1845
+0 1
+.names new_1369 new_1846
+0 1
+.names new_1369 new_1847
+0 1
+.names new_1369 new_1848
+0 1
+.names new_1384 new_1849
+0 1
+.names new_1384 new_896 new_1850
+11 1
+.names new_1384 new_1851
+0 1
+.names new_1384 new_896 new_1852
+11 1
+.names new_1384 new_1853
+0 1
+.names new_1384 new_896 new_1854
+11 1
+.names new_1384 new_1855
+0 1
+.names new_1384 new_896 new_1856
+11 1
+.names new_1384 new_1857
+0 1
+.names new_1384 new_896 new_1858
+11 1
+.names new_1384 new_1859
+0 1
+.names new_1384 new_896 new_1860
+11 1
+.names new_1384 new_1861
+0 1
+.names new_1384 new_896 new_1862
+11 1
+.names new_1384 new_1863
+0 1
+.names new_1384 new_896 new_1864
+11 1
+.names new_1202 new_1409 new_1869
+11 1
+.names 50 new_1409 new_1870
+00 1
+.names new_1306 new_1873
+0 1
+.names new_1202 new_1409 new_1874
+11 1
+.names 58 new_1409 new_1875
+00 1
+.names new_1306 new_1878
+0 1
+.names new_1202 new_1409 new_1879
+11 1
+.names 68 new_1409 new_1880
+00 1
+.names new_1306 new_1883
+0 1
+.names new_1202 new_1409 new_1884
+11 1
+.names 77 new_1409 new_1885
+00 1
+.names new_1306 new_1888
+0 1
+.names new_1202 new_1409 new_1889
+11 1
+.names 87 new_1409 new_1890
+00 1
+.names new_1322 new_1893
+0 1
+.names new_1202 new_1409 new_1894
+11 1
+.names 97 new_1409 new_1895
+00 1
+.names new_1315 new_1898
+0 1
+.names new_1202 new_1409 new_1899
+11 1
+.names 107 new_1409 new_1900
+00 1
+.names new_1315 new_1903
+0 1
+.names new_1202 new_1409 new_1904
+11 1
+.names 116 new_1409 new_1905
+00 1
+.names new_1315 new_1908
+0 1
+.names new_1452 213 new_1909
+11 1
+.names new_1452 213 new_1912
+11 0
+.names new_1452 213 343 new_1913
+111 1
+.names new_1452 213 343 new_1917
+111 0
+.names new_1452 213 343 new_1922
+111 1
+.names new_1452 213 343 new_1926
+111 0
+.names new_1464 new_1930
+1 1
+.names new_1691 new_1692 new_1933
+11 0
+.names new_1693 new_1694 new_1936
+11 0
+.names new_1471 new_1939
+0 1
+.names new_1471 new_1474 new_1940
+11 0
+.names new_1475 new_1941
+0 1
+.names new_1478 new_1942
+0 1
+.names new_1481 new_1943
+0 1
+.names new_1484 new_1944
+0 1
+.names new_1487 new_1945
+0 1
+.names new_1490 new_1946
+0 1
+.names new_1714 1947
+0 1
+.names new_953 new_1728 new_1960
+11 0
+.names new_959 new_1731 new_1961
+11 0
+.names new_1520 new_1276 new_1966
+11 1
+.names new_956 new_1765 new_1981
+11 0
+.names new_962 new_1767 new_1982
+11 0
+.names new_1067 new_1768 new_1983
+11 1
+.names new_1581 new_1787 new_1788 new_1986
+000 0
+.names new_1586 new_1791 new_1792 new_1987
+000 0
+.names new_1589 new_1793 new_1794 new_1988
+000 0
+.names new_1592 new_1795 new_1796 new_1989
+000 0
+.names new_1597 new_1799 new_1800 new_1990
+000 0
+.names new_1600 new_1801 new_1802 new_1991
+000 0
+.names 77 new_1849 new_2022
+11 1
+.names 223 new_1850 new_2023
+11 1
+.names 87 new_1851 new_2024
+11 1
+.names 226 new_1852 new_2025
+11 1
+.names 97 new_1853 new_2026
+11 1
+.names 232 new_1854 new_2027
+11 1
+.names 107 new_1855 new_2028
+11 1
+.names 238 new_1856 new_2029
+11 1
+.names 116 new_1857 new_2030
+11 1
+.names 244 new_1858 new_2031
+11 1
+.names 283 new_1859 new_2032
+11 1
+.names 250 new_1860 new_2033
+11 1
+.names 294 new_1861 new_2034
+11 1
+.names 257 new_1862 new_2035
+11 1
+.names 303 new_1863 new_2036
+11 1
+.names 264 new_1864 new_2037
+11 1
+.names new_1667 new_2038
+1 1
+.names new_1667 new_2043
+0 1
+.names new_1670 new_2052
+1 1
+.names new_1670 new_2057
+0 1
+.names 50 new_1197 new_1869 new_2068
+111 1
+.names 58 new_1197 new_1874 new_2073
+111 1
+.names 68 new_1197 new_1879 new_2078
+111 1
+.names 77 new_1197 new_1884 new_2083
+111 1
+.names 87 new_1219 new_1889 new_2088
+111 1
+.names 97 new_1219 new_1894 new_2093
+111 1
+.names 107 new_1219 new_1899 new_2098
+111 1
+.names 116 new_1219 new_1904 new_2103
+111 1
+.names new_1562 new_2121
+0 1
+.names new_1562 new_2122
+0 1
+.names new_1562 new_2123
+0 1
+.names new_1562 new_2124
+0 1
+.names new_1562 new_2125
+0 1
+.names new_1562 new_2126
+0 1
+.names new_1562 new_2127
+0 1
+.names new_1562 new_2128
+0 1
+.names new_950 new_1939 new_2133
+11 0
+.names new_1478 new_1941 new_2134
+11 0
+.names new_1475 new_1942 new_2135
+11 0
+.names new_1484 new_1943 new_2136
+11 0
+.names new_1481 new_1944 new_2137
+11 0
+.names new_1490 new_1945 new_2138
+11 0
+.names new_1487 new_1946 new_2139
+11 0
+.names new_1933 new_2141
+0 1
+.names new_1936 new_2142
+0 1
+.names new_1738 new_2143
+0 1
+.names new_1738 new_1747 new_2144
+11 1
+.names new_1747 new_2145
+0 1
+.names new_1727 new_1960 new_2146
+11 0
+.names new_1730 new_1961 new_2147
+11 0
+.names new_1722 new_1267 new_665 58 new_2148
+1111 1
+.names new_1738 new_2149
+0 1
+.names new_1738 new_1747 new_2150
+11 1
+.names new_1747 new_2151
+0 1
+.names new_1738 new_2152
+0 1
+.names new_1747 new_2153
+0 1
+.names new_1738 new_1747 new_2154
+11 1
+.names new_1738 new_2155
+0 1
+.names new_1747 new_2156
+0 1
+.names new_1738 new_1747 new_2157
+11 1
+.names new_1761 new_2158
+1 1
+.names new_1761 new_2175
+1 1
+.names new_1764 new_1981 new_2178
+11 0
+.names new_1766 new_1982 new_2179
+11 0
+.names new_1756 new_2180
+0 1
+.names new_1756 new_1328 new_2181
+11 1
+.names new_1756 new_2183
+0 1
+.names new_1331 new_1756 new_2184
+11 1
+.names new_1358 new_1812 new_2185
+11 0
+.names new_1358 new_1809 new_2188
+11 0
+.names new_1353 new_1812 new_2191
+11 0
+.names new_1353 new_1809 new_2194
+11 0
+.names new_1358 new_1806 new_2197
+11 0
+.names new_1358 new_1803 new_2200
+11 0
+.names new_1353 new_1806 new_2203
+11 0
+.names new_1353 new_1803 new_2206
+11 0
+.names new_1815 new_2209
+0 1
+.names new_1818 new_2210
+0 1
+.names new_1815 new_1818 new_2211
+11 1
+.names new_1821 new_2212
+1 1
+.names new_1821 new_2221
+1 1
+.names new_1833 new_2230
+0 1
+.names new_1833 new_2231
+0 1
+.names new_1833 new_2232
+0 1
+.names new_1833 new_2233
+0 1
+.names new_1824 new_2234
+0 1
+.names new_1824 new_2235
+0 1
+.names new_1824 new_2236
+0 1
+.names new_1824 new_2237
+0 1
+.names new_2022 new_1643 new_2023 new_2238
+000 0
+.names new_2024 new_1644 new_2025 new_2239
+000 0
+.names new_2026 new_1645 new_2027 new_2240
+000 0
+.names new_2028 new_1646 new_2029 new_2241
+000 0
+.names new_2030 new_1647 new_2031 new_2242
+000 0
+.names new_2032 new_1648 new_2033 new_2243
+000 0
+.names new_2034 new_1649 new_2035 new_2244
+000 0
+.names new_2036 new_1650 new_2037 new_2245
+000 0
+.names new_1986 new_1673 new_2270
+11 1
+.names new_1987 new_1675 new_2277
+11 1
+.names new_1988 new_1676 new_2282
+11 1
+.names new_1989 new_1677 new_2287
+11 1
+.names new_1990 new_1679 new_2294
+11 1
+.names new_1991 new_1680 new_2299
+11 1
+.names new_1917 new_2304
+1 1
+.names new_1930 350 new_2307
+11 1
+.names new_1930 350 new_2310
+11 0
+.names new_1715 new_2313
+1 1
+.names new_1718 new_2316
+1 1
+.names new_1715 new_2319
+1 1
+.names new_1718 new_2322
+1 1
+.names new_1940 new_2133 new_2325
+11 0
+.names new_2134 new_2135 new_2328
+11 0
+.names new_2136 new_2137 new_2331
+11 0
+.names new_2138 new_2139 new_2334
+11 0
+.names new_1936 new_2141 new_2341
+11 0
+.names new_1933 new_2142 new_2342
+11 0
+.names new_724 new_2144 new_2347
+11 1
+.names new_2146 new_699 new_1726 new_2348
+111 1
+.names new_753 new_2147 new_2349
+11 1
+.names new_2148 new_1273 new_2350
+11 1
+.names new_736 new_2150 new_2351
+11 1
+.names new_1735 new_2153 new_2352
+11 1
+.names new_763 new_2154 new_2353
+11 1
+.names new_1725 new_2156 new_2354
+11 1
+.names new_749 new_2157 new_2355
+11 1
+.names new_2178 new_2374
+0 1
+.names new_2179 new_2375
+0 1
+.names new_1520 new_2180 new_2376
+11 1
+.names new_1721 new_2181 new_2379
+11 1
+.names new_665 new_2211 new_2398
+11 1
+.names new_2057 226 new_1873 new_2417
+111 1
+.names new_2057 274 new_1306 new_2418
+111 1
+.names new_2052 new_2238 new_2419
+11 1
+.names new_2057 232 new_1878 new_2420
+111 1
+.names new_2057 274 new_1306 new_2421
+111 1
+.names new_2052 new_2239 new_2422
+11 1
+.names new_2057 238 new_1883 new_2425
+111 1
+.names new_2057 274 new_1306 new_2426
+111 1
+.names new_2052 new_2240 new_2427
+11 1
+.names new_2057 244 new_1888 new_2430
+111 1
+.names new_2057 274 new_1306 new_2431
+111 1
+.names new_2052 new_2241 new_2432
+11 1
+.names new_2043 250 new_1893 new_2435
+111 1
+.names new_2043 274 new_1322 new_2436
+111 1
+.names new_2038 new_2242 new_2437
+11 1
+.names new_2043 257 new_1898 new_2438
+111 1
+.names new_2043 274 new_1315 new_2439
+111 1
+.names new_2038 new_2243 new_2440
+11 1
+.names new_2043 264 new_1903 new_2443
+111 1
+.names new_2043 274 new_1315 new_2444
+111 1
+.names new_2038 new_2244 new_2445
+11 1
+.names new_2043 270 new_1908 new_2448
+111 1
+.names new_2043 274 new_1315 new_2449
+111 1
+.names new_2038 new_2245 new_2450
+11 1
+.names new_2313 new_2467
+0 1
+.names new_2316 new_2468
+0 1
+.names new_2319 new_2469
+0 1
+.names new_2322 new_2470
+0 1
+.names new_2341 new_2342 new_2471
+11 0
+.names new_2325 new_2474
+0 1
+.names new_2328 new_2475
+0 1
+.names new_2331 new_2476
+0 1
+.names new_2334 new_2477
+0 1
+.names new_2348 new_1729 new_2478
+00 0
+.names new_2175 new_2481
+0 1
+.names new_2175 new_1334 new_2482
+11 1
+.names new_2349 new_2183 new_2483
+11 1
+.names new_2374 new_1346 new_2486
+11 1
+.names new_2375 new_1350 new_2487
+11 1
+.names new_2185 new_2488
+1 1
+.names new_2188 new_2497
+1 1
+.names new_2191 new_2506
+1 1
+.names new_2194 new_2515
+1 1
+.names new_2197 new_2524
+1 1
+.names new_2200 new_2533
+1 1
+.names new_2203 new_2542
+1 1
+.names new_2206 new_2551
+1 1
+.names new_2185 new_2560
+1 1
+.names new_2188 new_2569
+1 1
+.names new_2191 new_2578
+1 1
+.names new_2194 new_2587
+1 1
+.names new_2197 new_2596
+1 1
+.names new_2200 new_2605
+1 1
+.names new_2203 new_2614
+1 1
+.names new_2206 new_2623
+1 1
+.names new_2212 new_2632
+0 1
+.names new_2212 new_1833 new_2633
+11 1
+.names new_2212 new_2634
+0 1
+.names new_2212 new_1833 new_2635
+11 1
+.names new_2212 new_2636
+0 1
+.names new_2212 new_1833 new_2637
+11 1
+.names new_2212 new_2638
+0 1
+.names new_2212 new_1833 new_2639
+11 1
+.names new_2221 new_2640
+0 1
+.names new_2221 new_1824 new_2641
+11 1
+.names new_2221 new_2642
+0 1
+.names new_2221 new_1824 new_2643
+11 1
+.names new_2221 new_2644
+0 1
+.names new_2221 new_1824 new_2645
+11 1
+.names new_2221 new_2646
+0 1
+.names new_2221 new_1824 new_2647
+11 1
+.names new_2270 new_1870 new_2068 new_2648
+000 0
+.names new_2270 new_1870 new_2068 new_2652
+000 1
+.names new_2417 new_2418 new_2419 new_2656
+000 0
+.names new_2420 new_2421 new_2422 new_2659
+000 0
+.names new_2277 new_1880 new_2078 new_2662
+000 0
+.names new_2277 new_1880 new_2078 new_2666
+000 1
+.names new_2425 new_2426 new_2427 new_2670
+000 0
+.names new_2282 new_1885 new_2083 new_2673
+000 0
+.names new_2282 new_1885 new_2083 new_2677
+000 1
+.names new_2430 new_2431 new_2432 new_2681
+000 0
+.names new_2287 new_1890 new_2088 new_2684
+000 0
+.names new_2287 new_1890 new_2088 new_2688
+000 1
+.names new_2435 new_2436 new_2437 new_2692
+000 0
+.names new_2438 new_2439 new_2440 new_2697
+000 0
+.names new_2294 new_1900 new_2098 new_2702
+000 0
+.names new_2294 new_1900 new_2098 new_2706
+000 1
+.names new_2443 new_2444 new_2445 new_2710
+000 0
+.names new_2299 new_1905 new_2103 new_2715
+000 0
+.names new_2299 new_1905 new_2103 new_2719
+000 1
+.names new_2448 new_2449 new_2450 new_2723
+000 0
+.names new_2304 new_2728
+0 1
+.names new_2158 new_2729
+0 1
+.names new_1562 new_2158 new_2730
+11 1
+.names new_2158 new_2731
+0 1
+.names new_1562 new_2158 new_2732
+11 1
+.names new_2158 new_2733
+0 1
+.names new_1562 new_2158 new_2734
+11 1
+.names new_2158 new_2735
+0 1
+.names new_1562 new_2158 new_2736
+11 1
+.names new_2158 new_2737
+0 1
+.names new_1562 new_2158 new_2738
+11 1
+.names new_2158 new_2739
+0 1
+.names new_1562 new_2158 new_2740
+11 1
+.names new_2158 new_2741
+0 1
+.names new_1562 new_2158 new_2742
+11 1
+.names new_2158 new_2743
+0 1
+.names new_1562 new_2158 new_2744
+11 1
+.names new_2376 new_1983 new_2379 new_2745
+000 0
+.names new_2376 new_1983 new_2379 new_2746
+000 1
+.names new_2316 new_2467 new_2748
+11 0
+.names new_2313 new_2468 new_2749
+11 0
+.names new_2322 new_2469 new_2750
+11 0
+.names new_2319 new_2470 new_2751
+11 0
+.names new_2328 new_2474 new_2754
+11 0
+.names new_2325 new_2475 new_2755
+11 0
+.names new_2334 new_2476 new_2756
+11 0
+.names new_2331 new_2477 new_2757
+11 0
+.names new_1520 new_2481 new_2758
+11 1
+.names new_1722 new_2482 new_2761
+11 1
+.names new_2478 new_1770 new_2764
+11 1
+.names new_2486 new_1789 new_1790 new_2768
+000 0
+.names new_2487 new_1797 new_1798 new_2769
+000 0
+.names new_665 new_2633 new_2898
+11 1
+.names new_679 new_2635 new_2899
+11 1
+.names new_686 new_2637 new_2900
+11 1
+.names new_702 new_2639 new_2901
+11 1
+.names new_2746 new_2962
+0 1
+.names new_2748 new_2749 new_2966
+11 0
+.names new_2750 new_2751 new_2967
+11 0
+.names new_2471 new_2970
+1 1
+.names new_2754 new_2755 new_2973
+11 0
+.names new_2756 new_2757 new_2977
+11 0
+.names new_2471 new_2143 new_2980
+11 1
+.names new_2488 new_2984
+0 1
+.names new_2497 new_2985
+0 1
+.names new_2506 new_2986
+0 1
+.names new_2515 new_2987
+0 1
+.names new_2524 new_2988
+0 1
+.names new_2533 new_2989
+0 1
+.names new_2542 new_2990
+0 1
+.names new_2551 new_2991
+0 1
+.names new_2488 new_2992
+0 1
+.names new_2497 new_2993
+0 1
+.names new_2506 new_2994
+0 1
+.names new_2515 new_2995
+0 1
+.names new_2524 new_2996
+0 1
+.names new_2533 new_2997
+0 1
+.names new_2542 new_2998
+0 1
+.names new_2551 new_2999
+0 1
+.names new_2488 new_3000
+0 1
+.names new_2497 new_3001
+0 1
+.names new_2506 new_3002
+0 1
+.names new_2515 new_3003
+0 1
+.names new_2524 new_3004
+0 1
+.names new_2533 new_3005
+0 1
+.names new_2542 new_3006
+0 1
+.names new_2551 new_3007
+0 1
+.names new_2488 new_3008
+0 1
+.names new_2497 new_3009
+0 1
+.names new_2506 new_3010
+0 1
+.names new_2515 new_3011
+0 1
+.names new_2524 new_3012
+0 1
+.names new_2533 new_3013
+0 1
+.names new_2542 new_3014
+0 1
+.names new_2551 new_3015
+0 1
+.names new_2488 new_3016
+0 1
+.names new_2497 new_3017
+0 1
+.names new_2506 new_3018
+0 1
+.names new_2515 new_3019
+0 1
+.names new_2524 new_3020
+0 1
+.names new_2533 new_3021
+0 1
+.names new_2542 new_3022
+0 1
+.names new_2551 new_3023
+0 1
+.names new_2488 new_3024
+0 1
+.names new_2497 new_3025
+0 1
+.names new_2506 new_3026
+0 1
+.names new_2515 new_3027
+0 1
+.names new_2524 new_3028
+0 1
+.names new_2533 new_3029
+0 1
+.names new_2542 new_3030
+0 1
+.names new_2551 new_3031
+0 1
+.names new_2488 new_3032
+0 1
+.names new_2497 new_3033
+0 1
+.names new_2506 new_3034
+0 1
+.names new_2515 new_3035
+0 1
+.names new_2524 new_3036
+0 1
+.names new_2533 new_3037
+0 1
+.names new_2542 new_3038
+0 1
+.names new_2551 new_3039
+0 1
+.names new_2488 new_3040
+0 1
+.names new_2497 new_3041
+0 1
+.names new_2506 new_3042
+0 1
+.names new_2515 new_3043
+0 1
+.names new_2524 new_3044
+0 1
+.names new_2533 new_3045
+0 1
+.names new_2542 new_3046
+0 1
+.names new_2551 new_3047
+0 1
+.names new_2560 new_3048
+0 1
+.names new_2569 new_3049
+0 1
+.names new_2578 new_3050
+0 1
+.names new_2587 new_3051
+0 1
+.names new_2596 new_3052
+0 1
+.names new_2605 new_3053
+0 1
+.names new_2614 new_3054
+0 1
+.names new_2623 new_3055
+0 1
+.names new_2560 new_3056
+0 1
+.names new_2569 new_3057
+0 1
+.names new_2578 new_3058
+0 1
+.names new_2587 new_3059
+0 1
+.names new_2596 new_3060
+0 1
+.names new_2605 new_3061
+0 1
+.names new_2614 new_3062
+0 1
+.names new_2623 new_3063
+0 1
+.names new_2560 new_3064
+0 1
+.names new_2569 new_3065
+0 1
+.names new_2578 new_3066
+0 1
+.names new_2587 new_3067
+0 1
+.names new_2596 new_3068
+0 1
+.names new_2605 new_3069
+0 1
+.names new_2614 new_3070
+0 1
+.names new_2623 new_3071
+0 1
+.names new_2560 new_3072
+0 1
+.names new_2569 new_3073
+0 1
+.names new_2578 new_3074
+0 1
+.names new_2587 new_3075
+0 1
+.names new_2596 new_3076
+0 1
+.names new_2605 new_3077
+0 1
+.names new_2614 new_3078
+0 1
+.names new_2623 new_3079
+0 1
+.names new_2560 new_3080
+0 1
+.names new_2569 new_3081
+0 1
+.names new_2578 new_3082
+0 1
+.names new_2587 new_3083
+0 1
+.names new_2596 new_3084
+0 1
+.names new_2605 new_3085
+0 1
+.names new_2614 new_3086
+0 1
+.names new_2623 new_3087
+0 1
+.names new_2560 new_3088
+0 1
+.names new_2569 new_3089
+0 1
+.names new_2578 new_3090
+0 1
+.names new_2587 new_3091
+0 1
+.names new_2596 new_3092
+0 1
+.names new_2605 new_3093
+0 1
+.names new_2614 new_3094
+0 1
+.names new_2623 new_3095
+0 1
+.names new_2560 new_3096
+0 1
+.names new_2569 new_3097
+0 1
+.names new_2578 new_3098
+0 1
+.names new_2587 new_3099
+0 1
+.names new_2596 new_3100
+0 1
+.names new_2605 new_3101
+0 1
+.names new_2614 new_3102
+0 1
+.names new_2623 new_3103
+0 1
+.names new_2560 new_3104
+0 1
+.names new_2569 new_3105
+0 1
+.names new_2578 new_3106
+0 1
+.names new_2587 new_3107
+0 1
+.names new_2596 new_3108
+0 1
+.names new_2605 new_3109
+0 1
+.names new_2614 new_3110
+0 1
+.names new_2623 new_3111
+0 1
+.names new_2656 new_3112
+1 1
+.names new_2656 new_3115
+0 1
+.names new_2652 new_3118
+0 1
+.names new_2768 new_1674 new_3119
+11 1
+.names new_2659 new_3122
+1 1
+.names new_2659 new_3125
+0 1
+.names new_2670 new_3128
+1 1
+.names new_2670 new_3131
+0 1
+.names new_2666 new_3134
+0 1
+.names new_2681 new_3135
+1 1
+.names new_2681 new_3138
+0 1
+.names new_2677 new_3141
+0 1
+.names new_2692 new_3142
+1 1
+.names new_2692 new_3145
+0 1
+.names new_2688 new_3148
+0 1
+.names new_2769 new_1678 new_3149
+11 1
+.names new_2697 new_3152
+1 1
+.names new_2697 new_3155
+0 1
+.names new_2710 new_3158
+1 1
+.names new_2710 new_3161
+0 1
+.names new_2706 new_3164
+0 1
+.names new_2723 new_3165
+1 1
+.names new_2723 new_3168
+0 1
+.names new_2719 new_3171
+0 1
+.names new_1909 new_2648 new_3172
+11 1
+.names new_1913 new_2662 new_3175
+11 1
+.names new_1913 new_2673 new_3178
+11 1
+.names new_1913 new_2684 new_3181
+11 1
+.names new_1922 new_2702 new_3184
+11 1
+.names new_1922 new_2715 new_3187
+11 1
+.names new_2692 new_3190
+0 1
+.names new_2697 new_3191
+0 1
+.names new_2710 new_3192
+0 1
+.names new_2723 new_3193
+0 1
+.names new_2692 new_2697 new_2710 new_2723 new_1459 new_3194
+11111 1
+.names new_2745 new_2962 3195
+11 0
+.names new_2966 new_3196
+0 1
+.names new_2980 new_2145 new_2347 new_3206
+000 0
+.names 124 new_2984 new_3207
+11 1
+.names 159 new_2985 new_3208
+11 1
+.names 150 new_2986 new_3209
+11 1
+.names 143 new_2987 new_3210
+11 1
+.names 137 new_2988 new_3211
+11 1
+.names 132 new_2989 new_3212
+11 1
+.names 128 new_2990 new_3213
+11 1
+.names 125 new_2991 new_3214
+11 1
+.names 125 new_2992 new_3215
+11 1
+.names new_655 new_2993 new_3216
+11 1
+.names 159 new_2994 new_3217
+11 1
+.names 150 new_2995 new_3218
+11 1
+.names 143 new_2996 new_3219
+11 1
+.names 137 new_2997 new_3220
+11 1
+.names 132 new_2998 new_3221
+11 1
+.names 128 new_2999 new_3222
+11 1
+.names 128 new_3000 new_3223
+11 1
+.names new_670 new_3001 new_3224
+11 1
+.names new_655 new_3002 new_3225
+11 1
+.names 159 new_3003 new_3226
+11 1
+.names 150 new_3004 new_3227
+11 1
+.names 143 new_3005 new_3228
+11 1
+.names 137 new_3006 new_3229
+11 1
+.names 132 new_3007 new_3230
+11 1
+.names 132 new_3008 new_3231
+11 1
+.names new_690 new_3009 new_3232
+11 1
+.names new_670 new_3010 new_3233
+11 1
+.names new_655 new_3011 new_3234
+11 1
+.names 159 new_3012 new_3235
+11 1
+.names 150 new_3013 new_3236
+11 1
+.names 143 new_3014 new_3237
+11 1
+.names 137 new_3015 new_3238
+11 1
+.names 137 new_3016 new_3239
+11 1
+.names new_706 new_3017 new_3240
+11 1
+.names new_690 new_3018 new_3241
+11 1
+.names new_670 new_3019 new_3242
+11 1
+.names new_655 new_3020 new_3243
+11 1
+.names 159 new_3021 new_3244
+11 1
+.names 150 new_3022 new_3245
+11 1
+.names 143 new_3023 new_3246
+11 1
+.names 143 new_3024 new_3247
+11 1
+.names new_715 new_3025 new_3248
+11 1
+.names new_706 new_3026 new_3249
+11 1
+.names new_690 new_3027 new_3250
+11 1
+.names new_670 new_3028 new_3251
+11 1
+.names new_655 new_3029 new_3252
+11 1
+.names 159 new_3030 new_3253
+11 1
+.names 150 new_3031 new_3254
+11 1
+.names 150 new_3032 new_3255
+11 1
+.names new_727 new_3033 new_3256
+11 1
+.names new_715 new_3034 new_3257
+11 1
+.names new_706 new_3035 new_3258
+11 1
+.names new_690 new_3036 new_3259
+11 1
+.names new_670 new_3037 new_3260
+11 1
+.names new_655 new_3038 new_3261
+11 1
+.names 159 new_3039 new_3262
+11 1
+.names 159 new_3040 new_3263
+11 1
+.names new_740 new_3041 new_3264
+11 1
+.names new_727 new_3042 new_3265
+11 1
+.names new_715 new_3043 new_3266
+11 1
+.names new_706 new_3044 new_3267
+11 1
+.names new_690 new_3045 new_3268
+11 1
+.names new_670 new_3046 new_3269
+11 1
+.names new_655 new_3047 new_3270
+11 1
+.names 283 new_3048 new_3271
+11 1
+.names new_670 new_3049 new_3272
+11 1
+.names new_690 new_3050 new_3273
+11 1
+.names new_706 new_3051 new_3274
+11 1
+.names new_715 new_3052 new_3275
+11 1
+.names new_727 new_3053 new_3276
+11 1
+.names new_740 new_3054 new_3277
+11 1
+.names new_753 new_3055 new_3278
+11 1
+.names 294 new_3056 new_3279
+11 1
+.names new_690 new_3057 new_3280
+11 1
+.names new_706 new_3058 new_3281
+11 1
+.names new_715 new_3059 new_3282
+11 1
+.names new_727 new_3060 new_3283
+11 1
+.names new_740 new_3061 new_3284
+11 1
+.names new_753 new_3062 new_3285
+11 1
+.names 283 new_3063 new_3286
+11 1
+.names 303 new_3064 new_3287
+11 1
+.names new_706 new_3065 new_3288
+11 1
+.names new_715 new_3066 new_3289
+11 1
+.names new_727 new_3067 new_3290
+11 1
+.names new_740 new_3068 new_3291
+11 1
+.names new_753 new_3069 new_3292
+11 1
+.names 283 new_3070 new_3293
+11 1
+.names 294 new_3071 new_3294
+11 1
+.names 311 new_3072 new_3295
+11 1
+.names new_715 new_3073 new_3296
+11 1
+.names new_727 new_3074 new_3297
+11 1
+.names new_740 new_3075 new_3298
+11 1
+.names new_753 new_3076 new_3299
+11 1
+.names 283 new_3077 new_3300
+11 1
+.names 294 new_3078 new_3301
+11 1
+.names 303 new_3079 new_3302
+11 1
+.names 317 new_3080 new_3303
+11 1
+.names new_727 new_3081 new_3304
+11 1
+.names new_740 new_3082 new_3305
+11 1
+.names new_753 new_3083 new_3306
+11 1
+.names 283 new_3084 new_3307
+11 1
+.names 294 new_3085 new_3308
+11 1
+.names 303 new_3086 new_3309
+11 1
+.names 311 new_3087 new_3310
+11 1
+.names 322 new_3088 new_3311
+11 1
+.names new_740 new_3089 new_3312
+11 1
+.names new_753 new_3090 new_3313
+11 1
+.names 283 new_3091 new_3314
+11 1
+.names 294 new_3092 new_3315
+11 1
+.names 303 new_3093 new_3316
+11 1
+.names 311 new_3094 new_3317
+11 1
+.names 317 new_3095 new_3318
+11 1
+.names 326 new_3096 new_3319
+11 1
+.names new_753 new_3097 new_3320
+11 1
+.names 283 new_3098 new_3321
+11 1
+.names 294 new_3099 new_3322
+11 1
+.names 303 new_3100 new_3323
+11 1
+.names 311 new_3101 new_3324
+11 1
+.names 317 new_3102 new_3325
+11 1
+.names 322 new_3103 new_3326
+11 1
+.names 329 new_3104 new_3327
+11 1
+.names 283 new_3105 new_3328
+11 1
+.names 294 new_3106 new_3329
+11 1
+.names 303 new_3107 new_3330
+11 1
+.names 311 new_3108 new_3331
+11 1
+.names 317 new_3109 new_3332
+11 1
+.names 322 new_3110 new_3333
+11 1
+.names 326 new_3111 new_3334
+11 1
+.names new_3190 new_3191 new_3192 new_3193 new_917 new_3383
+11111 1
+.names new_2977 new_3384
+1 1
+.names new_3196 new_1736 new_3387
+11 1
+.names new_2977 new_2149 new_3388
+11 1
+.names new_2973 new_1737 new_3389
+11 1
+.names new_3207 new_3208 new_3209 new_3210 new_3211 new_3212 new_3213 \
+ new_3214 new_3390
+00000000 1
+.names new_3215 new_3216 new_3217 new_3218 new_3219 new_3220 new_3221 \
+ new_3222 new_3391
+00000000 1
+.names new_3223 new_3224 new_3225 new_3226 new_3227 new_3228 new_3229 \
+ new_3230 new_3392
+00000000 1
+.names new_3231 new_3232 new_3233 new_3234 new_3235 new_3236 new_3237 \
+ new_3238 new_3393
+00000000 1
+.names new_3239 new_3240 new_3241 new_3242 new_3243 new_3244 new_3245 \
+ new_3246 new_3394
+00000000 1
+.names new_3247 new_3248 new_3249 new_3250 new_3251 new_3252 new_3253 \
+ new_3254 new_3395
+00000000 1
+.names new_3255 new_3256 new_3257 new_3258 new_3259 new_3260 new_3261 \
+ new_3262 new_3396
+00000000 1
+.names new_3263 new_3264 new_3265 new_3266 new_3267 new_3268 new_3269 \
+ new_3270 new_3397
+00000000 1
+.names new_3271 new_3272 new_3273 new_3274 new_3275 new_3276 new_3277 \
+ new_3278 new_3398
+00000000 1
+.names new_3279 new_3280 new_3281 new_3282 new_3283 new_3284 new_3285 \
+ new_3286 new_3399
+00000000 1
+.names new_3287 new_3288 new_3289 new_3290 new_3291 new_3292 new_3293 \
+ new_3294 new_3400
+00000000 1
+.names new_3295 new_3296 new_3297 new_3298 new_3299 new_3300 new_3301 \
+ new_3302 new_3401
+00000000 1
+.names new_3303 new_3304 new_3305 new_3306 new_3307 new_3308 new_3309 \
+ new_3310 new_3402
+00000000 1
+.names new_3311 new_3312 new_3313 new_3314 new_3315 new_3316 new_3317 \
+ new_3318 new_3403
+00000000 1
+.names new_3319 new_3320 new_3321 new_3322 new_3323 new_3324 new_3325 \
+ new_3326 new_3404
+00000000 1
+.names new_3327 new_3328 new_3329 new_3330 new_3331 new_3332 new_3333 \
+ new_3334 new_3405
+00000000 1
+.names new_3206 new_2641 new_3406
+11 1
+.names 169 new_2648 new_3112 new_3407
+111 1
+.names 179 new_2648 new_3115 new_3410
+111 1
+.names 190 new_2652 new_3115 new_3413
+111 1
+.names 200 new_2652 new_3112 new_3414
+111 1
+.names new_3119 new_1875 new_2073 new_3415
+000 0
+.names new_3119 new_1875 new_2073 new_3419
+000 1
+.names 169 new_2662 new_3128 new_3423
+111 1
+.names 179 new_2662 new_3131 new_3426
+111 1
+.names 190 new_2666 new_3131 new_3429
+111 1
+.names 200 new_2666 new_3128 new_3430
+111 1
+.names 169 new_2673 new_3135 new_3431
+111 1
+.names 179 new_2673 new_3138 new_3434
+111 1
+.names 190 new_2677 new_3138 new_3437
+111 1
+.names 200 new_2677 new_3135 new_3438
+111 1
+.names 169 new_2684 new_3142 new_3439
+111 1
+.names 179 new_2684 new_3145 new_3442
+111 1
+.names 190 new_2688 new_3145 new_3445
+111 1
+.names 200 new_2688 new_3142 new_3446
+111 1
+.names new_3149 new_1895 new_2093 new_3447
+000 0
+.names new_3149 new_1895 new_2093 new_3451
+000 1
+.names 169 new_2702 new_3158 new_3455
+111 1
+.names 179 new_2702 new_3161 new_3458
+111 1
+.names 190 new_2706 new_3161 new_3461
+111 1
+.names 200 new_2706 new_3158 new_3462
+111 1
+.names 169 new_2715 new_3165 new_3463
+111 1
+.names 179 new_2715 new_3168 new_3466
+111 1
+.names 190 new_2719 new_3168 new_3469
+111 1
+.names 200 new_2719 new_3165 new_3470
+111 1
+.names new_3194 new_3383 new_3471
+00 0
+.names new_2967 new_3472
+1 1
+.names new_2970 new_3475
+1 1
+.names new_2967 new_3478
+1 1
+.names new_2970 new_3481
+1 1
+.names new_2973 new_3484
+1 1
+.names new_2973 new_3487
+1 1
+.names new_3172 new_3490
+1 1
+.names new_3172 new_3493
+1 1
+.names new_3175 new_3496
+1 1
+.names new_3175 new_3499
+1 1
+.names new_3178 new_3502
+1 1
+.names new_3178 new_3505
+1 1
+.names new_3181 new_3508
+1 1
+.names new_3181 new_3511
+1 1
+.names new_3184 new_3514
+1 1
+.names new_3184 new_3517
+1 1
+.names new_3187 new_3520
+1 1
+.names new_3187 new_3523
+1 1
+.names new_3387 new_2350 new_3534
+00 1
+.names new_3388 new_2151 new_2351 new_3535
+000 0
+.names new_3389 new_1966 new_3536
+00 1
+.names new_3390 new_2209 new_3537
+11 1
+.names new_3398 new_2210 new_3538
+11 1
+.names new_3391 new_1842 new_3539
+11 1
+.names new_3399 new_1369 new_3540
+11 1
+.names new_3392 new_1843 new_3541
+11 1
+.names new_3400 new_1369 new_3542
+11 1
+.names new_3393 new_1844 new_3543
+11 1
+.names new_3401 new_1369 new_3544
+11 1
+.names new_3394 new_1845 new_3545
+11 1
+.names new_3402 new_1369 new_3546
+11 1
+.names new_3395 new_1846 new_3547
+11 1
+.names new_3403 new_1369 new_3548
+11 1
+.names new_3396 new_1847 new_3549
+11 1
+.names new_3404 new_1369 new_3550
+11 1
+.names new_3397 new_1848 new_3551
+11 1
+.names new_3405 new_1369 new_3552
+11 1
+.names new_3413 new_3414 new_3118 new_3557
+000 0
+.names new_3429 new_3430 new_3134 new_3568
+000 0
+.names new_3437 new_3438 new_3141 new_3573
+000 0
+.names new_3445 new_3446 new_3148 new_3578
+000 0
+.names new_3461 new_3462 new_3164 new_3589
+000 0
+.names new_3469 new_3470 new_3171 new_3594
+000 0
+.names new_3471 new_2728 new_3605
+11 1
+.names new_3478 new_3626
+0 1
+.names new_3481 new_3627
+0 1
+.names new_3487 new_3628
+0 1
+.names new_3484 new_3629
+0 1
+.names new_3472 new_3630
+0 1
+.names new_3475 new_3631
+0 1
+.names new_3536 new_2152 new_3632
+11 1
+.names new_3534 new_2155 new_3633
+11 1
+.names new_3537 new_3538 new_2398 new_3634
+000 0
+.names new_3539 new_3540 new_3635
+00 0
+.names new_3541 new_3542 new_3636
+00 0
+.names new_3543 new_3544 new_3637
+00 0
+.names new_3545 new_3546 new_3638
+00 0
+.names new_3547 new_3548 new_3639
+00 0
+.names new_3549 new_3550 new_3640
+00 0
+.names new_3551 new_3552 new_3641
+00 0
+.names new_3535 new_2643 new_3642
+11 1
+.names new_3407 new_3410 new_3643
+00 0
+.names new_3407 new_3410 new_3644
+00 1
+.names 169 new_3415 new_3122 new_3645
+111 1
+.names 179 new_3415 new_3125 new_3648
+111 1
+.names 190 new_3419 new_3125 new_3651
+111 1
+.names 200 new_3419 new_3122 new_3652
+111 1
+.names new_3419 new_3653
+0 1
+.names new_3423 new_3426 new_3654
+00 0
+.names new_3423 new_3426 new_3657
+00 1
+.names new_3431 new_3434 new_3658
+00 0
+.names new_3431 new_3434 new_3661
+00 1
+.names new_3439 new_3442 new_3662
+00 0
+.names new_3439 new_3442 new_3663
+00 1
+.names 169 new_3447 new_3152 new_3664
+111 1
+.names 179 new_3447 new_3155 new_3667
+111 1
+.names 190 new_3451 new_3155 new_3670
+111 1
+.names 200 new_3451 new_3152 new_3671
+111 1
+.names new_3451 new_3672
+0 1
+.names new_3455 new_3458 new_3673
+00 0
+.names new_3455 new_3458 new_3676
+00 1
+.names new_3463 new_3466 new_3677
+00 0
+.names new_3463 new_3466 new_3680
+00 1
+.names new_3493 new_3681
+0 1
+.names new_1909 new_3415 new_3682
+11 1
+.names new_3496 new_3685
+0 1
+.names new_3499 new_3686
+0 1
+.names new_3502 new_3687
+0 1
+.names new_3505 new_3688
+0 1
+.names new_3511 new_3689
+0 1
+.names new_1922 new_3447 new_3690
+11 1
+.names new_3517 new_3693
+0 1
+.names new_3520 new_3694
+0 1
+.names new_3523 new_3695
+0 1
+.names new_3514 new_3696
+0 1
+.names new_3384 new_3697
+1 1
+.names new_3384 new_3700
+1 1
+.names new_3490 new_3703
+0 1
+.names new_3508 new_3704
+0 1
+.names new_3475 new_3630 new_3705
+11 0
+.names new_3472 new_3631 new_3706
+11 0
+.names new_3481 new_3626 new_3707
+11 0
+.names new_3478 new_3627 new_3708
+11 0
+.names new_3632 new_2352 new_2353 new_3711
+000 0
+.names new_3633 new_2354 new_2355 new_3712
+000 0
+.names new_3634 new_2632 new_3713
+11 1
+.names new_3635 new_2634 new_3714
+11 1
+.names new_3636 new_2636 new_3715
+11 1
+.names new_3637 new_2638 new_3716
+11 1
+.names new_3638 new_2640 new_3717
+11 1
+.names new_3639 new_2642 new_3718
+11 1
+.names new_3640 new_2644 new_3719
+11 1
+.names new_3641 new_2646 new_3720
+11 1
+.names new_3644 new_3557 new_3721
+11 1
+.names new_3651 new_3652 new_3653 new_3731
+000 0
+.names new_3657 new_3568 new_3734
+11 1
+.names new_3661 new_3573 new_3740
+11 1
+.names new_3663 new_3578 new_3743
+11 1
+.names new_3670 new_3671 new_3672 new_3753
+000 0
+.names new_3676 new_3589 new_3756
+11 1
+.names new_3680 new_3594 new_3762
+11 1
+.names new_3643 new_3765
+0 1
+.names new_3662 new_3766
+0 1
+.names new_3705 new_3706 new_3773
+11 0
+.names new_3707 new_3708 new_3774
+11 0
+.names new_3700 new_3628 new_3775
+11 0
+.names new_3700 new_3776
+0 1
+.names new_3697 new_3629 new_3777
+11 0
+.names new_3697 new_3778
+0 1
+.names new_3712 new_2645 new_3779
+11 1
+.names new_3711 new_2647 new_3780
+11 1
+.names new_3645 new_3648 new_3786
+00 0
+.names new_3645 new_3648 new_3789
+00 1
+.names new_3664 new_3667 new_3800
+00 0
+.names new_3664 new_3667 new_3803
+00 1
+.names new_3654 new_1917 new_3809
+11 1
+.names new_3658 new_1917 new_3812
+11 1
+.names new_3673 new_1926 new_3815
+11 1
+.names new_3677 new_1926 new_3818
+11 1
+.names new_3682 new_3821
+1 1
+.names new_3682 new_3824
+1 1
+.names new_3690 new_3827
+1 1
+.names new_3690 new_3830
+1 1
+.names new_3773 new_3774 3833
+11 0
+.names new_3487 new_3776 new_3834
+11 0
+.names new_3484 new_3778 new_3835
+11 0
+.names new_3789 new_3731 new_3838
+11 1
+.names new_3803 new_3753 new_3845
+11 1
+.names new_3721 new_3850
+1 1
+.names new_3734 new_3855
+1 1
+.names new_3740 new_3858
+1 1
+.names new_3743 new_3861
+1 1
+.names new_3756 new_3865
+1 1
+.names new_3762 new_3868
+1 1
+.names new_3775 new_3834 new_3884
+11 0
+.names new_3777 new_3835 new_3885
+11 0
+.names new_3721 new_3786 new_3894
+11 0
+.names new_3743 new_3800 new_3895
+11 0
+.names new_3821 new_3898
+0 1
+.names new_3824 new_3899
+0 1
+.names new_3830 new_3906
+0 1
+.names new_3827 new_3911
+0 1
+.names new_3786 new_1912 new_3912
+11 1
+.names new_3812 new_3913
+1 1
+.names new_3800 new_1917 new_3916
+11 1
+.names new_3818 new_3917
+1 1
+.names new_3809 new_3920
+0 1
+.names new_3818 new_3921
+1 1
+.names new_3884 new_3924
+0 1
+.names new_3885 new_3925
+0 1
+.names new_3721 new_3838 new_3734 new_3740 new_3926
+1111 1
+.names new_3721 new_3838 new_3654 new_3930
+111 0
+.names new_3658 new_3838 new_3734 new_3721 new_3931
+1111 0
+.names new_3743 new_3845 new_3756 new_3762 new_3932
+1111 1
+.names new_3743 new_3845 new_3673 new_3935
+111 0
+.names new_3677 new_3845 new_3756 new_3743 new_3936
+1111 0
+.names new_3838 new_3937
+1 1
+.names new_3845 new_3940
+1 1
+.names new_3912 new_3947
+0 1
+.names new_3916 new_3948
+0 1
+.names new_3850 new_3950
+1 1
+.names new_3850 new_3953
+1 1
+.names new_3855 new_3956
+1 1
+.names new_3855 new_3959
+1 1
+.names new_3858 new_3962
+1 1
+.names new_3858 new_3965
+1 1
+.names new_3861 new_3968
+1 1
+.names new_3861 new_3971
+1 1
+.names new_3865 new_3974
+1 1
+.names new_3865 new_3977
+1 1
+.names new_3868 new_3980
+1 1
+.names new_3868 new_3983
+1 1
+.names new_3924 new_3925 3987
+11 0
+.names new_3765 new_3894 new_3930 new_3931 new_3992
+1111 0
+.names new_3766 new_3895 new_3935 new_3936 new_3996
+1111 0
+.names new_3921 new_4013
+0 1
+.names new_3932 new_3926 4028
+11 1
+.names new_3953 new_3681 new_4029
+11 0
+.names new_3959 new_3686 new_4030
+11 0
+.names new_3965 new_3688 new_4031
+11 0
+.names new_3971 new_3689 new_4032
+11 0
+.names new_3977 new_3693 new_4033
+11 0
+.names new_3983 new_3695 new_4034
+11 0
+.names new_3926 new_4035
+1 1
+.names new_3953 new_4042
+0 1
+.names new_3956 new_4043
+0 1
+.names new_3956 new_3685 new_4044
+11 0
+.names new_3959 new_4045
+0 1
+.names new_3962 new_4046
+0 1
+.names new_3962 new_3687 new_4047
+11 0
+.names new_3965 new_4048
+0 1
+.names new_3971 new_4049
+0 1
+.names new_3977 new_4050
+0 1
+.names new_3980 new_4051
+0 1
+.names new_3980 new_3694 new_4052
+11 0
+.names new_3983 new_4053
+0 1
+.names new_3974 new_4054
+0 1
+.names new_3974 new_3696 new_4055
+11 0
+.names new_3932 new_2304 new_4056
+11 1
+.names new_3950 new_4057
+0 1
+.names new_3950 new_3703 new_4058
+11 0
+.names new_3937 new_4059
+1 1
+.names new_3937 new_4062
+1 1
+.names new_3968 new_4065
+0 1
+.names new_3968 new_3704 new_4066
+11 0
+.names new_3940 new_4067
+1 1
+.names new_3940 new_4070
+1 1
+.names new_3926 new_3996 new_4073
+11 0
+.names new_3992 new_4074
+0 1
+.names new_3493 new_4042 new_4075
+11 0
+.names new_3499 new_4045 new_4076
+11 0
+.names new_3505 new_4048 new_4077
+11 0
+.names new_3511 new_4049 new_4078
+11 0
+.names new_3517 new_4050 new_4079
+11 0
+.names new_3523 new_4053 new_4080
+11 0
+.names new_3496 new_4043 new_4085
+11 0
+.names new_3502 new_4046 new_4086
+11 0
+.names new_3520 new_4051 new_4088
+11 0
+.names new_3514 new_4054 new_4090
+11 0
+.names new_3996 new_1926 new_4091
+11 1
+.names new_3605 new_4056 new_4094
+00 0
+.names new_3490 new_4057 new_4098
+11 0
+.names new_3508 new_4065 new_4101
+11 0
+.names new_4073 new_4074 new_4104
+11 1
+.names new_4075 new_4029 new_4105
+11 0
+.names new_4062 new_3899 new_4106
+11 0
+.names new_4076 new_4030 new_4107
+11 0
+.names new_4077 new_4031 new_4108
+11 0
+.names new_4078 new_4032 new_4109
+11 0
+.names new_4070 new_3906 new_4110
+11 0
+.names new_4079 new_4033 new_4111
+11 0
+.names new_4080 new_4034 new_4112
+11 0
+.names new_4059 new_4113
+0 1
+.names new_4059 new_3898 new_4114
+11 0
+.names new_4062 new_4115
+0 1
+.names new_4085 new_4044 new_4116
+11 0
+.names new_4086 new_4047 new_4119
+11 0
+.names new_4070 new_4122
+0 1
+.names new_4088 new_4052 new_4123
+11 0
+.names new_4067 new_4126
+0 1
+.names new_4067 new_3911 new_4127
+11 0
+.names new_4090 new_4055 new_4128
+11 0
+.names new_4098 new_4058 new_4139
+11 0
+.names new_4101 new_4066 new_4142
+11 0
+.names new_4104 4145
+0 1
+.names new_4105 new_4146
+0 1
+.names new_3824 new_4115 new_4147
+11 0
+.names new_4107 new_4148
+0 1
+.names new_4108 new_4149
+0 1
+.names new_4109 new_4150
+0 1
+.names new_3830 new_4122 new_4151
+11 0
+.names new_4111 new_4152
+0 1
+.names new_4112 new_4153
+0 1
+.names new_3821 new_4113 new_4154
+11 0
+.names new_3827 new_4126 new_4161
+11 0
+.names new_4091 new_4167
+1 1
+.names new_4094 new_4174
+1 1
+.names new_4091 new_4182
+1 1
+.names 330 new_4094 new_4186
+11 1
+.names new_4146 new_2230 new_4189
+11 1
+.names new_4147 new_4106 new_4190
+11 0
+.names new_4148 new_2232 new_4191
+11 1
+.names new_4149 new_2233 new_4192
+11 1
+.names new_4150 new_2234 new_4193
+11 1
+.names new_4151 new_4110 new_4194
+11 0
+.names new_4152 new_2236 new_4195
+11 1
+.names new_4153 new_2237 new_4196
+11 1
+.names new_4154 new_4114 new_4197
+11 0
+.names new_4116 new_4200
+1 1
+.names new_4116 new_4203
+1 1
+.names new_4119 new_4209
+1 1
+.names new_4119 new_4213
+1 1
+.names new_4161 new_4127 new_4218
+11 0
+.names new_4123 new_4223
+1 1
+.names new_4128 new_3917 new_4238
+11 1
+.names new_4139 new_4239
+0 1
+.names new_4142 new_4241
+0 1
+.names 330 new_4123 new_4242
+11 1
+.names new_4128 new_4247
+1 1
+.names new_3713 new_4189 new_2898 new_4251
+000 1
+.names new_4190 new_4252
+0 1
+.names new_3715 new_4191 new_2900 new_4253
+000 1
+.names new_3716 new_4192 new_2901 new_4254
+000 1
+.names new_3717 new_4193 new_3406 new_4255
+000 1
+.names new_4194 new_4256
+0 1
+.names new_3719 new_4195 new_3779 new_4257
+000 1
+.names new_3720 new_4196 new_3780 new_4258
+000 1
+.names new_4167 new_4035 new_4283
+11 1
+.names new_4174 new_4035 new_4284
+11 1
+.names new_3815 new_4238 new_4287
+00 0
+.names new_4186 new_4291
+0 1
+.names new_4167 new_4295
+0 1
+.names new_4167 new_4296
+1 1
+.names new_4182 new_4299
+0 1
+.names new_4252 new_2231 new_4303
+11 1
+.names new_4256 new_2235 new_4304
+11 1
+.names new_4197 new_4305
+1 1
+.names new_3992 new_4283 new_4310
+00 0
+.names new_4174 new_4213 new_4203 new_4316
+111 1
+.names new_4174 new_4209 new_4317
+11 1
+.names new_4223 new_4128 new_4218 new_4318
+111 1
+.names new_4223 new_4128 new_4319
+11 1
+.names new_4167 new_4209 new_4322
+11 1
+.names new_4203 new_3913 new_4325
+11 0
+.names new_4203 new_4213 new_4167 new_4326
+111 0
+.names new_4218 new_3815 new_4327
+11 0
+.names new_4218 new_4128 new_3917 new_4328
+111 0
+.names new_4247 new_4013 new_4329
+11 0
+.names new_4247 new_4330
+0 1
+.names 330 new_4094 new_4295 new_4331
+111 1
+.names new_4251 new_2730 new_4335
+11 1
+.names new_4253 new_2734 new_4338
+11 1
+.names new_4254 new_2736 new_4341
+11 1
+.names new_4255 new_2738 new_4344
+11 1
+.names new_4257 new_2742 new_4347
+11 1
+.names new_4258 new_2744 new_4350
+11 1
+.names new_4197 new_4353
+1 1
+.names new_4203 new_4356
+1 1
+.names new_4209 new_4359
+1 1
+.names new_4218 new_4362
+1 1
+.names new_4242 new_4365
+1 1
+.names new_4242 new_4368
+1 1
+.names new_4223 new_4223 new_4371
+11 1
+.names new_3714 new_4303 new_2899 new_4376
+000 1
+.names new_3718 new_4304 new_3642 new_4377
+000 1
+.names 330 new_4317 new_4387
+11 1
+.names 330 new_4318 new_4390
+11 1
+.names new_3921 new_4330 new_4393
+11 0
+.names new_4287 new_4398
+1 1
+.names new_4284 new_4413
+1 1
+.names new_3920 new_4325 new_4326 new_4416
+111 0
+.names new_3812 new_4322 new_4421
+00 0
+.names new_3948 new_4327 new_4328 new_4427
+111 0
+.names new_4287 new_4430
+1 1
+.names 330 new_4316 new_4435
+11 1
+.names new_4331 new_4296 new_4442
+00 0
+.names new_4174 new_4305 new_4203 new_4213 new_4443
+1111 1
+.names new_4305 new_3809 new_4446
+11 0
+.names new_4305 new_4200 new_3913 new_4447
+111 0
+.names new_4305 new_4200 new_4213 new_4167 new_4448
+1111 0
+.names new_4356 new_4452
+0 1
+.names new_4329 new_4393 new_4458
+11 0
+.names new_4365 new_4461
+0 1
+.names new_4368 new_4462
+0 1
+.names new_4371 new_1460 new_4463
+11 0
+.names new_4371 new_4464
+0 1
+.names new_4310 new_4465
+1 1
+.names new_4331 new_4296 new_4468
+00 1
+.names new_4376 new_2732 new_4472
+11 1
+.names new_4377 new_2740 new_4475
+11 1
+.names new_4310 new_4479
+1 1
+.names new_4353 new_4484
+0 1
+.names new_4359 new_4486
+0 1
+.names new_4359 new_4299 new_4487
+11 0
+.names new_4362 new_4491
+0 1
+.names 330 new_4319 new_4493
+11 1
+.names new_4398 new_4496
+0 1
+.names new_4287 new_4398 new_4497
+11 1
+.names new_4442 new_1769 new_4498
+11 1
+.names new_3947 new_4446 new_4447 new_4448 new_4503
+1111 0
+.names new_4413 new_4506
+0 1
+.names new_4435 new_4507
+0 1
+.names new_4421 new_4508
+0 1
+.names new_4421 new_4452 new_4509
+11 0
+.names new_4427 new_4510
+0 1
+.names new_4427 new_4241 new_4511
+11 0
+.names new_965 new_4464 new_4515
+11 0
+.names new_4416 new_4526
+0 1
+.names new_4416 new_4484 new_4527
+11 0
+.names new_4182 new_4486 new_4528
+11 0
+.names new_4430 new_4529
+0 1
+.names new_4430 new_4491 new_4530
+11 0
+.names new_4387 new_4531
+1 1
+.names new_4387 new_4534
+1 1
+.names new_4390 new_4537
+1 1
+.names new_4390 new_4540
+1 1
+.names 330 new_4319 new_4496 new_4545
+111 1
+.names 330 new_4443 new_4549
+11 1
+.names new_4356 new_4508 new_4552
+11 0
+.names new_4142 new_4510 new_4555
+11 0
+.names new_4493 new_4558
+0 1
+.names new_4463 new_4515 new_4559
+11 0
+.names new_4465 new_4562
+0 1
+.names new_4310 new_4465 new_4563
+11 1
+.names new_4468 new_4564
+1 1
+.names new_4479 new_4568
+0 1
+.names new_4443 new_4569
+1 1
+.names new_4353 new_4526 new_4572
+11 0
+.names new_4362 new_4529 new_4573
+11 0
+.names new_4487 new_4528 new_4576
+11 0
+.names new_4458 new_4581
+1 1
+.names new_4458 new_4584
+1 1
+.names new_2758 new_4498 new_2761 new_4587
+000 0
+.names new_2758 new_4498 new_2761 new_4588
+000 1
+.names new_4545 new_4497 4589
+00 0
+.names new_4552 new_4509 new_4593
+11 0
+.names new_4531 new_4596
+0 1
+.names new_4534 new_4597
+0 1
+.names new_4555 new_4511 new_4599
+11 0
+.names new_4537 new_4602
+0 1
+.names new_4540 new_4603
+0 1
+.names 330 new_4284 new_4562 new_4608
+111 1
+.names new_4503 new_4613
+1 1
+.names new_4503 new_4616
+1 1
+.names new_4572 new_4527 new_4619
+11 0
+.names new_4573 new_4530 new_4623
+11 0
+.names new_4588 new_4628
+0 1
+.names new_4569 new_4506 new_4629
+11 0
+.names new_4569 new_4630
+0 1
+.names new_4576 new_4635
+0 1
+.names new_4576 new_4291 new_4636
+11 0
+.names new_4581 new_4640
+0 1
+.names new_4581 new_4461 new_4641
+11 0
+.names new_4584 new_4642
+0 1
+.names new_4584 new_4462 new_4643
+11 0
+.names new_4608 new_4563 new_4644
+00 1
+.names new_4559 new_2128 new_4647
+11 1
+.names new_4559 new_2743 new_4650
+11 1
+.names new_4549 new_4656
+1 1
+.names new_4549 new_4659
+1 1
+.names new_4564 new_4664
+1 1
+.names new_4587 new_4628 4667
+11 1
+.names new_4413 new_4630 new_4668
+11 0
+.names new_4616 new_4669
+0 1
+.names new_4616 new_4239 new_4670
+11 0
+.names new_4619 new_4673
+0 1
+.names new_4619 new_4507 new_4674
+11 0
+.names new_4186 new_4635 new_4675
+11 0
+.names new_4623 new_4676
+0 1
+.names new_4623 new_4558 new_4677
+11 0
+.names new_4365 new_4640 new_4678
+11 0
+.names new_4368 new_4642 new_4679
+11 0
+.names new_4613 new_4687
+0 1
+.names new_4613 new_4568 new_4688
+11 0
+.names new_4593 new_4691
+1 1
+.names new_4593 new_4694
+1 1
+.names new_4599 new_4697
+1 1
+.names new_4599 new_4700
+1 1
+.names new_4629 new_4668 new_4704
+11 0
+.names new_4139 new_4669 new_4705
+11 0
+.names new_4656 new_4706
+0 1
+.names new_4659 new_4707
+0 1
+.names new_4435 new_4673 new_4708
+11 0
+.names new_4675 new_4636 new_4711
+11 0
+.names new_4493 new_4676 new_4716
+11 0
+.names new_4678 new_4641 new_4717
+11 0
+.names new_4679 new_4643 new_4721
+11 0
+.names new_4644 new_4722
+1 1
+.names new_4664 new_4726
+0 1
+.names new_4647 new_4650 new_4350 new_4727
+000 0
+.names new_4647 new_4650 new_4350 new_4730
+000 1
+.names new_4479 new_4687 new_4733
+11 0
+.names new_4705 new_4670 new_4740
+11 0
+.names new_4708 new_4674 new_4743
+11 0
+.names new_4691 new_4747
+0 1
+.names new_4691 new_4596 new_4748
+11 0
+.names new_4694 new_4749
+0 1
+.names new_4694 new_4597 new_4750
+11 0
+.names new_4697 new_4753
+0 1
+.names new_4697 new_4602 new_4754
+11 0
+.names new_4700 new_4755
+0 1
+.names new_4700 new_4603 new_4756
+11 0
+.names new_4716 new_4677 new_4757
+11 0
+.names new_4733 new_4688 new_4769
+11 0
+.names 330 new_4704 new_4772
+11 1
+.names new_4721 new_4775
+0 1
+.names new_4730 new_4778
+0 1
+.names new_4531 new_4747 new_4786
+11 0
+.names new_4534 new_4749 new_4787
+11 0
+.names new_4537 new_4753 new_4788
+11 0
+.names new_4540 new_4755 new_4789
+11 0
+.names new_4711 new_2124 new_4794
+11 1
+.names new_4711 new_2735 new_4797
+11 1
+.names new_4717 new_2127 new_4800
+11 1
+.names new_4722 new_4805
+1 1
+.names new_4717 new_4468 new_4808
+11 1
+.names new_4727 new_4812
+1 1
+.names new_4727 new_4778 4815
+11 1
+.names new_4769 new_4816
+0 1
+.names new_4772 new_4817
+0 1
+.names new_4786 new_4748 new_4818
+11 0
+.names new_4787 new_4750 new_4822
+11 0
+.names new_4788 new_4754 new_4823
+11 0
+.names new_4789 new_4756 new_4826
+11 0
+.names new_4775 new_4726 new_4829
+11 0
+.names new_4775 new_4830
+0 1
+.names new_4743 new_2122 new_4831
+11 1
+.names new_4757 new_2126 new_4838
+11 1
+.names new_4740 new_4844
+1 1
+.names new_4740 new_4847
+1 1
+.names new_4743 new_4850
+1 1
+.names new_4757 new_4854
+1 1
+.names new_4772 new_4816 new_4859
+11 0
+.names new_4769 new_4817 new_4860
+11 0
+.names new_4826 new_4868
+0 1
+.names new_4805 new_4870
+0 1
+.names new_4808 new_4872
+0 1
+.names new_4664 new_4830 new_4873
+11 0
+.names new_4794 new_4797 new_4341 new_4876
+000 0
+.names new_4794 new_4797 new_4341 new_4880
+000 1
+.names new_4812 new_4885
+0 1
+.names new_4822 new_4889
+0 1
+.names new_4859 new_4860 new_4895
+11 0
+.names new_4844 new_4896
+0 1
+.names new_4844 new_4706 new_4897
+11 0
+.names new_4847 new_4898
+0 1
+.names new_4847 new_4707 new_4899
+11 0
+.names new_4868 new_4564 new_4900
+00 1
+.names new_4717 new_4757 new_4823 new_4564 new_4901
+1111 1
+.names new_4850 new_4902
+0 1
+.names new_4854 new_4904
+0 1
+.names new_4854 new_4872 new_4905
+11 0
+.names new_4873 new_4829 new_4906
+11 0
+.names new_4818 new_2123 new_4907
+11 1
+.names new_4823 new_2125 new_4913
+11 1
+.names new_4818 new_4644 new_4916
+11 1
+.names new_4880 new_4920
+0 1
+.names new_4895 new_2184 new_4921
+11 1
+.names new_4656 new_4896 new_4924
+11 0
+.names new_4659 new_4898 new_4925
+11 0
+.names new_4900 new_4901 new_4926
+00 0
+.names new_4889 new_4870 new_4928
+11 0
+.names new_4889 new_4929
+0 1
+.names new_4808 new_4904 new_4930
+11 0
+.names new_4906 new_4931
+0 1
+.names new_4876 new_4937
+1 1
+.names new_4876 new_4940
+1 1
+.names new_4876 new_4920 4944
+11 1
+.names new_4924 new_4897 new_4946
+11 0
+.names new_4925 new_4899 new_4949
+11 0
+.names new_4916 new_4902 new_4950
+11 0
+.names new_4916 new_4951
+0 1
+.names new_4805 new_4929 new_4952
+11 0
+.names new_4930 new_4905 new_4953
+11 0
+.names new_4926 new_2737 new_4954
+11 1
+.names new_4931 new_2741 new_4957
+11 1
+.names new_2764 new_2483 new_4921 new_4964
+000 0
+.names new_2764 new_2483 new_4921 new_4965
+000 1
+.names new_4949 new_4968
+0 1
+.names new_4850 new_4951 new_4969
+11 0
+.names new_4952 new_4928 new_4970
+11 0
+.names new_4953 new_2739 new_4973
+11 1
+.names new_4937 new_4978
+0 1
+.names new_4940 new_4979
+0 1
+.names new_4965 new_4980
+0 1
+.names new_4968 new_4722 new_4981
+00 1
+.names new_4818 new_4743 new_4946 new_4722 new_4982
+1111 1
+.names new_4950 new_4969 new_4983
+11 0
+.names new_4970 new_4984
+0 1
+.names new_4946 new_2121 new_4985
+11 1
+.names new_4913 new_4954 new_4344 new_4988
+000 0
+.names new_4913 new_4954 new_4344 new_4991
+000 1
+.names new_4800 new_4957 new_4347 new_4996
+000 0
+.names new_4800 new_4957 new_4347 new_4999
+000 1
+.names new_4964 new_4980 5002
+11 1
+.names new_4981 new_4982 new_5007
+00 0
+.names new_4983 new_2731 new_5010
+11 1
+.names new_4984 new_2733 new_5013
+11 1
+.names new_4838 new_4973 new_4475 new_5018
+000 0
+.names new_4838 new_4973 new_4475 new_5021
+000 1
+.names new_4991 new_5026
+0 1
+.names new_4999 new_5029
+0 1
+.names new_5007 new_2729 new_5030
+11 1
+.names new_4996 new_5039
+1 1
+.names new_4988 new_5042
+1 1
+.names new_4988 new_5026 5045
+11 1
+.names new_5021 new_5046
+0 1
+.names new_4996 new_5029 5047
+11 1
+.names new_4831 new_5010 new_4472 new_5050
+000 0
+.names new_4831 new_5010 new_4472 new_5055
+000 1
+.names new_4907 new_5013 new_4338 new_5058
+000 0
+.names new_4907 new_5013 new_4338 new_5061
+000 1
+.names new_4730 new_4999 new_5021 new_4991 new_5066
+1111 1
+.names new_5018 new_5070
+1 1
+.names new_5018 new_5046 5078
+11 1
+.names new_4985 new_5030 new_4335 new_5080
+000 0
+.names new_4985 new_5030 new_4335 new_5085
+000 1
+.names new_5039 new_4885 new_5094
+11 0
+.names new_5039 new_5095
+0 1
+.names new_5042 new_5097
+0 1
+.names new_5050 new_5050 5102
+11 1
+.names new_5061 new_5103
+0 1
+.names new_4812 new_5095 new_5108
+11 0
+.names new_5070 new_5109
+0 1
+.names new_5070 new_5097 new_5110
+11 0
+.names new_5058 new_5111
+1 1
+.names new_5050 new_1461 new_5114
+11 1
+.names new_5050 new_5117
+1 1
+.names new_5080 new_5080 5120
+11 1
+.names new_5058 new_5103 5121
+11 1
+.names new_5094 new_5108 new_5122
+11 0
+.names new_5042 new_5109 new_5125
+11 0
+.names new_1461 new_5080 new_5128
+11 1
+.names new_4880 new_5061 new_5055 new_5085 new_5133
+1111 1
+.names new_5055 new_5085 new_1464 new_5136
+111 1
+.names new_5080 new_5139
+1 1
+.names new_5125 new_5110 new_5145
+11 0
+.names new_5111 new_5151
+1 1
+.names new_5111 new_5154
+1 1
+.names new_5117 new_5159
+0 1
+.names new_5114 new_5160
+1 1
+.names new_5114 new_5163
+1 1
+.names new_5066 new_5133 new_5166
+11 1
+.names new_5066 new_5133 new_5173
+11 1
+.names new_5122 new_5174
+1 1
+.names new_5122 new_5177
+1 1
+.names new_5139 new_5182
+0 1
+.names new_5139 new_5159 new_5183
+11 0
+.names new_5128 new_5184
+1 1
+.names new_5128 new_5188
+1 1
+.names new_5166 5192
+0 1
+.names new_5136 new_5173 new_5193
+00 1
+.names new_5151 new_4978 new_5196
+11 0
+.names new_5151 new_5197
+0 1
+.names new_5154 new_4979 new_5198
+11 0
+.names new_5154 new_5199
+0 1
+.names new_5160 new_5201
+0 1
+.names new_5163 new_5203
+0 1
+.names new_5145 new_5205
+1 1
+.names new_5145 new_5209
+1 1
+.names new_5117 new_5182 new_5212
+11 0
+.names 213 new_5193 new_5215
+11 1
+.names new_5174 new_5217
+0 1
+.names new_5177 new_5219
+0 1
+.names new_4937 new_5197 new_5220
+11 0
+.names new_4940 new_5199 new_5221
+11 0
+.names new_5184 new_5222
+0 1
+.names new_5184 new_5201 new_5223
+11 0
+.names new_5188 new_5203 new_5224
+11 0
+.names new_5188 new_5225
+0 1
+.names new_5183 new_5212 new_5228
+11 0
+.names new_5215 5231
+0 1
+.names new_5205 new_5217 new_5232
+11 0
+.names new_5205 new_5233
+0 1
+.names new_5209 new_5219 new_5234
+11 0
+.names new_5209 new_5235
+0 1
+.names new_5196 new_5220 new_5236
+11 0
+.names new_5198 new_5221 new_5240
+11 0
+.names new_5160 new_5222 new_5242
+11 0
+.names new_5163 new_5225 new_5243
+11 0
+.names new_5174 new_5233 new_5245
+11 0
+.names new_5177 new_5235 new_5246
+11 0
+.names new_5240 new_5250
+0 1
+.names new_5228 new_5253
+0 1
+.names new_5242 new_5223 new_5254
+11 0
+.names new_5243 new_5224 new_5257
+11 0
+.names new_5232 new_5245 new_5258
+11 0
+.names new_5234 new_5246 new_5261
+11 0
+.names new_5257 new_5266
+0 1
+.names new_5236 new_5269
+1 1
+.names new_5236 new_5254 new_2307 new_5277
+111 1
+.names new_5250 new_5254 new_2310 new_5278
+111 1
+.names new_5261 new_5279
+0 1
+.names new_5269 new_5283
+0 1
+.names new_5269 new_5253 new_5284
+11 0
+.names new_5236 new_5266 new_2310 new_5285
+111 1
+.names new_5250 new_5266 new_2307 new_5286
+111 1
+.names new_5258 new_5289
+1 1
+.names new_5258 new_5292
+1 1
+.names new_5228 new_5283 new_5295
+11 0
+.names new_5277 new_5285 new_5278 new_5286 new_5298
+0000 0
+.names new_5279 new_5303
+1 1
+.names new_5279 new_5306
+1 1
+.names new_5295 new_5284 new_5309
+11 0
+.names new_5292 new_5312
+0 1
+.names new_5289 new_5313
+0 1
+.names new_5306 new_5322
+0 1
+.names new_5303 new_5323
+0 1
+.names new_5298 new_5324
+1 1
+.names new_5298 new_5327
+1 1
+.names new_5309 new_5332
+1 1
+.names new_5309 new_5335
+1 1
+.names new_5324 new_5323 new_5340
+11 0
+.names new_5327 new_5322 new_5341
+11 0
+.names new_5327 new_5344
+0 1
+.names new_5324 new_5345
+0 1
+.names new_5332 new_5313 new_5348
+11 0
+.names new_5335 new_5312 new_5349
+11 0
+.names new_5303 new_5345 new_5350
+11 0
+.names new_5306 new_5344 new_5351
+11 0
+.names new_5335 new_5352
+0 1
+.names new_5332 new_5353
+0 1
+.names new_5289 new_5353 new_5354
+11 0
+.names new_5292 new_5352 new_5355
+11 0
+.names new_5350 new_5340 new_5356
+11 0
+.names new_5351 new_5341 new_5357
+11 0
+.names new_5348 new_5354 new_5358
+11 0
+.names new_5349 new_5355 new_5359
+11 0
+.names new_5356 new_5357 5360
+11 1
+.names new_5358 new_5359 5361
+11 0
+.end

@@ -36,3 +36,9 @@
 output/*
 .vscode
 *.txt
+
+# tech mapping ABC history
+abc.history
+
+# Python
+__pycache__/

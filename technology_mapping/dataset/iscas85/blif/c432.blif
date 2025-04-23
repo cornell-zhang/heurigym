@@ -1,0 +1,348 @@
+# Benchmark "c432" written by ABC on Tue Apr 22 14:49:18 2025
+.model c432
+.inputs 1 4 8 11 14 17 21 24 27 30 34 37 40 43 47 50 53 56 60 63 66 69 73 \
+ 76 79 82 86 89 92 95 99 102 105 108 112 115
+.outputs 223 329 370 421 430 431 432
+.names 1 new_118
+0 1
+.names 4 new_119
+0 1
+.names 11 new_122
+0 1
+.names 17 new_123
+0 1
+.names 24 new_126
+0 1
+.names 30 new_127
+0 1
+.names 37 new_130
+0 1
+.names 43 new_131
+0 1
+.names 50 new_134
+0 1
+.names 56 new_135
+0 1
+.names 63 new_138
+0 1
+.names 69 new_139
+0 1
+.names 76 new_142
+0 1
+.names 82 new_143
+0 1
+.names 89 new_146
+0 1
+.names 95 new_147
+0 1
+.names 102 new_150
+0 1
+.names 108 new_151
+0 1
+.names new_118 4 new_154
+11 0
+.names 8 new_119 new_157
+00 1
+.names 14 new_119 new_158
+00 1
+.names new_122 17 new_159
+11 0
+.names new_126 30 new_162
+11 0
+.names new_130 43 new_165
+11 0
+.names new_134 56 new_168
+11 0
+.names new_138 69 new_171
+11 0
+.names new_142 82 new_174
+11 0
+.names new_146 95 new_177
+11 0
+.names new_150 108 new_180
+11 0
+.names 21 new_123 new_183
+00 1
+.names 27 new_123 new_184
+00 1
+.names 34 new_127 new_185
+00 1
+.names 40 new_127 new_186
+00 1
+.names 47 new_131 new_187
+00 1
+.names 53 new_131 new_188
+00 1
+.names 60 new_135 new_189
+00 1
+.names 66 new_135 new_190
+00 1
+.names 73 new_139 new_191
+00 1
+.names 79 new_139 new_192
+00 1
+.names 86 new_143 new_193
+00 1
+.names 92 new_143 new_194
+00 1
+.names 99 new_147 new_195
+00 1
+.names 105 new_147 new_196
+00 1
+.names 112 new_151 new_197
+00 1
+.names 115 new_151 new_198
+00 1
+.names new_154 new_159 new_162 new_165 new_168 new_171 new_174 new_177 \
+ new_180 new_199
+111111111 1
+.names new_199 new_203
+0 1
+.names new_199 new_213
+0 1
+.names new_199 223
+0 1
+.names new_203 new_154 new_224
+01 1
+10 1
+.names new_203 new_159 new_227
+01 1
+10 1
+.names new_203 new_162 new_230
+01 1
+10 1
+.names new_203 new_165 new_233
+01 1
+10 1
+.names new_203 new_168 new_236
+01 1
+10 1
+.names new_203 new_171 new_239
+01 1
+10 1
+.names 1 new_213 new_242
+11 0
+.names new_203 new_174 new_243
+01 1
+10 1
+.names new_213 11 new_246
+11 0
+.names new_203 new_177 new_247
+01 1
+10 1
+.names new_213 24 new_250
+11 0
+.names new_203 new_180 new_251
+01 1
+10 1
+.names new_213 37 new_254
+11 0
+.names new_213 50 new_255
+11 0
+.names new_213 63 new_256
+11 0
+.names new_213 76 new_257
+11 0
+.names new_213 89 new_258
+11 0
+.names new_213 102 new_259
+11 0
+.names new_224 new_157 new_260
+11 0
+.names new_224 new_158 new_263
+11 0
+.names new_227 new_183 new_264
+11 0
+.names new_230 new_185 new_267
+11 0
+.names new_233 new_187 new_270
+11 0
+.names new_236 new_189 new_273
+11 0
+.names new_239 new_191 new_276
+11 0
+.names new_243 new_193 new_279
+11 0
+.names new_247 new_195 new_282
+11 0
+.names new_251 new_197 new_285
+11 0
+.names new_227 new_184 new_288
+11 0
+.names new_230 new_186 new_289
+11 0
+.names new_233 new_188 new_290
+11 0
+.names new_236 new_190 new_291
+11 0
+.names new_239 new_192 new_292
+11 0
+.names new_243 new_194 new_293
+11 0
+.names new_247 new_196 new_294
+11 0
+.names new_251 new_198 new_295
+11 0
+.names new_260 new_264 new_267 new_270 new_273 new_276 new_279 new_282 \
+ new_285 new_296
+111111111 1
+.names new_263 new_300
+0 1
+.names new_288 new_301
+0 1
+.names new_289 new_302
+0 1
+.names new_290 new_303
+0 1
+.names new_291 new_304
+0 1
+.names new_292 new_305
+0 1
+.names new_293 new_306
+0 1
+.names new_294 new_307
+0 1
+.names new_295 new_308
+0 1
+.names new_296 new_309
+0 1
+.names new_296 new_319
+0 1
+.names new_296 329
+0 1
+.names new_309 new_260 new_330
+01 1
+10 1
+.names new_309 new_264 new_331
+01 1
+10 1
+.names new_309 new_267 new_332
+01 1
+10 1
+.names new_309 new_270 new_333
+01 1
+10 1
+.names 8 new_319 new_334
+11 0
+.names new_309 new_273 new_335
+01 1
+10 1
+.names new_319 21 new_336
+11 0
+.names new_309 new_276 new_337
+01 1
+10 1
+.names new_319 34 new_338
+11 0
+.names new_309 new_279 new_339
+01 1
+10 1
+.names new_319 47 new_340
+11 0
+.names new_309 new_282 new_341
+01 1
+10 1
+.names new_319 60 new_342
+11 0
+.names new_309 new_285 new_343
+01 1
+10 1
+.names new_319 73 new_344
+11 0
+.names new_319 86 new_345
+11 0
+.names new_319 99 new_346
+11 0
+.names new_319 112 new_347
+11 0
+.names new_330 new_300 new_348
+11 0
+.names new_331 new_301 new_349
+11 0
+.names new_332 new_302 new_350
+11 0
+.names new_333 new_303 new_351
+11 0
+.names new_335 new_304 new_352
+11 0
+.names new_337 new_305 new_353
+11 0
+.names new_339 new_306 new_354
+11 0
+.names new_341 new_307 new_355
+11 0
+.names new_343 new_308 new_356
+11 0
+.names new_348 new_349 new_350 new_351 new_352 new_353 new_354 new_355 \
+ new_356 new_357
+111111111 1
+.names new_357 new_360
+0 1
+.names new_357 370
+0 1
+.names 14 new_360 new_371
+11 0
+.names new_360 27 new_372
+11 0
+.names new_360 40 new_373
+11 0
+.names new_360 53 new_374
+11 0
+.names new_360 66 new_375
+11 0
+.names new_360 79 new_376
+11 0
+.names new_360 92 new_377
+11 0
+.names new_360 105 new_378
+11 0
+.names new_360 115 new_379
+11 0
+.names 4 new_242 new_334 new_371 new_380
+1111 0
+.names new_246 new_336 new_372 17 new_381
+1111 0
+.names new_250 new_338 new_373 30 new_386
+1111 0
+.names new_254 new_340 new_374 43 new_393
+1111 0
+.names new_255 new_342 new_375 56 new_399
+1111 0
+.names new_256 new_344 new_376 69 new_404
+1111 0
+.names new_257 new_345 new_377 82 new_407
+1111 0
+.names new_258 new_346 new_378 95 new_411
+1111 0
+.names new_259 new_347 new_379 108 new_414
+1111 0
+.names new_380 new_415
+0 1
+.names new_381 new_386 new_393 new_399 new_404 new_407 new_411 new_414 \
+ new_416
+11111111 1
+.names new_393 new_417
+0 1
+.names new_404 new_418
+0 1
+.names new_407 new_419
+0 1
+.names new_411 new_420
+0 1
+.names new_415 new_416 421
+00 1
+.names new_386 new_417 new_422
+11 0
+.names new_386 new_393 new_418 new_399 new_425
+1111 0
+.names new_399 new_393 new_419 new_428
+111 0
+.names new_386 new_393 new_407 new_420 new_429
+1111 0
+.names new_381 new_386 new_422 new_399 430
+1111 0
+.names new_381 new_386 new_425 new_428 431
+1111 0
+.names new_381 new_422 new_425 new_429 432
+1111 0
+.end

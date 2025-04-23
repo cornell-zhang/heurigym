@@ -1,0 +1,9 @@
+# Mapped netlist with 4 LUTs, total area = 4
+.model c17_k3_size
+.inputs 1 2 3 6 7
+.outputs 22 23
+.names 3 new_16 1 22
+.names 3 2 6 new_16
+.names 2 new_11 7 23
+.names 3 6 new_11
+.end
