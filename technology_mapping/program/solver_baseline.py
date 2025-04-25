@@ -98,9 +98,137 @@ def create_lut_for_cut(G: nx.DiGraph, node: str, cut: Cut) -> KLut:
         A KLut object with inputs and truth table
     """
     inputs = list(cut.inputs)
-    # placeholder for correct truth table logic
-    truth_table = {}
+    
+    # Handle special case: if the cut contains only the node itself, it's a wire
+    if len(inputs) == 1 and inputs[0] == node:
+        # For a wire, output is always equal to input
+        truth_table = [('1', '1')]
+        return KLut(k=len(inputs), inputs=inputs, truth_table=truth_table)
+    
+    # Generate all possible input combinations for the cut
+    input_combinations = list(itertools.product(['0', '1'], repeat=len(inputs)))
+    
+    # Create a simulation context to evaluate the output for each input combination
+    truth_table = []
+    for input_combo in input_combinations:
+        # Map each input to its value
+        input_values = {inputs[i]: input_combo[i] for i in range(len(inputs))}
+        
+        # Simulate the logic network to determine the output for this input combination
+        output = simulate_cut(G, node, cut.inputs, input_values)
+        
+        # Add to the truth table if output is '1' (BLIF format typically only lists '1' outputs)
+        input_pattern = ''.join(input_combo)
+        if output == '1':
+            truth_table.append((input_pattern, output))
+    
+    # If the truth table is empty (all outputs are '0'), use empty table
+    # BLIF format handles this case as constant 0
+    # If the truth table has all 2^k entries (all outputs are '1'), we can optimize
+    # by just using the single entry "1" for constant 1
+    if len(truth_table) == 2**len(inputs):
+        truth_table = [('', '1')]  # Constant 1 in BLIF format
+    
     return KLut(k=len(inputs), inputs=inputs, truth_table=truth_table)
+
+def simulate_cut(G: nx.DiGraph, target_node: str, cut_inputs: FrozenSet[str], input_values: Dict[str, str]) -> str:
+    """
+    Simulates a cut subgraph to determine the output value for given input values
+    
+    Args:
+        G: The logic network graph
+        target_node: The node to evaluate (output of the cut)
+        cut_inputs: The inputs to the cut (boundary)
+        input_values: Values for the cut inputs
+        
+    Returns:
+        The output value ('0' or '1') for the node
+    """
+    # Cache to avoid re-computing node values
+    value_cache = {}
+    
+    # Add initial input values to cache
+    for node, value in input_values.items():
+        value_cache[node] = value
+    
+    # Define a recursive evaluation function for this specific cut
+    def evaluate_node_in_cut(node: str) -> str:
+        # If we've already calculated this node's value, return it
+        if node in value_cache:
+            return value_cache[node]
+        
+        # If this node is a cut input, use the provided value
+        if node in cut_inputs:
+            if node not in input_values:
+                raise ValueError(f"Missing value for cut input {node}")
+            value_cache[node] = input_values[node]
+            return input_values[node]
+        
+        # For internal nodes, compute based on inputs and truth table
+        predecessors = list(G.predecessors(node))
+        
+        # First evaluate all inputs
+        input_pattern = []
+        for pred in predecessors:
+            input_pattern.append(evaluate_node_in_cut(pred))
+        
+        # Check if this node has a truth table
+        if 'truth_table' in G.nodes[node]:
+            truth_table = G.nodes[node]['truth_table']
+            input_str = ''.join(input_pattern)
+            
+            # Special case for constant 1
+            if len(truth_table) == 1 and truth_table[0][0] == '' and truth_table[0][1] == '1':
+                value_cache[node] = '1'
+                return '1'
+                
+            # Find the matching entry in the truth table
+            for pattern, result in truth_table:
+                if pattern == input_str:
+                    value_cache[node] = result
+                    return result
+            
+            # If node has 'explicit_truth_table', check input against it with don't-care handling
+            if 'explicit_truth_table' in G.nodes[node]:
+                explicit_truth_table = G.nodes[node]['explicit_truth_table']
+                
+                # Check if we have any output '0' entries
+                has_output_0 = any(output == '0' for _, output in explicit_truth_table)
+                default_output = '1' if has_output_0 and not any(output == '1' for _, output in explicit_truth_table) else '0'
+                
+                for pattern, result in explicit_truth_table:
+                    # Handle don't-care in the pattern
+                    if '-' in pattern:
+                        match = True
+                        for i, pat_bit in enumerate(pattern):
+                            if pat_bit != '-' and pat_bit != input_pattern[i]:
+                                match = False
+                                break
+                                
+                        if match:
+                            value_cache[node] = result
+                            return result
+                
+                # Return default if no match in explicit table
+                value_cache[node] = default_output
+                return default_output
+            
+            # If no match found (shouldn't happen with complete table), default to '0'
+            value_cache[node] = '0'
+            return '0'
+            
+        # If node has no truth table but only one input, it's a wire/buffer
+        if len(predecessors) == 1:
+            value = evaluate_node_in_cut(predecessors[0])
+            value_cache[node] = value
+            return value
+            
+        # Default case (should rarely happen)
+        value_cache[node] = '0'
+        return '0'
+    
+    # Evaluate the target node, which triggers recursive evaluation of the subgraph
+    return evaluate_node_in_cut(target_node)
 
 
 def solve(netlist: LogicNetwork, k: int, delay_budget: float = None, optimize_for: str = "size") -> Tuple[float, List[Tuple[str, KLut]]]:
@@ -176,13 +304,13 @@ def solve(netlist: LogicNetwork, k: int, delay_budget: float = None, optimize_fo
                     # Skip trivial cut of node itself
                     continue
 
-                # Calculate LUT count for this implementation. Sum up the LUT count of all inputs and this LUT. 
+                # Calculate LUT count for this implementation
                 lut_count = 1  # This LUT
                 for input_node in cut.inputs:
                     if input_node not in netlist.PI:
                         lut_count += best_lut_count.get(input_node, 0)
                 
-                # Calculate level for tie-breaking. Max of the level of all inputs + 1. 
+                # Calculate level for tie-breaking
                 level = 1  # This LUT
                 for input_node in cut.inputs:
                     if input_node not in netlist.PI:
@@ -263,37 +391,44 @@ def solve(netlist: LogicNetwork, k: int, delay_budget: float = None, optimize_fo
         for node, cut in best_cut.items():
             print(f"Node {node} has best cut {cut}")
 
-
-
     # Phase 3: Generate mapping from the selected cuts
-    nodes_ready_to_map = set(netlist.PO) # start from POs. This set includes all nodes that are mapped to LUTs. 
+    nodes_ready_to_map = set(netlist.PO)  # start from POs
+    visited_nodes = set()  # Track visited nodes to avoid duplicates
+    
     while nodes_ready_to_map:
         node = nodes_ready_to_map.pop()
-        if node in best_cut: # only PI node is not included in best_cut. 
+        
+        # Skip if already visited
+        if node in visited_nodes:
+            continue
+        visited_nodes.add(node)
+        
+        # If node is not a PI, create a LUT for it
+        if node not in netlist.PI and node in best_cut:
             cut = best_cut[node]
             lut = create_lut_for_cut(G, node, cut)
             mapping.append((node, lut))
-            # add the inputs of this LUT to the nodes_ready_to_map
+            
+            # Add the inputs of this LUT to the nodes_ready_to_map if they're not PIs
             for input_node in cut.inputs:
-                if input_node not in netlist.PI and input_node not in nodes_ready_to_map:
+                if input_node not in netlist.PI and input_node not in visited_nodes:
                     nodes_ready_to_map.add(input_node)
     
-
     # Calculate total area - in this simplified model, it's just the count of LUTs
     total_area = len(mapping)
     
-    # Calculate maximum level for statistics. It is the max level of the POs. 
+    # Calculate maximum level for statistics
     max_level = 0
     for po in netlist.PO:
-        max_level = max(max_level, best_level[po])
+        if po in best_level:
+            max_level = max(max_level, best_level[po])
     
     if DEBUG:
         print("===== Phase 3: Mapping ======")
         for node, lut in mapping:
-            # print the node and LUT info with its inputs and truth table
             print(f"Node {node} has LUT with inputs {lut.inputs}")
-            # print(f"truth table {lut.truth_table}")
-
+            if hasattr(lut, 'truth_table'):
+                print(f"  Truth table entries: {len(lut.truth_table)}")
 
     # Print statistics
     print(f"======== Mapping statistics ========")

@@ -73,8 +73,11 @@ def main():
     netlist = read_blif(args.net)
     
     # print out something about the netlist
-    # print(f"Netlist has {len(netlist.graph.nodes)} nodes and {len(netlist.graph.edges)} edges")
-    # print(f"Netlist has {len(netlist.PI)} PIs and {len(netlist.PO)} POs")
+    print(f"Netlist has {len(netlist.graph.nodes)} nodes and {len(netlist.graph.edges)} edges")
+    print(f"Netlist has {len(netlist.PI)} PIs and {len(netlist.PO)} POs")
+    # print PI and PO
+    print(f"PIs: {netlist.PI}")
+    print(f"POs: {netlist.PO}")
     # # For each node, print its successors, print out the successors dict
     # for node in netlist.graph.nodes:
     #     for successor in netlist.graph.successors(node):
