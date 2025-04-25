@@ -7,6 +7,8 @@ Technology mapping is a critical stage in the FPGA design flow where a technolog
 
 The technology mapping process involves covering a Boolean network with K-LUTs in a way that optimizes specific design metrics. Traditional approaches include cut enumeration, where potential K-feasible cuts (subgraphs with at most K inputs) are identified and selected to form an optimal cover of the network. The mapping process must ensure that the resulting network correctly implements the original logic function while minimizing resource usage.
 
+Here our optimization target is to minimize the number of LUTs, which represents the area of the mapped logic network. This is an NP-hard problem. 
+
 ## Formalization
 
 Consider a directed acyclic graph (DAG) $G = (V, E)$ representing a Boolean network, where each node $v \in V$ represents a logic gate, and each edge $(u, v) \in E$ indicates that the output of node $u$ is an input to node $v$. Let $PI$ denote the set of primary inputs and $PO$ denote the set of primary outputs in the network.
@@ -29,16 +31,6 @@ The K-LUT technology mapping problem can be formulated as:
 
 $\min_{M} Cost(M)$
 
-For an alternative optimization target focusing on performance, we can define the depth of a node $v$ under mapping $M$ as:
-
-$$Depth_M(v) = \begin{cases}
-0, & \text{if}\ v \in PI \\
-\max_{u \in M(v)} (Depth_M(u) + 1), & \text{otherwise}
-\end{cases}$$
-
-Then, the depth-oriented mapping problem becomes:
-
-$\min_{M} \max_{v \in PO} Depth_M(v)$
 
 ## Input Format
 
@@ -112,6 +104,12 @@ In this output:
 
 
 ## What's missing now
-- Don't have support on truth table yet. We need to verify the mapped logic network is correct. 
-- No `evaluator.py` and `verify.py` yet. 
-- Also provide a `solver_baseline.py` with a cut-enumeration + dynamic programming based solver. But it doesn't support truth table for LUTs yet, so the output BLIF file doesn't have truth table. 
+- Also provide a `solver_baseline.py` with a cut-enumeration + dynamic programming based solver. But it doesn't support truth table for LUTs yet, so the output BLIF file doesn't have truth table. (Need the derivation of the truth table from the cut.)
+
+## Dependencies
+- `evaluator.py` and `verifier.py` are based on the [abc](https://github.com/berkeley-abc/abc/tree/master) tool. It can be installed by: 
+    ```bash
+    git clone git@github.com:berkeley-abc/abc.git
+    cd abc
+    make -j4
+    ```

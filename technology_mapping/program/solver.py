@@ -1,4 +1,3 @@
-
 from typing import List, Tuple, Dict, Set, FrozenSet
 from structure import LogicNetwork, KLut
 import networkx as nx
