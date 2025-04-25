@@ -105,6 +105,7 @@ In this output:
 
 ## What's missing now
 - Also provide a `solver_baseline.py` with a cut-enumeration + dynamic programming based solver. But it doesn't support truth table for LUTs yet, so the output BLIF file doesn't have truth table. (Need the derivation of the truth table from the cut.)
+- Now support truth table derivation! It is tested on several demo small circuits and seems correct. But for large circuits, it takes too much time, probably because of the simulate_logic method. 
 
 ## Dependencies
 - `evaluator.py` and `verifier.py` are based on the [abc](https://github.com/berkeley-abc/abc/tree/master) tool. It can be installed by: 

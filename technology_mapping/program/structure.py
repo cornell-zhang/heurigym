@@ -14,7 +14,16 @@ class KLut:
         
         # Truth table in the form of [(input_pattern, output_value), ...] 
         # e.g. [('11', '1'), ('00', '0')] for an AND gate
-        self.truth_table = truth_table or []
+        if truth_table is None:
+            # Initialize empty truth table with all outputs as '0'
+            n_inputs = len(inputs)
+            self.truth_table = []
+            for i in range(2**n_inputs):
+                # Convert i to binary string of length n_inputs
+                pattern = format(i, f'0{n_inputs}b')
+                self.truth_table.append((pattern, '0'))
+        else:
+            self.truth_table = truth_table
     
     def get_blif_representation(self, node_name: str) -> List[str]:
         """
