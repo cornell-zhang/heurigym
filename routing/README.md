@@ -13,35 +13,34 @@ There are two input files for each circuit: a routing resource file (with a .cap
 
 The routing resource file follows this format:
 
-    **# Dimensions of GCell graph**  
+    # Dimensions of GCell graph 
     nLayers xSize ySize  
     
-    **# Weights of performance metrics**  
+    # Weights of performance metrics  
     UnitLengthWireCost UnitViaCost OFWeight[0] OFWeight[1] OFWeight[2] ...  
     
-    **# Lengths of horizontal GCell edges (edge count = xSize - 1)**  
+    # Lengths of horizontal GCell edges (edge count = xSize - 1)  
     HorizontalGCellEdgeLengths[0] HorizontalGCellEdgeLengths[1] HorizontalGCellEdgeLengths[2] ...  
     
-    **# Lengths of vertical GCell edges (edge count = ySize - 1)**  
+    # Lengths of vertical GCell edges (edge count = ySize - 1)  
     VerticalGCellEdgeLengths[0] VerticalGCellEdgeLengths[1] VerticalGCellEdgeLengths[2] ...  
     
-    **# Information for the 0-th layer**  
+    # Information for the 0-th layer  
     
-    **## Layer name, preferred direction and minimum length of a wire at this metal layer**  
-    *(Direction: 0 = horizontal, 1 = vertical)*  
+    ## Layer name, preferred direction and minimum length of a wire at this metal layer  (Direction: 0 = horizontal, 1 = vertical)
     layerName layerDirection layerMinLength  
     
-    **## Routing capacities of GCell edges at the 0-th layer**  
+    ## Routing capacities of GCell edges at the 0-th layer  
     
-    **### Capacities of GCell at [x(0), y(0)], [x(1), y(0)], ...**  
+    ### Capacities of GCell at [x(0), y(0)], [x(1), y(0)], ...  
     10 10 10 ...  
     
-    **### Capacities of GCell at [x(0), y(1)], [x(1), y(1)], ...**  
+    ### Capacities of GCell at [x(0), y(1)], [x(1), y(1)], ...  
     10 10 10 ...  
     
     ...  
     
-    **## Information for the 1-th layer**  
+    ## Information for the 1-th layer 
     ...
 
 
