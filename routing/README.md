@@ -77,5 +77,22 @@ where each row ($x_l$ $y_l$ $z_l$ $x_h$ $y_h$ $z_h$) describes a line/rectangle 
 
 ## Evaluation
 ### Evaluation Metrics
-
+The original score is measured by the weighted sum of the following metrics: total wire length, via utilization and routing overflow.
+\begin{equation*}
+\begin{aligned}
+    origina\_socre = & w_1*TotalWL + w_2*ViaCount \\
+    & + OverflowScore
+\end{aligned}
+\end{equation*}
+TotalWL and ViaCount denote the sum of the wire length for all signal nets and the total number of vias, respectively. $w_1$ and $w_2$ correspond to UnitLengthWireCost and UnitViaCost, respectively, which are defined in the .cap file. In our evaluation, $w_1$ and $w_2$ are set to be $0.5/\texttt{M2 pitch}$ and $2$, respectively.
+The overflow cost for a GCell edge with routing capacity $c$ and routing demand $d$ at the $l$-th layer is calculated as follows:
+\begin{equation*}
+    OverflowCost(c,d,l) = OFWeight[l] * (\exp^{s (d-c)}),
+\end{equation*}
+\begin{equation*}
+    s = \begin{cases}
+        0.5, & \text{if } c > 0 \\
+        1.5, & \text{if } c=0
+    \end{cases}
+\end{equation*}
 ### Benchmarks
