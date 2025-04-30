@@ -63,8 +63,29 @@ The net information file follows this format:
         )       
         ... 
 
+### Output
+The global routing solution is described in the GCell coordinate system. And the routing solution is defined on metal (routing) layers, from which via utilization can be inferred. To enhance routability and ensure pin accessibility during the subsequent detailed routing process, we operate under the following assumptions:
+1. Metal 1 (the 0-th layer) is not employed for net routing. To reach pins on Metal 1, vias must be utilized to establish connections from Metal 2.
+2. Each pin must be connected through at least one of its access points.
 
+Here is an example of a global routing solution for a net:
 
+        # Net name       
+        Net0
+        (
+        # $x_l$ $y_l$ $z_l$ $x_h$ $y_h$ $z_h$          
+        0 0 0 0 0 0
+        0 0 0 0 0 1
+        0 0 1 0 2 1
+        0 2 1 0 2 2
+        0 2 2 3 2 2
+        3 2 1 3 2 2
+        3 2 1 3 3 1
+        3 3 0 3 3 1
+        3 3 0 3 3 0
+        )
+
+where each row ($x_l$ $y_l$ $z_l$ $x_h$ $y_h$ $z_h$) describes a line/rectangle in the 3D GCell graph, spanning from $(x_l, y_l, z_l)$ to $(x_h, y_h, z_h)$.
 
 
 ## Evaluation
