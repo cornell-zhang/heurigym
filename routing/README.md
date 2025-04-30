@@ -13,44 +13,37 @@ There are two input files for each circuit: a routing resource file (with a .cap
 
 The routing resource file follows this format:
 
-\hspace{0.2cm} \textcolor{blue}{\# Dimensions of GCell graph}
+**# Dimensions of GCell graph**  
+nLayers xSize ySize  
 
-\hspace{0.2cm} nLayers xSize ySize 
+**# Weights of performance metrics**  
+UnitLengthWireCost UnitViaCost OFWeight[0] OFWeight[1] OFWeight[2] ...  
 
-\hspace{0.2cm} \textcolor{blue}{\# Weights of performance metrics}
+**# Lengths of horizontal GCell edges (edge count = xSize - 1)**  
+HorizontalGCellEdgeLengths[0] HorizontalGCellEdgeLengths[1] HorizontalGCellEdgeLengths[2] ...  
 
-\hspace{0.2cm} UnitLengthWireCost UnitViaCost OFWeight[0] OFWeight[1] 
-OFWeight[2] \cdots 
+**# Lengths of vertical GCell edges (edge count = ySize - 1)**  
+VerticalGCellEdgeLengths[0] VerticalGCellEdgeLengths[1] VerticalGCellEdgeLengths[2] ...  
 
-\hspace{0.2cm} \textcolor{blue}{\# Lengths of horizontal GCell edges (edge count = xSize - 1)}
+**# Information for the 0-th layer**  
 
-\hspace{0.2cm} HorizontalGCellEdgeLengths[0] HorizontalGCellEdgeLengths[1] HorizontalGCellEdgeLengths[2] \cdots  
+**## Layer name, preferred direction and minimum length of a wire at this metal layer**  
+*(Direction: 0 = horizontal, 1 = vertical)*  
+layerName layerDirection layerMinLength  
 
-\hspace{0.2cm} \textcolor{blue}{\# Lengths of vertical GCell edges (edge count = ySize - 1)}
+**## Routing capacities of GCell edges at the 0-th layer**  
 
-\hspace{0.2cm} VerticalGCellEdgeLengths[0] VerticalGCellEdgeLengths[1] VerticalGCellEdgeLengths[2] \cdots 
+**### Capacities of GCell at [x(0), y(0)], [x(1), y(0)], ...**  
+10 10 10 ...  
 
-\hspace{0.2cm} \textcolor{blue}{\# Information for the $0$-th layer}
+**### Capacities of GCell at [x(0), y(1)], [x(1), y(1)], ...**  
+10 10 10 ...  
 
-\hspace{0.2cm} \textcolor{blue}{\#\# Layer name, prefered direction and minimum length of a wire at this metal layer. For direction, 0 represents horizontal, while 1 represents vertical.}
+...  
 
-\hspace{0.2cm} layerName layerDirection layerMinLength 
+**## Information for the 1-th layer**  
+...
 
-\hspace{0.2cm} \textcolor{blue}{\#\# Routing capacities of GCell edges at the $0$-th layer}
-
-\hspace{0.2cm} \textcolor{blue}{\#\#\# Capacities of GCell at [x(0), y(0)], Capacities of GCell at [x(1), y(0)], ...}
-
-\hspace{0.2cm} 10 10 10 \cdots
-
-\hspace{0.2cm} \textcolor{blue}{\#\#\# Capacities of GCell at [x(0), y(1)], Capacities of GCell at [x(1), y(1)], ...}
-
-\hspace{0.2cm} 10 10 10 \cdots
-
-\hspace{0.2cm} \cdots \cdots \cdots
-
-\hspace{0.2cm} \textcolor{blue}{\#\# Information for the $1$-th layer}
-
-\hspace{0.2cm} \cdots \cdots \cdots
 
 ## Evaluation
 ### Evaluation Metrics
