@@ -22,7 +22,7 @@ The routing resource file follows this format:
     # Lengths of vertical GCell edges (edge count = ySize - 1)  
     VerticalGCellEdgeLengths[0] VerticalGCellEdgeLengths[1] VerticalGCellEdgeLengths[2] ...   
     # Information for the 0-th layer  
-    ## Layer name, preferred direction and minimum length of a wire at this metal layer  (Direction: 0 = horizontal, 1 = vertical)
+    ## Layer name, preferred direction (Direction: 0 = horizontal, 1 = vertical) and minimum length of a wire at this metal layer (Not useful here)
     layerName layerDirection layerMinLength   
     ## Routing capacities of GCell edges at the 0-th layer    
     ### Capacities of GCell at [x(0), y(0)], [x(1), y(0)], ...  
@@ -84,5 +84,6 @@ The global routing solution is measured by the weighted sum of the following met
 TotalWL and ViaCount denote the sum of the wire length for all signal nets and the total number of vias, respectively. UnitLengthWireCost and UnitViaCost are defined in the .cap file. In our evaluation, UnitLengthWireCost and UnitViaCost are set to be $0.00131579$ and $4$, respectively.
 
 The OverflowScore is computed as the total overflow cost across all GCell edges. For a GCell edge at layer $l$ with routing capacity $c$ and demand $d$, the overflow cost is defined as:
-$OverflowCost(c,d,l) = OFWeight[l] * (\exp^{0.5(d-c)})$. The smaller the score, the better.
+$OverflowCost(c,d,l) = OFWeight[l] * (\exp^{0.5(d-c)})$. $OFWeight[l]$ is overflow weight for GCell edges at the $l$-th layer, which is defined in the .cap file.
+The smaller the weighted score, the better.
 ### Benchmarks
