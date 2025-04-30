@@ -79,10 +79,10 @@ where each row ($x_l$ $y_l$ $z_l$ $x_h$ $y_h$ $z_h$) describes a line/rectangle 
 ### Evaluation Metrics
 The global routing solution is measured by the weighted sum of the following metrics: total wire length, via utilization and routing overflow:
 
-$Score = w_1*TotalWL + w_2*ViaCount + OverflowScore$
+    Score = UnitLengthWireCost*TotalWL + UnitViaCost*ViaCount + OverflowScore
 
-TotalWL and ViaCount denote the sum of the wire length for all signal nets and the total number of vias, respectively. $w_1$ and $w_2$ correspond to UnitLengthWireCost and UnitViaCost, respectively, which are defined in the .cap file. In our evaluation, $w_1$ and $w_2$ are set to be $0.5/\texttt{M2 pitch}$ and $2$, respectively.
+TotalWL and ViaCount denote the sum of the wire length for all signal nets and the total number of vias, respectively. UnitLengthWireCost and UnitViaCost are defined in the .cap file. In our evaluation, UnitLengthWireCost and UnitViaCost are set to be $0.00131579$ and $4$, respectively.
 
-The overflow cost for a GCell edge with routing capacity $c$ and routing demand $d$ at the $l$-th layer is calculated as follows:
+The OverflowScore is computed as the total overflow cost across all GCell edges. For a GCell edge at layer $l$ with routing capacity $c$ and demand $d$, the overflow cost is defined as:
 $OverflowCost(c,d,l) = OFWeight[l] * (\exp^{0.5(d-c)})$
 ### Benchmarks
