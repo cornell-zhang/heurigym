@@ -113,4 +113,5 @@ TeraPool-Cluster_rank | 49.7M | 4192 | 59.3M | 213M | 51 | 9245*12544|
 
 ## References
 [1] Liang, Rongjian, et al. "Gpu/ml-enhanced large scale global routing contest." International Symposium on Physical Design. 2024.
+
 [2] Cheng, Chung-Kuan, et al. "Assessment of reinforcement learning for macro placement." International Symposium on Physical Design. 2023.
