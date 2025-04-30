@@ -79,7 +79,7 @@ where each row ($x_l$ $y_l$ $z_l$ $x_h$ $y_h$ $z_h$) describes a line/rectangle 
 ### Evaluation Metrics
 The global routing solution is measured by the weighted sum of the following metrics: total wire length, via utilization and routing overflow:
 
-$origina\_socre = w_1*TotalWL + w_2*ViaCount + OverflowScore$
+$Score = w_1*TotalWL + w_2*ViaCount + OverflowScore$
 
 TotalWL and ViaCount denote the sum of the wire length for all signal nets and the total number of vias, respectively. $w_1$ and $w_2$ correspond to UnitLengthWireCost and UnitViaCost, respectively, which are defined in the .cap file. In our evaluation, $w_1$ and $w_2$ are set to be $0.5/\texttt{M2 pitch}$ and $2$, respectively.
 
