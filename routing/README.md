@@ -84,5 +84,5 @@ The global routing solution is measured by the weighted sum of the following met
 TotalWL and ViaCount denote the sum of the wire length for all signal nets and the total number of vias, respectively. UnitLengthWireCost and UnitViaCost are defined in the .cap file. In our evaluation, UnitLengthWireCost and UnitViaCost are set to be $0.00131579$ and $4$, respectively.
 
 The OverflowScore is computed as the total overflow cost across all GCell edges. For a GCell edge at layer $l$ with routing capacity $c$ and demand $d$, the overflow cost is defined as:
-$OverflowCost(c,d,l) = OFWeight[l] * (\exp^{0.5(d-c)})$
+$OverflowCost(c,d,l) = OFWeight[l] * (\exp^{0.5(d-c)})$. The smaller the score, the better.
 ### Benchmarks
