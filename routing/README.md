@@ -87,8 +87,16 @@ The OverflowScore is computed as the total overflow cost across all GCell edges.
 $OverflowCost(c,d,l) = OFWeight[l] * (\exp^{0.5(d-c)})$. $OFWeight[l]$ is overflow weight for GCell edges at the $l$-th layer, which is defined in the .cap file.
 The smaller the weighted score, the better.
 ### Benchmarks
-We use the same benchmark suite as the ISPD2024 global routing contest. This suite will encompass 14 placed circuits synthesised at the NanGate 45nm technology node. 
-The largest circuit within these suites encompasses approximately 50 million cells. It is worth noting that some testcases may contain macros that restrict access to certain routing resources. For the sake of simplicity, these circuits do not incorporate power grid or clock tree routing.
+We use the benchmark suite from the ISPD 2024 Global Routing Contest, which comprises seven RTL designs, each paired with two placed netlists. For the same RTL design, the two netlists differ slightly in netlist structure and implementation settings, such as core density and macro placement. The benchmarks are derived from the open-source TILOS macro placement suite and are synthesized using the NanGate 45nm technology node. The largest design contains approximately 50 million cells. Some testcases feature macros that restrict access to certain routing resources. To simplify the setup, power grid and clock tree routing are excluded.
+
+Below table details the statistics of the test cases. 
 
 |Design | #std cells | #macros | #nets | #pins | density (\%) | GCell grid dimensions |
 |  ----  | ----  | ----  | ----  | ---- | ---- | ---- | 
+Ariane_sample | 122K | 133 | 129K | 420K | 51 | 844$\times$1144|
+MemPool-Tile_sample | 129K | 20 | 136K | 500K | 51 | 475$\times$644|
+NVDLA_sample | 166K | 128 | 177K | 630K | 51 | 1240$\times$1682|
+BlackParrot_sample | 715K | 220 | 770K | 2.9M | 68 | 1532$\times$2077|
+MemPool-Group_sample | 3.1M | 320 | 3.3M | 10.9M | 68 | 1782$\times$2417|
+MemPool-Cluster_sample | 9.9M | 1296 | 10.6M | 40.2M | 68 | 3511$\times$4764|
+TeraPool-Cluster_sample | 49.7M | 4192 | 59.3M | 213M | 68 | 7891$\times$10708|
