@@ -87,7 +87,7 @@ The OverflowScore is computed as the total overflow cost across all GCell edges.
 $OverflowCost(c,d,l) = OFWeight[l] * (\exp^{0.5(d-c)})$. $OFWeight[l]$ is overflow weight for GCell edges at the $l$-th layer, which is defined in the .cap file.
 The smaller the weighted score, the better.
 ### Benchmarks
-We use the benchmark suite from the ISPD 2024 Global Routing Contest, which comprises seven RTL designs, each paired with two placed netlists. For the same RTL design, the two netlists differ slightly in netlist structure and implementation settings, such as core density and macro placement. The benchmarks are derived from the open-source TILOS macro placement suite and are synthesized using the NanGate 45nm technology node. The largest design contains approximately 50 million cells. Some testcases feature macros that restrict access to certain routing resources. To simplify the setup, power grid and clock tree routing are excluded.
+We use the benchmark suite from the ISPD 2024 Global Routing Contest [1], which comprises seven RTL designs, each paired with two placed netlists. For the same RTL design, the two netlists differ slightly in netlist structure and implementation settings, such as core density and macro placement. The benchmarks are derived from the open-source TILOS macro placement suite [2] and are synthesized using the NanGate 45nm technology node. The largest design contains approximately 50 million cells. Some testcases feature macros that restrict access to certain routing resources. To simplify the setup, power grid and clock tree routing are excluded.
 
 Below table details the statistics of the test cases. 
 
@@ -108,3 +108,9 @@ BlackParrot_rank | 780K | 220 | 825K | 2.9M | 68 | 1532*2077|
 MemPool-Group_rank | 3.0M | 320 | 3.2M | 10.9M | 68 | 1782*2417|
 MemPool-Cluster_rank | 9.9M | 1296 | 10.6M | 40.2M | 51 | 4113*5580|
 TeraPool-Cluster_rank | 49.7M | 4192 | 59.3M | 213M | 51 | 9245*12544|
+
+[Testcases](https://drive.google.com/drive/u/2/folders/1bon65UEAx8cjSvVhYJ-lgC8QMDX0fvUm)
+
+## References
+[1] Liang, Rongjian, et al. "Gpu/ml-enhanced large scale global routing contest." International Symposium on Physical Design. 2024.
+[2] Cheng, Chung-Kuan, et al. "Assessment of reinforcement learning for macro placement." International Symposium on Physical Design. 2023.
