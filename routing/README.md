@@ -14,32 +14,22 @@ There are two input files for each circuit: a routing resource file (with a .cap
 The routing resource file follows this format:
 
     # Dimensions of GCell graph 
-    nLayers xSize ySize  
-    
+    nLayers xSize ySize      
     # Weights of performance metrics  
-    UnitLengthWireCost UnitViaCost OFWeight[0] OFWeight[1] OFWeight[2] ...  
-    
+    UnitLengthWireCost UnitViaCost OFWeight[0] OFWeight[1] OFWeight[2] ...   
     # Lengths of horizontal GCell edges (edge count = xSize - 1)  
-    HorizontalGCellEdgeLengths[0] HorizontalGCellEdgeLengths[1] HorizontalGCellEdgeLengths[2] ...  
-    
+    HorizontalGCellEdgeLengths[0] HorizontalGCellEdgeLengths[1] HorizontalGCellEdgeLengths[2] ...   
     # Lengths of vertical GCell edges (edge count = ySize - 1)  
-    VerticalGCellEdgeLengths[0] VerticalGCellEdgeLengths[1] VerticalGCellEdgeLengths[2] ...  
-    
+    VerticalGCellEdgeLengths[0] VerticalGCellEdgeLengths[1] VerticalGCellEdgeLengths[2] ...   
     # Information for the 0-th layer  
-    
     ## Layer name, preferred direction and minimum length of a wire at this metal layer  (Direction: 0 = horizontal, 1 = vertical)
-    layerName layerDirection layerMinLength  
-    
-    ## Routing capacities of GCell edges at the 0-th layer  
-    
+    layerName layerDirection layerMinLength   
+    ## Routing capacities of GCell edges at the 0-th layer    
     ### Capacities of GCell at [x(0), y(0)], [x(1), y(0)], ...  
-    10 10 10 ...  
-    
+    10 10 10 ...     
     ### Capacities of GCell at [x(0), y(1)], [x(1), y(1)], ...  
-    10 10 10 ...  
-    
-    ...  
-    
+    10 10 10 ...    
+    ...      
     ## Information for the 1-th layer 
     ...
 
@@ -53,8 +43,7 @@ The net information file follows this format:
         # Access point locations for pin 1  
         [(location of access point 0), (location of access point 1), ...]        
         ...  
-        )  
-        
+        )       
         Net1  
         (  
         [(location of access point 0), (location of access point 1), ...]  
@@ -74,7 +63,6 @@ Here is an example of a global routing solution for a net:
         Net0
         (
         # $x_l$ $y_l$ $z_l$ $x_h$ $y_h$ $z_h$          
-        0 0 0 0 0 0
         0 0 0 0 0 1
         0 0 1 0 2 1
         0 2 1 0 2 2
@@ -82,7 +70,6 @@ Here is an example of a global routing solution for a net:
         3 2 1 3 2 2
         3 2 1 3 3 1
         3 3 0 3 3 1
-        3 3 0 3 3 0
         )
 
 where each row ($x_l$ $y_l$ $z_l$ $x_h$ $y_h$ $z_h$) describes a line/rectangle in the 3D GCell graph, spanning from $(x_l, y_l, z_l)$ to $(x_h, y_h, z_h)$.
