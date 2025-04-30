@@ -52,9 +52,12 @@ The net information file follows this format:
         )       
         ... 
 
+Parsers for the input files can be found in [evaluator.cpp](https://drive.google.com/drive/u/2/folders/1Ckqd9Fq-CpqVwAlaSObMmv0Uvqbx3IVf)
+
+
 ### Output
-The global routing solution is described in the GCell coordinate system. To enhance routability and ensure pin accessibility during the subsequent detailed routing process, we operate under the following assumptions:
-1. Metal 1 (the 0-th layer) is not employed for net routing. To reach pins on Metal 1, vias must be utilized to establish connections from Metal 2.
+The GR solution is described in the GCell coordinate system. To enhance routability and ensure pin accessibility during the subsequent detailed routing process, we enforce following constraints:
+1. Metal 1 (the 0-th layer) is not employed for net routing. To reach pins on Metal 1, vias must be utilized to establish connections from higher layers.
 2. Each pin must be connected through at least one of its access points.
 
 Here is an example of a global routing solution for a net:
@@ -81,7 +84,7 @@ The global routing solution is measured by the weighted sum of the following met
 
     Score = UnitLengthWireCost*TotalWL + UnitViaCost*ViaCount + OverflowScore
 
-TotalWL and ViaCount denote the sum of the wire length for all signal nets and the total number of vias, respectively. UnitLengthWireCost and UnitViaCost are defined in the .cap file. In our evaluation, UnitLengthWireCost and UnitViaCost are set to be $0.00131579$ and $4$, respectively.
+TotalWL and ViaCount denote the sum of the wire length for all nets and the total number of vias, respectively. UnitLengthWireCost and UnitViaCost are defined in the .cap file. In our evaluation, UnitLengthWireCost and UnitViaCost are set to be $0.00131579$ and $4$, respectively.
 
 The OverflowScore is computed as the total overflow cost across all GCell edges. For a GCell edge at layer $l$ with routing capacity $c$ and demand $d$, the overflow cost is defined as:
 $OverflowCost(c,d,l) = OFWeight[l] * (\exp^{0.5(d-c)})$. $OFWeight[l]$ is overflow weight for GCell edges at the $l$-th layer, which is defined in the .cap file.
