@@ -87,3 +87,8 @@ The OverflowScore is computed as the total overflow cost across all GCell edges.
 $OverflowCost(c,d,l) = OFWeight[l] * (\exp^{0.5(d-c)})$. $OFWeight[l]$ is overflow weight for GCell edges at the $l$-th layer, which is defined in the .cap file.
 The smaller the weighted score, the better.
 ### Benchmarks
+We use the same benchmark suite as the ISPD2024 global routing contest. This suite will encompass 14 placed circuits synthesised at the NanGate 45nm technology node. 
+The largest circuit within these suites encompasses approximately 50 million cells. It is worth noting that some testcases may contain macros that restrict access to certain routing resources. For the sake of simplicity, these circuits do not incorporate power grid or clock tree routing.
+
+|Design | #std cells | #macros | #nets | #pins | density (\%) | GCell grid dimensions |
+|  ----  | ----  | ----  | ----  | ---- | ---- | ---- | 
