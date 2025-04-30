@@ -49,22 +49,18 @@ The net information file follows this format:
         Net0  
         (  
         # Access point locations (layer, x, y) for pin 0  
-        [(location of access point 0), (location of access point 1), ...]  
-        
+        [(location of access point 0), (location of access point 1), ...]      
         # Access point locations for pin 1  
-        [(location of access point 0), (location of access point 1), ...]  
-        
+        [(location of access point 0), (location of access point 1), ...]        
         ...  
         )  
         
         Net1  
         (  
         [(location of access point 0), (location of access point 1), ...]  
-        [(location of access point 0), (location of access point 1), ...]  
-                
+        [(location of access point 0), (location of access point 1), ...]                
         ... 
-        )
-             
+        )       
         ... 
 
 
