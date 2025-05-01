@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 def verify(input_file: str, output_file: str) -> bool:
     """Verification function: checks if all the constraints are satisfied.
+    Please do NOT change the function name and arguments.
+    It is used by the agent to verify the output of the solver.
 
     Args:
         input_file: Path to the input file
@@ -10,4 +12,6 @@ def verify(input_file: str, output_file: str) -> bool:
         bool: True if the schedule is valid, False otherwise
 
     """
+    # inputs = parse_input(input_file)
+    # outputs = parse_output(output_file)
     raise NotImplementedError("This is a placeholder implementation.")

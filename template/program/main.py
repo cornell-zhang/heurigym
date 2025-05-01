@@ -32,6 +32,7 @@ def main():
     try:
         os.makedirs(os.path.dirname(output_file), exist_ok=True)
         with open(output_file, "w") as out_file:
+            # TODO: Provide your output writer here
             raise NotImplementedError(
                 "You need to implement the output writer yourself."
             )
