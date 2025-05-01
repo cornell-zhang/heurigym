@@ -3,12 +3,12 @@ import sys
 from utils import parse_json, parse_schedule
 
 
-def verify(input_file: str, schedule_file: str) -> bool:
+def verify(input_file: str, output_file: str) -> bool:
     """Verification function: checks dependency and resource constraints.
 
     Args:
         input_file: Path to the input JSON file containing graph and constraints
-        schedule_file: Path to the schedule file containing node start times
+        output_file: Path to the schedule file containing node start times
 
     Returns:
         bool: True if schedule is valid, False otherwise
@@ -21,8 +21,8 @@ def verify(input_file: str, schedule_file: str) -> bool:
     """
     # Parse input files
     nodes, delay, resource_constraints = parse_json(input_file)
-    schedule = parse_schedule(schedule_file)
-    
+    schedule = parse_schedule(output_file)
+
     valid = True
 
     # Check data dependency constraints
