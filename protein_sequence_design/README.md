@@ -17,7 +17,6 @@ Protein sequence design (or inverse protein folding) aims to find an amino acid 
     * $g(d_{ij})$ is a contact function (e.g., sigmoidal or step) rewarding small distances between H residues.
 * **Optimization Goal:**
     * Find a sequence $S \in \{H,P\}^n$ that *minimizes* $\Phi(S)$.
-    * This problem is reduced to finding a minimum $s-t$ cut in a specially constructed directed graph with $O(n+p)$ vertices and edges (where $p$ is the number of pairs with $g(d_{ij})>0$). This yields a polynomial-time algorithm, roughly $O(n^2 \log n)$.
 
 ## Input Format
 
