@@ -2,8 +2,18 @@
 import os
 import json
 import sys
-from typing import Dict, Tuple
-from solver import Node
+from dataclasses import dataclass, field
+from typing import Dict, Tuple, List
+
+
+@dataclass
+class Node:
+    id: str  # e.g., "n1"
+    resource: str  # e.g., "mul" or "sub"
+    preds: List[str] = field(default_factory=list)  # Predecessor nodes
+    succs: List[str] = field(default_factory=list)  # Successor nodes
+    start_time: int = 0  # Scheduled start cycle (to be computed)
+    in_degree: int = 0  # Number of incoming edges (for topological ordering)
 
 
 def get_filename(path: str) -> str:

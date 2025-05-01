@@ -128,6 +128,11 @@ class ProgramExecutor:
                 base_name = input_file.stem
                 
                 # Run the main program
+                shutil.copy(
+                    "scripts/main.py",
+                    self.solution_folder / "main.py"
+                )
+                os.makedirs(self.solution_folder / "output", exist_ok=True)
                 run_result = subprocess.run(
                     ['python3', 'main.py', str(input_file)],
                     cwd=str(self.solution_folder),
@@ -135,10 +140,7 @@ class ProgramExecutor:
                     text=True
                 )
                 
-                # Create output directory if it doesn't exist
-                os.makedirs(self.solution_folder / "output", exist_ok=True)
                 cost_file = self.solution_folder / "output" / f"{base_name}.cost"
-                
                 if run_result.returncode != 0:
                     # Save error message directly to cost file
                     error_data = {
@@ -311,43 +313,13 @@ Output Format:
         problem_folder = workspace_root / problem_desc['name']
         program_folder = problem_folder / "program"
         
-        # Read all Python template files
-        program_files = {}
-        
-        # First read main.py and solver.py
-        main_path = program_folder / "main.py"
+        # Read solve.py file
         solver_path = program_folder / "solver.py"
-        if main_path.exists():
-            with open(main_path, 'r') as f:
-                program_files["main.py"] = f.read()
         if solver_path.exists():
             with open(solver_path, 'r') as f:
-                program_files["solver.py"] = f.read()
-        
-        # Then read all other Python files
-        for py_file in program_folder.glob("*.py"):
-            if py_file.name not in ["main.py", "solver.py"]:
-                with open(py_file, 'r') as f:
-                    program_files[py_file.name] = f.read()
-        
-        # Build output string with all program files
-        output = []
-        
-        # First add main.py and solver.py
-        for filename in ["main.py", "solver.py"]:
-            if filename in program_files:
-                output.append(f"# {filename}:")
-                output.append(program_files[filename])
-                output.append("")  # Add blank line between files
-        
-        # Then add all other files
-        for filename, content in program_files.items():
-            if filename not in ["main.py", "solver.py"]:
-                output.append(f"# {filename}:")
-                output.append(content)
-                output.append("")  # Add blank line between files
-            
-        return "\n".join(output)
+                return f.read()
+        else:
+            raise FileNotFoundError(f"Solver file not found at {solver_path}")
         
     def format_prompt(self, 
                      problem_desc: Dict[str, str], 
@@ -428,7 +400,7 @@ This is the program you generated in the previous iteration:
 The program failed to produce valid solutions for some test cases. Please fix the following issues:
 1. Check for compilation errors or runtime exceptions
 2. Ensure the program handles all edge cases and meets the problem constraints correctly
-3. Verify that the output format matches the expected format
+3. Verify that the input and output format matches the expected format
 4. Make sure all required functions are implemented correctly"""
             else:
                 prompt += """

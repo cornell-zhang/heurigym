@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from utils import parse_json, parse_schedule
 
+
 def evaluate(input_file: str, output_file: str) -> int:
     """Cost calculation function: calculates the final latency.
 
@@ -15,7 +16,7 @@ def evaluate(input_file: str, output_file: str) -> int:
     """
     nodes, delay, _ = parse_json(input_file)
     schedule = parse_schedule(output_file)
-    
+
     latency = 0
     for node_id, node in nodes.items():
         finish_time = schedule[node_id] + delay[node.resource]

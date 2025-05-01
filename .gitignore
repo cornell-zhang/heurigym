@@ -73,6 +73,8 @@ ENV/
 env.bak/
 venv.bak/
 
+# ILP
+*.lp
 
 # tech mapping ABC history
 abc.history

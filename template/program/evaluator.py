@@ -3,7 +3,8 @@ from typing import Union
 
 
 def evaluate(input_file: str, output_file: str) -> Union[int, float]:
-    """Cost calculation function: calculates the cost.
+    """
+    Cost calculation function: calculates the cost.
     Please do NOT change the function name and arguments.
     It is used by the agent to evaluate the cost of the generated solution.
 
