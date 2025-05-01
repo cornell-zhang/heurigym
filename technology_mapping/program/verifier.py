@@ -11,34 +11,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-
-def _check_abc_available() -> None:
-    """Raise RuntimeError if `abc` binary is not on PATH."""
-    if shutil.which("abc") is None:
-        raise RuntimeError(
-            "`abc` executable not found on $PATH. "
-            "Install Berkeley ABC (https://github.com/berkeley-abc/abc) "
-            "or add it to your PATH before running the verifier."
-        )
-
-
-def _run_cec(golden: Path, candidate: Path) -> subprocess.CompletedProcess[str]:
-    """Run `cec` in ABC and return the CompletedProcess."""
-    cmd = [
-        "abc",
-        "-c",
-        f"cec {golden.as_posix()} {candidate.as_posix()}"
-    ]
-    # capture both stdout and stderr as text, force locale-independent output
-    return subprocess.run(
-        cmd,
-        check=False,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True
-    )
-
-
 def verify(input_file: str, output_file: str) -> bool:
     """Verify logical equivalence between two BLIF files using ABC.
 
@@ -81,6 +53,35 @@ def verify(input_file: str, output_file: str) -> bool:
         f"[verifier] abc output:\n{output}\n"
     )
     return False
+
+
+
+def _check_abc_available() -> None:
+    """Raise RuntimeError if `abc` binary is not on PATH."""
+    if shutil.which("abc") is None:
+        raise RuntimeError(
+            "`abc` executable not found on $PATH. "
+            "Install Berkeley ABC (https://github.com/berkeley-abc/abc) "
+            "or add it to your PATH before running the verifier."
+        )
+
+
+def _run_cec(golden: Path, candidate: Path) -> subprocess.CompletedProcess[str]:
+    """Run `cec` in ABC and return the CompletedProcess."""
+    cmd = [
+        "abc",
+        "-c",
+        f"cec {golden.as_posix()} {candidate.as_posix()}"
+    ]
+    # capture both stdout and stderr as text, force locale-independent output
+    return subprocess.run(
+        cmd,
+        check=False,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True
+    )
+
 
 
 # --------------------------------------------------------------------------
