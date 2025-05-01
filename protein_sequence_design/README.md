@@ -2,7 +2,7 @@
 
 ## Background
 
-Protein sequence design (or inverse protein folding) aims to find an amino acid sequence likely to adopt a given target 3D structure. The Grand Canonical (GC) model simplifies this by using a binary hydrophobic/polar (H/P) alphabet and a fitness function rewarding dense hydrophobic cores while penalizing solvent-exposed H residues [1, 2]. Initially, only heuristic methods existed for this model [3]. [4] provides efficient algorithms for both finding optimal sequences.
+Protein sequence design (or inverse protein folding) aims to find an amino acid sequence likely to adopt a given target 3D structure. The Grand Canonical (GC) model simplifies this by using a binary hydrophobic/polar (H/P) alphabet and a fitness function rewarding dense hydrophobic cores while penalizing solvent-exposed H residues [1, 2]. Initially, only heuristic methods existed for this model [3]. [4] provides efficient algorithms for finding optimal sequences.
 
 ## Formalization
 
