@@ -16,6 +16,7 @@ We construct a new benchmark HeuriGen that has
 | [Pick-up and Delivery](pdptw) | TSP |
 | [Technology Mapping](technology_mapping) | Covering |
 | [Global Routing](global_routing) | Routing |
+| [Protein Sequence Design (GC model)](protein_sequence_design) | Network Flow |
 
 
 ## Problem Setup

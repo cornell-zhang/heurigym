@@ -1,16 +1,10 @@
-# Protein Sequence Design & Evolutionary Fitness Landscape in GC Model
+# Protein Sequence Design (GC Model)
 
 ## Background
 
-Protein sequence design (or inverse protein folding) aims to find an amino acid sequence likely to adopt a given target 3D structure. The Grand Canonical (GC) model simplifies this by using a binary hydrophobic/polar (H/P) alphabet and a fitness function rewarding dense hydrophobic cores while penalizing solvent-exposed H residues [1, 2]. Initially, only heuristic methods existed for this model [3].
-
-A related concept is the **fitness landscape**: the set of all optimal sequences (minimizers of the fitness function) for a target structure. A key question is whether this set of optimal sequences is **connected** by single H/P point mutations, allowing evolutionary paths without passing through non-optimal intermediates. 
-
-[4] provides efficient algorithms for both finding optimal sequences and testing this connectedness property.
+Protein sequence design (or inverse protein folding) aims to find an amino acid sequence likely to adopt a given target 3D structure. The Grand Canonical (GC) model simplifies this by using a binary hydrophobic/polar (H/P) alphabet and a fitness function rewarding dense hydrophobic cores while penalizing solvent-exposed H residues [1, 2]. Initially, only heuristic methods existed for this model [3]. [4] provides efficient algorithms for both finding optimal sequences.
 
 ## Formalization
-
-### 1. Sequence Design Problem
 
 * **Structure Representation:**
     * A target structure with $n$ residues.
@@ -19,51 +13,44 @@ A related concept is the **fitness landscape**: the set of all optimal sequences
 * **Fitness Function:**
     * A sequence $S$ is an element of $\{H, P\}^n$. $S_H$ denotes the set of indices $k$ where $S_k = H$.
     * The fitness $\Phi(S)$ is given by:
-        $$ \Phi(S) = \alpha \sum_{i,j \in S_H} g(d_{ij}) + \beta \sum_{i \in S_H} s_i $$
+        $ \Phi(S) = \alpha \sum_{i,j \in S_H} g(d_{ij}) + \beta \sum_{i \in S_H} s_i $.
     * $\alpha < 0$ weights favorable H-H contacts, $\beta > 0$ penalizes solvent exposure of H residues.
     * $g(d_{ij})$ is a contact function (e.g., sigmoidal or step) rewarding small distances between H residues.
 * **Optimization Goal:**
     * Find a sequence $S \in \{H,P\}^n$ that *minimizes* $\Phi(S)$.
     * This problem is reduced to finding a minimum $s-t$ cut in a specially constructed directed graph with $O(n+p)$ vertices and edges (where $p$ is the number of pairs with $g(d_{ij})>0$). This yields a polynomial-time algorithm, roughly $O(n^2 \log n)$.
 
-### 2. Connectedness Problem
-
-* **Optimal Set:** $\Omega = \{ S \in \{H,P\}^n \mid \Phi(S) \text{ is minimal} \}$. $\Omega$ can be exponentially large.
-* **Adjacency:** Two sequences $S, S'$ are adjacent if they differ by a single H↔P flip at one position.
-* **Connectedness:** Is $\Omega$ connected? That is, for any $S, S' \in \Omega$, does a path $S = S_0, S_1, \dots, S_k = S'$ exist such that each $S_i \in \Omega$ and $S_{i}, S_{i+1}$ are adjacent?
-* **Submodular Reformulation:**
-    * Map sequence $S$ to the set $X = S_H$ (indices where $S_k=H$). Define $f(X) = \Phi(\sigma(X))$, where $\sigma(X)$ is the sequence corresponding to set $X$.
-    * $f(X)$ is a **submodular function**: $f(X \cap Y) + f(X \cup Y) \le f(X) + f(Y)$.
-    * Let $\Omega_f$ be the family of subsets minimizing $f$. $\Omega$ is connected if and only if $\Omega_f$ is connected under single-element insertions/deletions transforming one minimizing set into another while staying within $\Omega_f$.
-* **Algorithmic Test:**
-    * Compute the unique minimal ($X_*$) and maximal ($X^*$) minimizers of $f$ using standard submodular function minimization algorithms.
-    * Starting from $W = X^*$, iteratively find an element $i \in W$ such that $W' = W \setminus \{i\}$ is also a minimizer ($f(W') = f(W)$) and update $W := W'$.
-    * If this process reaches $X_*$, then $\Omega_f$ (and $\Omega$) is connected.
-    * If the process reaches a non-minimal set $W$ where no such element $i$ exists (an "impasse"), then $\Omega_f$ is disconnected. This test runs in polynomial time.
-
 ## Input Format
 
-1.  **For Sequence Design:**
-    * **Target Structure Data:**
-        * Number of residues, $n$.
-        * List of solvent-accessible areas $\{s_i\}_{i=1}^n$.
-        * List of residue pairs $(i, j)$ and distances $d_{ij}$ for which $g(d_{ij}) > 0$.
-    * **Model Parameters:**
-        * Values for $\alpha$ (negative) and $\beta$ (positive).
-        * Definition of the contact function $g(d)$ (e.g., $g(d) = 1/(1+e^{d-6.5})$ for $d \le 6.5$Å, 0 otherwise ).
+The input is a protein structure provided in the standard Protein Data Bank (PDB) file format. This format describes the positions of atoms in three-dimensional space. The algorithm utilizes the atomic coordinates to calculate inter-residue distances ($d_{ij}$) and solvent accessible surface areas ($s_i$).
 
-2.  **For Connectedness Test:**
-    * The same inputs as for Sequence Design.
-    * Implicitly requires an oracle/subroutine to evaluate the fitness function $\Phi(S)$ (or $f(X)$) efficiently. The sequence design algorithm itself can serve this purpose.
+A snippet of a typical PDB file looks like this:
+
+```pdb
+ATOM      1  N   ASP A   1      25.824 -18.547  21.875  1.00 26.10           N
+ATOM      2  CA  ASP A   1      25.130 -17.690  20.946  1.00 24.02           C
+ATOM      3  C   ASP A   1      25.342 -18.306  19.589  1.00 20.34           C
+ATOM      4  O   ASP A   1      26.329 -19.003  19.358  1.00 21.77           O
+ATOM      5  CB  ASP A   1      25.691 -16.283  20.931  1.00 29.35           C
+ATOM      6  CG  ASP A   1      25.201 -15.494  22.138  1.00 33.94           C
+ATOM      7  OD1 ASP A   1      25.791 -15.651  23.209  1.00 37.34           O
+ATOM      8  OD2 ASP A   1      24.238 -14.727  21.999  1.00 37.25           O
+ATOM      9  N   LYS A   2      24.426 -18.058  18.693  1.00 13.86           N
+ATOM     10  CA  LYS A   2      24.544 -18.580  17.400  1.00 13.08           C
+... (remaining atoms) ...
+```
 
 ## Output Format
 
-1.  **Sequence Design:**
-    * An optimal sequence $S$, represented as a string of length $n$ over $\{H, P\}$, which achieves the minimum value of $\Phi(S)$.
-2.  **Connectedness Test:**
-    * A Boolean result: **Connected** or **Disconnected**.
-    * If **Disconnected**, typically provides an "impasse" set $X$ (or corresponding sequence $S$) demonstrating the disconnection.
-    * (Implicitly, if **Connected**, the algorithm demonstrates a monotone path from $X^*$ to $X_*$ exists).
+The output is a single string representing the calculated optimal sequence using the binary Hydrophobic (H) / Polar (P) alphabet. The length of the sequence corresponds to the number of amino acid residues processed from the input PDB file.
+
+An example output sequence looks like this:
+
+```
+PPPPPPPPPPPPPPPPPPPPPPHPHPPPPHPHPPPPHPPPPPHHHPHPPP...PHPPPPHPPPPPPHPPHPPPPHHHHHHPPPPPHPHPHPPPPPHPHPHPHP
+
+```
+
 
 ## References
 
