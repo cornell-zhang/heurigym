@@ -97,23 +97,23 @@ We use the benchmark suite from the ISPD 2024 Global Routing Contest [1], which 
 
 Below table details the statistics of the test cases. 
 
-|Design | #std cells | #macros | #nets | #pins | density (\%) | GCell grid dimensions |
+|Design | #std cells | #macros | #nets | #pins | density (\%) | GCell grid dimensions (nLayers xSize ySize) |
 |  ----  | ----  | ----  | ----  | ---- | ---- | ---- | 
-Ariane_sample | 122K | 133 | 129K | 420K | 51 | 844*1144|
-MemPool-Tile_sample | 129K | 20 | 136K | 500K | 51 | 475*644|
-NVDLA_sample | 166K | 128 | 177K | 630K | 51 | 1240*1682|
-BlackParrot_sample | 715K | 220 | 770K | 2.9M | 68 | 1532*2077|
-MemPool-Group_sample | 3.1M | 320 | 3.3M | 10.9M | 68 | 1782*2417|
-MemPool-Cluster_sample | 9.9M | 1296 | 10.6M | 40.2M | 68 | 3511*4764|
-TeraPool-Cluster_sample | 49.7M | 4192 | 59.3M | 213M | 68 | 7891*10708|
+Ariane_sample | 122K | 133 | 129K | 420K | 51 | 10*844*1144|
+MemPool-Tile_sample | 129K | 20 | 136K | 500K | 51 | 10*475*644|
+NVDLA_sample | 166K | 128 | 177K | 630K | 51 | 10*1240*1682|
+BlackParrot_sample | 715K | 220 | 770K | 2.9M | 68 | 10*1532*2077|
+MemPool-Group_sample | 3.1M | 320 | 3.3M | 10.9M | 68 | 10*1782*2417|
+MemPool-Cluster_sample | 9.9M | 1296 | 10.6M | 40.2M | 68 | 10*3511*4764|
+TeraPool-Cluster_sample | 49.7M | 4192 | 59.3M | 213M | 68 | 10*7891*10708|
 |  ----  | ----  | ----  | ----  | ---- | ---- | ---- | 
-Ariane_rank | 121K | 133 | 128K | 435K | 68 | 716*971|
-MemPool-Tile_rank | 128K | 20 | 136K | 483K | 68 | 429*581|
-NVDLA_rank | 164K | 128 | 174K | 610K | 68 | 908*1682|
-BlackParrot_rank | 780K | 220 | 825K | 2.9M | 68 | 1532*2077|
-MemPool-Group_rank | 3.0M | 320 | 3.2M | 10.9M | 68 | 1782*2417|
-MemPool-Cluster_rank | 9.9M | 1296 | 10.6M | 40.2M | 51 | 4113*5580|
-TeraPool-Cluster_rank | 49.7M | 4192 | 59.3M | 213M | 51 | 9245*12544|
+Ariane_rank | 121K | 133 | 128K | 435K | 68 | 10*716*971|
+MemPool-Tile_rank | 128K | 20 | 136K | 483K | 68 | 10*429*581|
+NVDLA_rank | 164K | 128 | 174K | 610K | 68 | 10*908*1682|
+BlackParrot_rank | 780K | 220 | 825K | 2.9M | 68 | 10*1532*2077|
+MemPool-Group_rank | 3.0M | 320 | 3.2M | 10.9M | 68 | 10*1782*2417|
+MemPool-Cluster_rank | 9.9M | 1296 | 10.6M | 40.2M | 51 | 10*4113*5580|
+TeraPool-Cluster_rank | 49.7M | 4192 | 59.3M | 213M | 51 | 10*9245*12544|
 
 ## Downloads
 [Testcases](https://drive.google.com/drive/u/2/folders/1bon65UEAx8cjSvVhYJ-lgC8QMDX0fvUm)
