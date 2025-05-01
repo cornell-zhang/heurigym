@@ -107,13 +107,13 @@ MemPool-Group_sample | 3.1M | 320 | 3.3M | 10.9M | 68 | 10 * 1782 * 2417|
 MemPool-Cluster_sample | 9.9M | 1296 | 10.6M | 40.2M | 68 | 10 * 3511 * 4764|
 TeraPool-Cluster_sample | 49.7M | 4192 | 59.3M | 213M | 68 | 10 * 7891 * 10708|
 |  ----  | ----  | ----  | ----  | ---- | ---- | ---- | 
-Ariane_rank | 121K | 133 | 128K | 435K | 68 | 10*716*971|
-MemPool-Tile_rank | 128K | 20 | 136K | 483K | 68 | 10*429*581|
-NVDLA_rank | 164K | 128 | 174K | 610K | 68 | 10*908*1682|
-BlackParrot_rank | 780K | 220 | 825K | 2.9M | 68 | 10*1532*2077|
-MemPool-Group_rank | 3.0M | 320 | 3.2M | 10.9M | 68 | 10*1782*2417|
-MemPool-Cluster_rank | 9.9M | 1296 | 10.6M | 40.2M | 51 | 10*4113*5580|
-TeraPool-Cluster_rank | 49.7M | 4192 | 59.3M | 213M | 51 | 10*9245*12544|
+Ariane_rank | 121K | 133 | 128K | 435K | 68 | 10 * 716 * 971|
+MemPool-Tile_rank | 128K | 20 | 136K | 483K | 68 | 10 * 429 * 581|
+NVDLA_rank | 164K | 128 | 174K | 610K | 68 | 10 * 908 * 1682|
+BlackParrot_rank | 780K | 220 | 825K | 2.9M | 68 | 10 * 1532 * 2077|
+MemPool-Group_rank | 3.0M | 320 | 3.2M | 10.9M | 68 | 10 * 1782 * 2417|
+MemPool-Cluster_rank | 9.9M | 1296 | 10.6M | 40.2M | 51 | 10 * 4113 * 5580|
+TeraPool-Cluster_rank | 49.7M | 4192 | 59.3M | 213M | 51 | 10 * 9245 * 12544|
 
 ## Downloads
 [Testcases](https://drive.google.com/drive/u/2/folders/1bon65UEAx8cjSvVhYJ-lgC8QMDX0fvUm)
