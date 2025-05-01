@@ -136,12 +136,22 @@ class ProgramExecutor:
                 output_dir = self.solution_folder / f"output{iteration}"
                 os.makedirs(output_dir, exist_ok=True)
                 output_file = output_dir / f"{base_name}.output"
-                run_result = subprocess.run(
-                    ['python3', 'main.py', str(input_file), str(output_file)],
-                    cwd=str(self.solution_folder),
-                    capture_output=True,
-                    text=True
-                )
+                try:
+                    run_result = subprocess.run(
+                        ['python3', 'main.py', str(input_file), str(output_file)],
+                        cwd=str(self.solution_folder),
+                        capture_output=True,
+                        text=True,
+                        timeout=10  # 10 second timeout
+                    )
+                except subprocess.TimeoutExpired:
+                    error_data = {
+                        "message": "Program execution timed out after 10 seconds"
+                    }
+                    with open(cost_file, 'w') as f:
+                        json.dump(error_data, f, indent=2)
+                    all_outputs.append(f"Test case {base_name}:\nProgram execution timed out after 10 seconds")
+                    continue
                 
                 cost_file = output_dir / f"{base_name}.cost"
                 if run_result.returncode != 0:
