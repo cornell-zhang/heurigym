@@ -1,11 +1,10 @@
 import argparse
-import numpy as np
 from collections import defaultdict
 from collections import deque
 import time
 from egraph_data import EGraphData
+import sys
 import os
-import pickle
 
 
 class CostSet:
@@ -200,21 +199,19 @@ def greedy(egraph):  #egraph's type is EGraphData or BaseEGraph
     return egraph.node_to_id(choose_enodes)
 
 
-def main():
-    args = get_args()
-    # we do greedy on cpu
-    egraph = EGraphData(args.input_file,
+def solve(input_file):
+    egraph = EGraphData(input_file,
                         load_cost=False,
                         drop_self_loops=False,
                         device="cpu")
     choose_enodes = greedy(egraph)
-    input_file = args.input_file.split("/")[-1]
-    input_file = input_file.split(".")[0]
-    saved_file_path = os.path.join("output_log", f'greedy_{input_file}.pkl')
-    os.makedirs(os.path.dirname(saved_file_path), exist_ok=True)
-    with open(saved_file_path, "wb") as f:
-        pickle.dump(choose_enodes, f)
+    return str(choose_enodes)
 
 
 if __name__ == "__main__":
-    main()
+    input_file = sys.argv[1]
+    output = solve(input_file)
+    outputfile = "output_log/greedy.output"
+    os.makedirs(os.path.dirname(outputfile), exist_ok=True)
+    with open(outputfile, "w") as f:
+        f.write(output)

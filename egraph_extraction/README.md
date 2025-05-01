@@ -142,7 +142,7 @@ i.e., $R = \{m_r\}$.
 ```
 
 ## Output Format
-Output should be a pickle file containing a list of selected e-nodes:
+The solver function should return a string containing a list of selected e-nodes in the format of `["node_id_1", "node_id_2", ...]`, where each `node_id` is a string representing the ID of the selected e-node.
 ```
 [
     "0__0",
