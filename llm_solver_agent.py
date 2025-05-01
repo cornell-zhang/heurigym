@@ -107,7 +107,7 @@ class ProgramExecutor:
         with open(target_file, 'w') as f:
             f.write(program)
         logger.info(f"Saved program to {target_file}")
-        return target_file
+        return target_file, program
         
     def execute_program(self, iteration: int = 0) -> Tuple[bool, str]:
         """Runs the Python program and returns success status and output."""
@@ -542,7 +542,7 @@ Your goal is to improve the solution for as many test cases as possible, with sp
                 logger.info(f"Getting program from {model} (iteration {iteration+1}/{max_iterations})")
                 
                 # Get program from LLM
-                current_program = self.get_program(
+                raw_response = self.get_program(
                     problem_desc, 
                     model, 
                     iteration, 
@@ -551,19 +551,19 @@ Your goal is to improve the solution for as many test cases as possible, with sp
                 )
                 
                 # Save the program to a separate file
-                program_file = log_dir / f"solver{iteration}.txt"
+                program_file = log_dir / f"response{iteration}.txt"
                 with open(program_file, 'w') as f:
-                    f.write(current_program)
+                    f.write(raw_response)
                 
                 # Append the program to the log file
                 with open(log_file, 'a') as f:
                     f.write(f"\n{'=' * 40} ITERATION {iteration} {'=' * 40}\n\n")
-                    f.write("PROGRAM:\n")
-                    f.write(current_program if current_program else "No program generated yet")
+                    f.write("RAW RESPONSE:\n")
+                    f.write(raw_response if raw_response else "No program generated yet")
                     f.write("\n\n")
                 
                 # Save and execute the program
-                program_file = executor.save_program(current_program, iteration)
+                program_file, current_program = executor.save_program(raw_response, iteration)
                 success, output = executor.execute_program(iteration)
                 
                 # Store the program for the next iteration
