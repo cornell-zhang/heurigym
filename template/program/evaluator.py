@@ -5,6 +5,7 @@ from typing import Union
 def evaluate(input_file: str, output_file: str) -> Union[int, float]:
     """
     Cost calculation function: calculates the cost.
+    Suppose the input has been verified by the verifier, which means the input to this function is always valid.
     Please do NOT change the function name and arguments.
     It is used by the agent to evaluate the cost of the generated solution.
 

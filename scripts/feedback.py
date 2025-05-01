@@ -21,7 +21,11 @@ def main():
     # Capture stderr output during verification
     stderr_capture = io.StringIO()
     with redirect_stderr(stderr_capture):
-        valid = verify(input_file, output_file)
+        valid, error_message = verify(input_file, output_file)
+    # Check if there were any stderr messages and append them to error_message
+    stderr_output = stderr_capture.getvalue()
+    if stderr_output:
+        error_message = (error_message + "\n" + stderr_output).strip()
 
     # Calculate the cost
     if valid:
@@ -33,7 +37,7 @@ def main():
     output_data = {
         "validity": valid,
         "cost": cost,
-        "message": stderr_capture.getvalue().strip(),
+        "message": error_message,
     }
 
     # Write the output to a JSON file

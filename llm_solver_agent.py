@@ -71,7 +71,7 @@ class ProgramExecutor:
         self.program_folder = problem_folder / "program"
         self.solution_folder = solution_folder
         
-    def save_program(self, program: str) -> Path:
+    def save_program(self, program: str, iteration: int = 0) -> Path:
         """Saves the LLM's program to solver.py in the solution folder and copies all necessary Python files."""
         # Find the first code block enclosed with ``` in the generated text
         program = program.strip()
@@ -91,8 +91,9 @@ class ProgramExecutor:
                     # Extract just the code between the markers
                     program = program[first_newline + 1:end_idx].strip()
         
-        # Create output directory in the solution folder
-        os.makedirs(self.solution_folder / "output", exist_ok=True)
+        # Create output directory in the solution folder for this iteration
+        output_dir = self.solution_folder / f"output{iteration}"
+        os.makedirs(output_dir, exist_ok=True)
         
         # Copy all Python files from the original program folder to the solution folder
         for py_file in self.program_folder.glob("*.py"):
@@ -108,7 +109,7 @@ class ProgramExecutor:
         logger.info(f"Saved program to {target_file}")
         return target_file
         
-    def execute_program(self) -> Tuple[bool, str]:
+    def execute_program(self, iteration: int = 0) -> Tuple[bool, str]:
         """Runs the Python program and returns success status and output."""
         try:
             # Get all test cases from the problem's dataset folder
@@ -132,15 +133,17 @@ class ProgramExecutor:
                     "scripts/main.py",
                     self.solution_folder / "main.py"
                 )
-                os.makedirs(self.solution_folder / "output", exist_ok=True)
+                output_dir = self.solution_folder / f"output{iteration}"
+                os.makedirs(output_dir, exist_ok=True)
+                output_file = output_dir / f"{base_name}.output"
                 run_result = subprocess.run(
-                    ['python3', 'main.py', str(input_file)],
+                    ['python3', 'main.py', str(input_file), str(output_file)],
                     cwd=str(self.solution_folder),
                     capture_output=True,
                     text=True
                 )
                 
-                cost_file = self.solution_folder / "output" / f"{base_name}.cost"
+                cost_file = output_dir / f"{base_name}.cost"
                 if run_result.returncode != 0:
                     # Save error message directly to cost file
                     error_data = {
@@ -157,7 +160,7 @@ class ProgramExecutor:
                     self.solution_folder / "feedback.py"
                 )
                 eval_result = subprocess.run(
-                    ['python3', 'feedback.py', str(input_file), f'output/{base_name}.output'],
+                    ['python3', 'feedback.py', str(input_file), str(output_file)],
                     cwd=str(self.solution_folder),
                     capture_output=True,
                     text=True
@@ -313,7 +316,7 @@ Output Format:
         problem_folder = workspace_root / problem_desc['name']
         program_folder = problem_folder / "program"
         
-        # Read solve.py file
+        # Read solver.py file
         solver_path = program_folder / "solver.py"
         if solver_path.exists():
             with open(solver_path, 'r') as f:
@@ -401,14 +404,16 @@ The program failed to produce valid solutions for some test cases. Please fix th
 1. Check for compilation errors or runtime exceptions
 2. Ensure the program handles all edge cases and meets the problem constraints correctly
 3. Verify that the input and output format matches the expected format
-4. Make sure all required functions are implemented correctly"""
+4. Make sure all required functions are implemented correctly
+5. If the program is not able to produce valid solutions for any test case, please try to find the root cause and fix it.
+6. If the program is able to produce valid solutions for some test cases, please try to improve the solution."""
             else:
                 prompt += """
 ## Improvement Guidance
 Please carefully observe the problem structure and improve upon this program by:
 1. Addressing any weaknesses in the previous approach
 2. Introducing more advanced or efficient algorithms
-3. Focusing on improving performance for test cases with higher costs
+3. Focusing on improving performance for test cases
 
 Your goal is to improve the solution for as many test cases as possible, with special attention to those where the previous solution performed poorly."""
         
@@ -548,8 +553,8 @@ Your goal is to improve the solution for as many test cases as possible, with sp
                     f.write("\n\n")
                 
                 # Save and execute the program
-                program_file = executor.save_program(current_program)
-                success, output = executor.execute_program()
+                program_file = executor.save_program(current_program, iteration)
+                success, output = executor.execute_program(iteration)
                 
                 # Store the program for the next iteration
                 previous_program = current_program
