@@ -4,7 +4,7 @@ from typing import Tuple
 def verify(input_file: str, solution_file: str) -> Tuple[bool, str]:
     """
     Verification function: checks if all the constraints are satisfied.
-    Please do NOT change the function name and arguments.
+    Please do NOT change the function name. You can take in more than one input file, but please keep the last argument as the solution file.
     It is used by the agent to verify the output of the solver.
 
     Args:

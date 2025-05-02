@@ -6,7 +6,7 @@ def evaluate(input_file: str, solution_file: str) -> Union[int, float]:
     """
     Cost calculation function: calculates the cost.
     Suppose the input has been verified by the verifier, which means the input to this function is always valid.
-    Please do NOT change the function name and arguments.
+    Please do NOT change the function name. You can take in more than one input file, but please keep the last argument as the solution file.
     It is used by the agent to evaluate the cost of the generated solution.
 
     Args:

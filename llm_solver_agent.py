@@ -118,17 +118,21 @@ class ProgramExecutor:
             if not dataset_folder.exists():
                 return False, f"Dataset folder not found: {dataset_folder}"
             
-            # Find all files in the dataset folder
+            # Find all files in the dataset folder and group them by base name
             input_files = [f for f in dataset_folder.iterdir() if f.is_file()]
-            
-            if not input_files:
-                return False, f"No test cases found in {dataset_folder}"
-            
-            # Run the program for each test case
-            all_outputs = []
+            file_groups = {}
             for input_file in input_files:
                 base_name = input_file.stem
-                
+                if base_name not in file_groups:
+                    file_groups[base_name] = []
+                file_groups[base_name].append(input_file)
+            
+            if not file_groups:
+                return False, f"No test cases found in {dataset_folder}"
+            
+            # Run the program for each group of files
+            all_outputs = []
+            for base_name, group_files in file_groups.items():
                 # Run the main program
                 shutil.copy(
                     "scripts/main.py",
@@ -140,8 +144,13 @@ class ProgramExecutor:
                 cost_file = output_dir / f"{base_name}.cost"
                 
                 try:
+                    # Prepare the command with all input files in the group
+                    cmd = ['python3', 'main.py']
+                    cmd.extend(sorted([str(f) for f in group_files]))  # Add all input files
+                    cmd.append(str(output_file))  # Add output file
+                    
                     run_result = subprocess.run(
-                        ['python3', 'main.py', str(input_file), str(output_file)],
+                        cmd,
                         cwd=str(self.solution_folder),
                         capture_output=True,
                         text=True,
@@ -171,8 +180,14 @@ class ProgramExecutor:
                     "scripts/feedback.py",
                     self.solution_folder / "feedback.py"
                 )
+                
+                # Prepare evaluator command with all input files
+                eval_cmd = ['python3', 'feedback.py']
+                eval_cmd.extend(sorted([str(f) for f in group_files]))  # Add all input files
+                eval_cmd.append(str(output_file))  # Add output file
+                
                 eval_result = subprocess.run(
-                    ['python3', 'feedback.py', str(input_file), str(output_file)],
+                    eval_cmd,
                     cwd=str(self.solution_folder),
                     capture_output=True,
                     text=True
@@ -328,8 +343,11 @@ Output Format:
         problem_folder = workspace_root / problem_desc['name']
         program_folder = problem_folder / "program"
         
-        # Read solver.py file
-        solver_path = Path("scripts/solver.py")
+        # Try problem-specific solver first, fall back to default
+        solver_path = program_folder / "solver.py"
+        if not solver_path.exists():
+            solver_path = Path("scripts/solver.py")
+            
         if solver_path.exists():
             with open(solver_path, 'r') as f:
                 return f.read()

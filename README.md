@@ -27,8 +27,7 @@ The folder should have two subfolders:
 
 You can copy the `template` folder as a starting point. There are several files you need to implement or include:
 * `README.md`: Problem description, formalization, and input/output format
-* `main.py`: Python code for handling the problem data, sending data to the solver, and saving the output. The output file should be under the output directory with a suffix `.output`.
-* `solver.py`: A template solver function for LLM to fill in. Feel free to modify the signature of the `solve` function as you want.
+* `solver.py`: A template solver function for LLM to fill in. Feel free overload the `solve` function by copying it to your problem folder.
 * `verifier.py`: After LLM provides a solution, the verifier will check if the solution is valid. Please implement the `verify` function in this file.
 * `evaluator.py`: After the solution is verified, the evaluator will calculate the cost of the solution. Please implement the `evaluate` function in this file.
 
