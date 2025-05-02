@@ -173,7 +173,6 @@ def main():
     if len(sys.argv) == 2:
         pdb_file = sys.argv[1]
     else:
-        # Simplified usage message as --dssp is removed
         print("Usage: python .py <pdb_file>")
         sys.exit(1)
 
@@ -183,21 +182,19 @@ def main():
     structure, residue_data, original_sequence_1L = get_residue_coordinates_and_sequence(pdb_file)
     if residue_data is None: sys.exit(1)
     n_residues = len(residue_data)
-    print(f"   Found {n_residues} standard residues for analysis.")
+    print(f"Found {n_residues} standard residues for analysis.")
 
     print("2. Calculating distances...")
     dist_matrix = calculate_distances(residue_data)
 
     print("3. Calculating Solvent Accessible Surface Areas (SASA)...")
-    # *** Corrected call to calculate_sasa: removed dssp_executable ***
     sasa_values = calculate_sasa(structure, residue_data)
-    # ******************************************************************
-    if sasa_values is None: print("   SASA calculation failed."); sys.exit(1)
+    if sasa_values is None: print("SASA calculation failed."); sys.exit(1)
     if len(sasa_values) != n_residues: print("Error: SASA values length mismatch."); sys.exit(1)
 
     print("4. Building the graph...")
     graph, source, sink = build_graph(residue_data, dist_matrix, sasa_values, alpha, beta)
-    print(f"   Graph built with {graph.number_of_nodes()} nodes and {graph.number_of_edges()} edges.")
+    print(f"Graph built with {graph.number_of_nodes()} nodes and {graph.number_of_edges()} edges.")
 
     print("5. Computing minimum s-t cut (Optimal H/P Sequence)...")
     optimal_sequence = get_optimal_sequence(graph, source, sink, n_residues)
