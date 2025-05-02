@@ -13,9 +13,9 @@ def verify(input_file: str, solution_file: str) -> Tuple[bool, str]:
 
     Returns:
         Tuple[bool, str]: A tuple of (is_valid, error_message)
-        is_valid: True if the output is valid, False otherwise
-        error_message: If the output is invalid, please provide a detailed error message on why it is invalid;
-        If the output is valid, please return an empty string.
+            - is_valid: True if the output is valid, False otherwise
+            - error_message: If the output is invalid, please provide a detailed error message on why it is invalid;
+            If the output is valid, please return an empty string.
 
     """
     # inputs = parse_input(input_file)

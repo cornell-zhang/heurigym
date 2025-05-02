@@ -1,29 +1,56 @@
-# evaluator.py
-import warnings
+#!/usr/bin/env python3
+from Bio.PDB import PDBParser
+from Bio.PDB.Polypeptide import is_aa
+from Bio.SeqUtils import seq1
+from utils import get_natural_hp_sequence
 
-def evaluate_agreement(generated_sequence, natural_sequence):
+
+def evaluate(input_file: str, solution_file: str) -> float:
     """
-    Calculates the percentage agreement between two sequences (e.g.,
-    the generated H/P sequence and the natural H/P sequence).
+    Calculates the percentage agreement between the natural H/P sequence from the PDB file
+    and the generated H/P sequence from the solution file.
 
     Args:
-        generated_sequence (str): The first sequence (e.g., optimal H/P).
-        natural_sequence (str): The second sequence (e.g., natural H/P).
+        input_file (str): Path to the input PDB file
+        solution_file (str): Path to the solution file containing the generated H/P sequence
 
     Returns:
         float: The percentage agreement (0.0 to 100.0). Returns 0.0 if
                lengths differ or sequences are empty.
     """
+    # Parse the input PDB file to get the natural sequence
+    parser = PDBParser(QUIET=True)
+    structure = parser.get_structure("protein", input_file)
+    model = structure[0]  # Assuming single model PDB
+
+    # Extract the natural sequence
+    natural_sequence = []
+    for chain in model:
+        for residue in chain:
+            if is_aa(residue, standard=True) and residue.id[0] == " ":
+                res_name = residue.get_resname().upper()
+                one_letter = seq1(res_name)
+                natural_sequence.append(one_letter)
+
+    natural_sequence = "".join(natural_sequence)
+    natural_hp_sequence = get_natural_hp_sequence(natural_sequence)
+
+    # Read the solution file
+    with open(solution_file, "r") as f:
+        generated_sequence = f.read().strip()
+
+    # Calculate agreement
     len1 = len(generated_sequence)
-    len2 = len(natural_sequence)
+    len2 = len(natural_hp_sequence)
 
     if len1 != len2:
-        warnings.warn(f"Sequences have different lengths ({len1} vs {len2}), cannot calculate agreement accurately. Returning 0.0.", UserWarning)
         return 0.0
 
-    if len1 == 0: # Handle empty sequences case
-        return 100.0 # Or 0.0 depending on desired behavior for empty inputs
+    if len1 == 0:
+        return 100.0
 
-    matches = sum(1 for i in range(len1) if generated_sequence[i] == natural_sequence[i])
+    matches = sum(
+        1 for i in range(len1) if generated_sequence[i] == natural_hp_sequence[i]
+    )
     agreement = (matches / len1) * 100.0
     return agreement
