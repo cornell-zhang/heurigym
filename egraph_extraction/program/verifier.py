@@ -8,7 +8,6 @@ integrity).  Does **not** compute the objective cost.
 
 from __future__ import annotations
 import json
-import pickle
 from collections import defaultdict
 from typing import Dict, List, Set, Tuple
 import sys
@@ -33,6 +32,7 @@ def load_solution(path: str) -> List[str]:
     with open(path, "rb") as fh:
         obj = fh.read()
         import ast
+
         obj = ast.literal_eval(obj.decode("utf-8"))
 
     if not isinstance(obj, (list, set, tuple)):
@@ -57,8 +57,7 @@ def _build_aux(nodes: Dict[str, dict]):
         child_ecs: Set[str] = set()
         for child in rec["children"]:
             if child not in nodes:
-                raise ValueError(
-                    f"Node '{nid}' references unknown child '{child}'")
+                raise ValueError(f"Node '{nid}' references unknown child '{child}'")
             child_ecs.add(nodes[child]["eclass"])
         child_ecs_of_node[nid] = child_ecs
 
@@ -69,7 +68,7 @@ def verify(input_file: str, output_file: str) -> Tuple[bool, str]:
     nodes, root_eclasses = load_graph(input_file)
     selected_nodes = load_solution(output_file)
 
-    violations: str = ''
+    violations: str = ""
     selected_set: Set[str] = set(selected_nodes)
 
     # Integrity — unknown IDs --------------------------------------------------

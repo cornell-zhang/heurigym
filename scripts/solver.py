@@ -1,6 +1,7 @@
 def solve(input_file: str, output_file: str):
     """
-    Solve the operator scheduling problem.
+    Solve the optimization problem.
+
     Please do NOT change the function name and arguments.
     Inputs should be read from input_file and outputs should be written to output_file.
     Input and output formats have been specified in the problem statement.

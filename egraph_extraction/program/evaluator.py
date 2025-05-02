@@ -2,11 +2,10 @@
 """
 Evaluator for E-Graph extraction solutions.
 
-Compute the total cost of the chosen nodes – even if the solution is invalid.
+Compute the total cost of the chosen nodes.
 """
 
 from __future__ import annotations
-import argparse
 import sys
 import verifier  # local import – both files live side-by-side
 

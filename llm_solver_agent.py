@@ -328,7 +328,7 @@ Output Format:
         program_folder = problem_folder / "program"
         
         # Read solver.py file
-        solver_path = program_folder / "solver.py"
+        solver_path = Path("scripts/solver.py")
         if solver_path.exists():
             with open(solver_path, 'r') as f:
                 return f.read()
