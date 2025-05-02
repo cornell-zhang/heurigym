@@ -1,50 +1,55 @@
+#!/usr/bin/env python3
 import sys
-import io
-import os
-import json
-from contextlib import redirect_stderr
-from utils import read_instance, verify_solution, evaluate_solution
+from utils import read_instance, calculate_distance
 
-def main():
-    
-    if len(sys.argv) != 3:
-        print(f"Usage: {sys.argv[0]} <input_file> <solution_file>", file=sys.stderr)
-        return 1
-    
-    input_file = sys.argv[1]
-    solution_file = sys.argv[2]
-    
-    # Read the instance from the input file
+
+def evaluate(input_file: str, solution_file: str) -> float:
+    """Cost calculation function: calculates the solution cost.
+
+    Args:
+        input_file: Path to the input file containing the instance
+        solution_file: Path to the solution file
+
+    Returns:
+        float: The cost of the solution, or infinity if invalid
+    """
     instance = read_instance(input_file)
+    nodes = instance.nodes  # Use the dictionary directly
+    total_cost = 0.0
 
-    # Verify the solution validity        
-    stderr_capture = io.StringIO()
-    with redirect_stderr(stderr_capture):
-        is_valid = verify_solution(instance, solution_file)
+    with open(solution_file, "r") as file:
+        lines = file.readlines()
+        for line_num, line in enumerate(
+            lines[1:], start=1
+        ):  # Skip the first line (cost line)
+            route = list(map(int, line.strip().split()))
+            if (
+                not route
+                or route[0] != instance.depot_node[0]
+                or route[-1] != instance.depot_node[0]
+            ):
+                raise ValueError(
+                    f"Route on line {line_num} must start and end at the depot."
+                )
 
-    # Calculate the cost
-    if is_valid:
-        cost = evaluate_solution(instance, solution_file)
-    else:
-        cost = float('inf')
-    
-    # Prepare the output data
-    output_data = {
-        "validity": is_valid,
-        "cost": cost,
-        "message": stderr_capture.getvalue().strip()
-    }
-    
-    # Write the output to a JSON file
-    output_file = f"{os.path.splitext(solution_file)[0]}.cost"
-    try:
-        with open(output_file, 'w') as out_file:
-            json.dump(output_data, out_file, indent=2)
-    except IOError:
-        print(f"Error opening output file: {output_file}", file=sys.stderr)
-        return 1
-    
-    return 0
+            route_cost = 0.0
+            for i in range(len(route) - 1):
+                current_node = nodes[route[i]]
+                next_node = nodes[route[i + 1]]
+                route_cost += calculate_distance(
+                    current_node.x, current_node.y, next_node.x, next_node.y
+                )
+
+            print(f"Cost for route {line_num}: {route_cost}")
+            total_cost += route_cost
+
+    return total_cost
+
 
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) != 3:
+        print(f"Usage: {sys.argv[0]} <input_file> <solution_file>", file=sys.stderr)
+        sys.exit(1)
+
+    cost = evaluate(sys.argv[1], sys.argv[2])
+    print(cost)
