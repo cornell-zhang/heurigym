@@ -66,12 +66,13 @@ class ProblemReader:
 class ProgramExecutor:
     """Handles program execution and result extraction."""
     
-    def __init__(self, problem_folder: Path, solution_folder: Path):
+    def __init__(self, problem_folder: Path, solution_folder: Path, timeout: int = 10):
         self.problem_folder = problem_folder
         self.program_folder = problem_folder / "program"
         self.solution_folder = solution_folder
+        self.timeout = timeout
         
-    def save_program(self, program: str, iteration: int = 0) -> Path:
+    def save_program(self, program: str, iteration: int = 0) -> Tuple[Path, str]:
         """Saves the LLM's program to solver.py in the solution folder and copies all necessary Python files."""
         # Find the first code block enclosed with ``` in the generated text
         program = program.strip()
@@ -144,15 +145,15 @@ class ProgramExecutor:
                         cwd=str(self.solution_folder),
                         capture_output=True,
                         text=True,
-                        timeout=10  # 10 second timeout
+                        timeout=self.timeout  # Use the timeout from constructor
                     )
                 except subprocess.TimeoutExpired:
                     error_data = {
-                        "message": "Program execution timed out after 10 seconds"
+                        "message": f"Program execution timed out after {self.timeout} seconds"
                     }
                     with open(cost_file, 'w') as f:
                         json.dump(error_data, f, indent=2)
-                    all_outputs.append(f"Test case {base_name}:\nProgram execution timed out after 10 seconds")
+                    all_outputs.append(f"Test case {base_name}:\nProgram execution timed out after {self.timeout} seconds")
                     continue
                 
                 if run_result.returncode != 0:
@@ -617,6 +618,9 @@ def parse_arguments():
                         default='operator_scheduling',
                         help='Specific problem to solve (folder name)')
     
+    parser.add_argument('--timeout', type=int, default=10,
+                        help='Timeout in seconds for program execution (default: 10)')
+    
     return parser.parse_args()
 
 def main():
@@ -657,7 +661,7 @@ def main():
                 solution_dir.mkdir(parents=True, exist_ok=True)
                 
                 # Initialize program executor with the solution directory
-                executor = ProgramExecutor(workspace_root / problem_desc['name'], solution_dir)
+                executor = ProgramExecutor(workspace_root / problem_desc['name'], solution_dir, args.timeout)
                 
                 # Get iterative program
                 logger.info(f"Getting iterative program from {model}")
