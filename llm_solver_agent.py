@@ -367,19 +367,23 @@ This is the program you generated in the previous iteration:
             problem_folder = workspace_root / problem_desc['name']
             demo_folder = problem_folder / "dataset" / "demo"
             if demo_folder.exists():
-                # Find all .json files in the demo folder
-                json_files = [f for f in demo_folder.iterdir() if f.is_file() and f.suffix == '.json']
+                # Find all files in the demo folder
+                input_files = [f for f in demo_folder.iterdir() if f.is_file()]
                 
                 # For each test case, show input and its result
-                for json_file in json_files:
-                    test_case = json_file.stem
+                for input_file in input_files:
+                    test_case = input_file.stem
                     prompt += f"\n### Test Case: {test_case}\n\n"
                     
                     # Show input data
                     try:
-                        with open(json_file, 'r') as f:
+                        with open(input_file, 'r') as f:
                             content = f.read()
-                        prompt += f"**Input Data:**\n```json\n{content}\n```\n\n"
+                            # Limit to first 50 lines if content is too large
+                            lines = content.split('\n')
+                            if len(lines) > 50:
+                                content = '\n'.join(lines[:50]) + '\n... (truncated)'
+                        prompt += f"**Input Data:**\n```\n{content}\n```\n\n"
                     except Exception as e:
                         prompt += f"**Input Data:** Error reading file: {str(e)}\n\n"
                     
