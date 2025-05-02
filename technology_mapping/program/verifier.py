@@ -33,6 +33,13 @@ def verify(input_file: str, solution_file: str) -> Tuple[bool, str]:
     golden = Path(input_file).expanduser().resolve()
     candidate = Path(solution_file).expanduser().resolve()
 
+    # if the solution_file suffix is `.output`, change this file to `.blif`
+    if candidate.suffix == ".output":
+        new_candidate = candidate.with_suffix(".blif")
+        # Physically rename the file in the filesystem
+        candidate.rename(new_candidate)
+        candidate = new_candidate
+
     error_message = ""
 
     if not golden.is_file():
