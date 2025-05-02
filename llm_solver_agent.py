@@ -136,6 +136,8 @@ class ProgramExecutor:
                 output_dir = self.solution_folder / f"output{iteration}"
                 os.makedirs(output_dir, exist_ok=True)
                 output_file = output_dir / f"{base_name}.output"
+                cost_file = output_dir / f"{base_name}.cost"
+                
                 try:
                     run_result = subprocess.run(
                         ['python3', 'main.py', str(input_file), str(output_file)],
@@ -153,7 +155,6 @@ class ProgramExecutor:
                     all_outputs.append(f"Test case {base_name}:\nProgram execution timed out after 10 seconds")
                     continue
                 
-                cost_file = output_dir / f"{base_name}.cost"
                 if run_result.returncode != 0:
                     # Save error message directly to cost file
                     error_data = {
@@ -383,7 +384,7 @@ This is the program you generated in the previous iteration:
                         prompt += f"**Input Data:** Error reading file: {str(e)}\n\n"
                     
                     # Show result
-                    cost_file = solution_dir / "output" / f"{test_case}.cost"
+                    cost_file = solution_dir / f"output{iteration - 1}" / f"{test_case}.cost"
                     if cost_file.exists():
                         with open(cost_file, 'r') as f:
                             cost_data = json.load(f)
@@ -404,7 +405,7 @@ This is the program you generated in the previous iteration:
             # Add improvement guidance
             any_failed = any(
                 not json.load(open(f))['validity'] if 'validity' in json.load(open(f)) else True 
-                for f in (solution_dir / "output").glob("*.cost")
+                for f in (solution_dir / f"output{iteration - 1}").glob("*.cost")
             )
             
             if any_failed:
