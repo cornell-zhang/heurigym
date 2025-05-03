@@ -79,30 +79,30 @@ The net information file follows this format:
 
 ```
 # Net name
-Net0
-(
-# Access point locations (layer, x, y) for pin 0
-[(0, 202, 347), (0, 202, 348), ...]
-# Access point locations for pin 1
-[(1, 5, 6), (2, 5, 6), ...]
-...
-)
-Net1
-(
-...
-)
+Net0  
+(  
+# Access point locations (layer, x, y) for pin 0  
+[(location of access point 0), (location of access point 1), ...]      
+# Access point locations for pin 1  
+[(location of access point 0), (location of access point 1), ...]        
+...  
+)       
+Net1  
+(  
+[(location of access point 0), (location of access point 1), ...]  
+[(location of access point 0), (location of access point 1), ...]                
+... 
+)       
+... 
 ```
 
 Each net consists of:
-- Net name (string)
-- Opening bracket '('
-- List of pins, where each pin has one or more access points
+- A net name (e.g., `Net0`)
+- A list of pins, where each pin has one or more access points. Each pin is stored in `[...]`, and different access points are separated by commas. Different pins are separated by a new line.
 - Each access point is formatted as `(layer, x, y)` where:
-  - `layer` (integer): Layer index
-  - `x` (integer): x-coordinate
-  - `y` (integer): y-coordinate
-- Access points for a pin are enclosed in square brackets and separated by spaces
-- Closing bracket ')'
+  - `layer` is the layer number (integer)
+  - `x` is the x-coordinate (integer)
+  - `y` is the y-coordinate (integer)
 
 ## Output Format
 The GR solution is described in the GCell coordinate system. To enhance routability and ensure pin accessibility during the subsequent detailed routing process, we enforce following constraints:
