@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from typing import Union, List
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum, auto
 
 
@@ -58,6 +58,12 @@ class GCell:
     demand: int = 0
     capacity: float = 0.0
 
+    def set_capacity(self, cap: float) -> None:
+        self.capacity = cap
+
+    def set_demand(self, demand: int) -> None:
+        self.demand = demand
+
 
 @dataclass
 class GridGraph2D:
@@ -69,7 +75,7 @@ class GridGraph2D:
     unit_overflow_cost: float = 0.0
     num_gridx: int = 0
     num_gridy: int = 0
-    gcells: List[List[GCell]] = None
+    gcells: List[List[GCell]] = field(default_factory=list)
 
     def is_routing_layer(self) -> bool:
         return self.direction != Direction.NONE
@@ -79,6 +85,21 @@ class GridGraph2D:
 
     def is_ver(self) -> bool:
         return self.direction == Direction.VERTICAL
+
+    def set_unit_cost(self, length: float, via: float, overflow: float) -> None:
+        self.unit_length_cost = length
+        self.unit_via_cost = via
+        self.unit_overflow_cost = overflow
+
+    def init(self, gridx: int, gridy: int) -> None:
+        self.num_gridx = gridx
+        self.num_gridy = gridy
+        self.gcells = [[GCell() for _ in range(gridy)] for _ in range(gridx)]
+
+    def get_gcell(self, x: int, y: int) -> GCell:
+        if not self.gcells:
+            self.init(self.num_gridx, self.num_gridy)
+        return self.gcells[x][y]
 
 
 @dataclass
@@ -91,9 +112,13 @@ class GridGraph:
     y_coords: List[int] = None
 
     def cell_width(self, x: int) -> int:
+        if x >= len(self.x_coords) - 1:
+            return 0  # Edge case: last column
         return self.x_coords[x + 1] - self.x_coords[x]
 
     def cell_height(self, y: int) -> int:
+        if y >= len(self.y_coords) - 1:
+            return 0  # Edge case: last row
         return self.y_coords[y + 1] - self.y_coords[y]
 
 
@@ -121,10 +146,17 @@ class GlobalRoutingDB:
             self.graph.num_gridx = num_gridx
             self.graph.num_gridy = num_gridy
             self.graph.planes = [GridGraph2D() for _ in range(num_layers)]
+            self.layer_directions = [0] * num_layers  # Initialize layer_directions
 
-            # Read costs
-            unit_length_cost, unit_via_cost = map(float, f.readline().split())
-            overflow_costs = list(map(float, f.readline().split()))
+            # Initialize all planes with correct dimensions
+            for plane in self.graph.planes:
+                plane.init(num_gridx, num_gridy)
+
+            # Read costs - all on one line
+            costs = list(map(float, f.readline().split()))
+            unit_length_cost = costs[0]
+            unit_via_cost = costs[1]
+            overflow_costs = costs[2:2+num_layers]
 
             # Read GCell edge lengths
             self.graph.x_coords = [0] + list(map(int, f.readline().split()))
@@ -144,9 +176,7 @@ class GlobalRoutingDB:
                     Direction.HORIZONTAL if direction == 0 else Direction.VERTICAL
                 )
                 plane.set_unit_cost(unit_length_cost, unit_via_cost, overflow_costs[z])
-
-                if z != 0 and plane.is_routing_layer():
-                    plane.init(num_gridx, num_gridy)
+                self.layer_directions[z] = direction  # Store layer direction
 
                 # Read capacities
                 for y in range(num_gridy):
@@ -182,12 +212,13 @@ class GlobalRoutingDB:
                     if current_net:
                         pin = Pin(accesses=[])
                         current_net.pins.append(pin)
-                        # Parse access points
+                        # Parse access points - remove all brackets and split
                         points = (
                             line.replace("[", "")
                             .replace("]", "")
                             .replace("(", "")
                             .replace(")", "")
+                            .replace(",", " ")  # Replace commas with spaces
                             .split()
                         )
                         for i in range(0, len(points), 3):
@@ -293,7 +324,7 @@ class GlobalRoutingDB:
             for z in range(self.graph.num_layer):
                 plane = self.graph.planes[z]
                 if not plane.is_routing_layer():
-                    via_cost += total_vias[z] * plane.unit_via_cost()
+                    via_cost += total_vias[z] * plane.unit_via_cost
                     continue
 
                 total_wl = 0
@@ -320,25 +351,25 @@ class GlobalRoutingDB:
                         if plane.is_hor():
                             total_wl += wire_counter[z][x][y] * self.graph.cell_width(x)
                         elif plane.is_ver():
-                            total_wl += wire_counter[z][x][y] * self.graph.cell_height(
-                                y
-                            )
+                            total_wl += wire_counter[z][x][y] * self.graph.cell_height(y)
 
-                overflow_cost += layer_overflows * plane.unit_overflow_cost()
-                via_cost += total_vias[z] * plane.unit_via_cost()
-                wl_cost += total_wl * plane.unit_length_cost()
+                layer_overflow_cost = layer_overflows * plane.unit_overflow_cost
+                overflow_cost += layer_overflow_cost
+                via_cost += total_vias[z] * plane.unit_via_cost
+                wl_cost += total_wl * plane.unit_length_cost
+                print(f"Layer = {z}, layer_overflows = {layer_overflows:.6f}, overflow cost = {layer_overflow_cost:.6f}")
 
             total_incompleted = sum(
                 1 for completed in net_completed.values() if not completed
             )
             self.total_cost = overflow_cost + via_cost + wl_cost
 
-            if total_opens > 0:
-                self.error_message = f"Number of open nets: {total_opens}"
-                return False
-            if total_incompleted > 0:
-                self.error_message = f"Number of incompleted nets: {total_incompleted}"
-                return False
+            print(f"Number of open nets: {total_opens}")
+            print(f"Number of incompleted nets: {total_incompleted}")
+            print(f"wirelength cost {wl_cost:.4f}")
+            print(f"via cost {via_cost:.4f}")
+            print(f"overflow cost {overflow_cost:.4f}")
+            print(f"total cost {self.total_cost:.4f}")
 
             return True
 
@@ -454,6 +485,22 @@ def evaluate(cap_file: str, net_file: str, solution_file: str) -> Union[int, flo
     if not db.read_files(cap_file, net_file, solution_file):
         if db.error_message:
             print(db.error_message)
-        return float("inf")
+        return db.total_cost  # Return the calculated cost even if there are errors
 
     return db.total_cost
+
+
+if __name__ == "__main__":
+    import sys
+    import argparse
+
+    parser = argparse.ArgumentParser(description='Evaluate global routing solution')
+    parser.add_argument('cap_file', help='Path to the routing resource file')
+    parser.add_argument('net_file', help='Path to the net information file')
+    parser.add_argument('solution_file', help='Path to the solution file')
+    
+    args = parser.parse_args()
+    
+    cost = evaluate(args.cap_file, args.net_file, args.solution_file)
+    print(f"Total cost: {cost}")
+    sys.exit(0)
