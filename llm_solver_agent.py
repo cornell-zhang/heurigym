@@ -268,8 +268,9 @@ class ProgramExecutor:
 class LLMInterface:
     """Interface for interacting with different LLM providers."""
     
-    def __init__(self, models_to_use: List[str]):
+    def __init__(self, models_to_use: List[str], timeout: int = 10):
         load_dotenv()
+        self.timeout = timeout
         
         # Initialize clients only for models that will be used
         self.openai_client = None
@@ -369,6 +370,7 @@ Output Format:
         # Replace placeholders in the template
         prompt = self.prompt_template.replace("{PROBLEM}", problem_info)
         prompt = prompt.replace("{EXAMPLE_PROGRAM}", example_program)
+        prompt = prompt.replace("{TIMEOUT}", str(self.timeout))
         
         # If this is an iteration beyond the first, add the previous program and its results
         if iteration > 0 and previous_program and solution_dir:
@@ -649,7 +651,7 @@ def main():
     
     # Initialize components
     problem_reader = ProblemReader(workspace_root)
-    llm_interface = LLMInterface(args.models)  # Pass the models to use
+    llm_interface = LLMInterface(args.models, args.timeout)  # Pass the models and timeout to use
     
     # Get problem folders
     problem_folders = problem_reader.get_problem_folders()
