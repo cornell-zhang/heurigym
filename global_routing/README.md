@@ -78,50 +78,40 @@ capacity[0,y] capacity[1,y] ... capacity[xSize-1,y]
 The net information file follows this format:
 
 ```
-# Net name
-Net0  
-(  
-# Access point locations (layer, x, y) for pin 0  
-[(location of access point 0), (location of access point 1), ...]      
-# Access point locations for pin 1  
-[(location of access point 0), (location of access point 1), ...]        
-...  
-)       
-Net1  
-(  
-[(location of access point 0), (location of access point 1), ...]  
-[(location of access point 0), (location of access point 1), ...]                
-... 
-)       
-... 
-```
-
-Each net consists of:
-- A net name (e.g., `Net0`, `boot_addr_i[63]`, etc.)
-- A list of pins, where each pin has one or more access points. Each pin is stored in `[...]`, and different access points are separated by commas. Different pins are separated by a new line.
-- Each access point is formatted as `(layer, x, y)` where:
-  - `layer` is the layer number (integer)
-  - `x` is the x-coordinate (integer)
-  - `y` is the y-coordinate (integer)
-
-An example of a net information file is as follows:
-
-```
+# Name of Net0
 boot_addr_i[63]
 (
+# Access point locations (layer, x, y) for pin 0  
 [(2, 0, 174)]
+# Access point locations for pin 1
 [(0, 215, 351)]
+# Access point locations for pin 2
 [(0, 204, 350), (0, 205, 350), (0, 204, 351), (0, 205, 351)]
 )
+# Name of Net1
 boot_addr_i[62]
 (
+# Access point locations (layer, x, y) for pin 0  
 [(2, 0, 176)]
+# Access point locations for pin 1
 [(0, 218, 351), (0, 219, 351)]
+# Access point locations for pin 2
 [(0, 203, 351), (0, 203, 350)]
+# Access point locations for pin 3
 [(0, 202, 350), (0, 203, 350), (0, 202, 351), (0, 203, 351)]
 )
 ...
 ```
+
+Each net consists of:
+- A net name. It can be arbitrary string (e.g., `Net0`, `boot_addr_i[63]`, etc.).
+- Opening bracket '('
+- A list of pins, where each pin has one or more access points. Each pin is stored in `[...]`, and different access points are separated by commas. Different pins are separated by a new line.
+- Each access point is formatted as a tuple `(layer, x, y)` where:
+  - `layer` is the layer number (integer)
+  - `x` is the x-coordinate (integer)
+  - `y` is the y-coordinate (integer)
+- Closing bracket ')'
 
 ## Output Format
 The GR solution is described in the GCell coordinate system. To enhance routability and ensure pin accessibility during the subsequent detailed routing process, we enforce following constraints:

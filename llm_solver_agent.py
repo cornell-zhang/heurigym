@@ -42,10 +42,17 @@ class ProblemReader:
         sections = {}
         current_section = "overview"
         current_content = []
+        in_code_block = False
         
         for line in md_content.split('\n'):
+            # Check for code block markers
+            if line.strip().startswith('```'):
+                in_code_block = not in_code_block
+                current_content.append(line)
+                continue
+                
             # Check for main headers (level 1 or 2)
-            if line.startswith('#') and not line.startswith('###'):
+            if line.startswith('#') and not line.startswith('###') and not in_code_block:
                 # Save previous section content if exists
                 if current_content:
                     sections[current_section] = '\n'.join(current_content).strip()
