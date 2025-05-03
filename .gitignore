@@ -76,6 +76,7 @@ venv.bak/
 # ILP
 *.lp
 *.log
+*.output
 
 # tech mapping ABC history
 abc.history
