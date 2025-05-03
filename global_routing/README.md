@@ -97,12 +97,31 @@ Net1
 ```
 
 Each net consists of:
-- A net name (e.g., `Net0`)
+- A net name (e.g., `Net0`, `boot_addr_i[63]`, etc.)
 - A list of pins, where each pin has one or more access points. Each pin is stored in `[...]`, and different access points are separated by commas. Different pins are separated by a new line.
 - Each access point is formatted as `(layer, x, y)` where:
   - `layer` is the layer number (integer)
   - `x` is the x-coordinate (integer)
   - `y` is the y-coordinate (integer)
+
+An example of a net information file is as follows:
+
+```
+boot_addr_i[63]
+(
+[(2, 0, 174)]
+[(0, 215, 351)]
+[(0, 204, 350), (0, 205, 350), (0, 204, 351), (0, 205, 351)]
+)
+boot_addr_i[62]
+(
+[(2, 0, 176)]
+[(0, 218, 351), (0, 219, 351)]
+[(0, 203, 351), (0, 203, 350)]
+[(0, 202, 350), (0, 203, 350), (0, 202, 351), (0, 203, 351)]
+)
+...
+```
 
 ## Output Format
 The GR solution is described in the GCell coordinate system. To enhance routability and ensure pin accessibility during the subsequent detailed routing process, we enforce following constraints:

@@ -33,6 +33,10 @@ def evaluate(cap_file: str, net_file: str, solution_file: str) -> float:
         if not os.path.isfile(file_path):
             raise ValueError(f"{name} is not a file: {file_path}")
     
+    # if solution file is empty, return 0
+    if os.path.getsize(solution_file) == 0:
+        raise ValueError("Solution file is empty")
+    
     # Compile the C++ evaluator
     try:
         subprocess.run(["make"], cwd=script_dir, check=True)
