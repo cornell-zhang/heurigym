@@ -379,13 +379,13 @@ class LLMInterface:
         # If this is an iteration beyond the first, add the previous program and its results
         if iteration > 0 and previous_program and solution_dir:
             prompt += f"""
-## Feedback from Previous Iteration (Iteration {iteration-1})
+# Feedback from Previous Iteration (Iteration {iteration-1})
 This is the program you generated in the previous iteration:
 ```python
 {previous_program}
 ```
 
-## Test Cases and Results"""
+# Test Cases and Results"""
 
             # Get the absolute path to the demo folder
             workspace_root = Path(os.getcwd())
@@ -398,7 +398,7 @@ This is the program you generated in the previous iteration:
                 # For each test case, show input and its result
                 for input_file in input_files:
                     test_case = input_file.stem
-                    prompt += f"\n### Test Case: {test_case}\n\n"
+                    prompt += f"\n## Test Case: {test_case}\n\n"
                     
                     # Show input data
                     try:
@@ -439,7 +439,7 @@ This is the program you generated in the previous iteration:
             
             if any_failed:
                 prompt += """
-## Improvement Guidance
+# Improvement Guidance
 The program failed to produce valid solutions for some test cases. Please fix the following issues:
 1. Check for compilation errors or runtime exceptions
 2. Ensure the program handles all edge cases and meets the problem constraints correctly
@@ -449,7 +449,7 @@ The program failed to produce valid solutions for some test cases. Please fix th
 6. If the program is able to produce valid solutions for some test cases, please try to improve the solution."""
             else:
                 prompt += """
-## Improvement Guidance
+# Improvement Guidance
 Please carefully observe the problem structure and improve upon this program by:
 1. Addressing any weaknesses in the previous approach
 2. Introducing more advanced or efficient algorithms

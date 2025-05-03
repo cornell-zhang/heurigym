@@ -82,9 +82,9 @@ The net information file follows this format:
 Net0
 (
 # Access point locations (layer, x, y) for pin 0
-[(0 0 0) (0 1 2) ...] 
+[(0, 202, 347), (0, 202, 348), ...]
 # Access point locations for pin 1
-[(1 5 6) (2 5 6) ...]
+[(1, 5, 6), (2, 5, 6), ...]
 ...
 )
 Net1
@@ -97,7 +97,7 @@ Each net consists of:
 - Net name (string)
 - Opening bracket '('
 - List of pins, where each pin has one or more access points
-- Each access point is formatted as `(layer x y)` where:
+- Each access point is formatted as `(layer, x, y)` where:
   - `layer` (integer): Layer index
   - `x` (integer): x-coordinate
   - `y` (integer): y-coordinate
