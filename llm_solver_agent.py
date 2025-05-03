@@ -532,7 +532,7 @@ Your goal is to improve the solution for as many test cases as possible, with sp
             response = self.gemini_client.models.generate_content(
                 model=model,
                 contents=full_prompt,
-                generation_config={"temperature": self.temperature}
+                config={"temperature": self.temperature}
             )
             
             # Extract the text from the response
