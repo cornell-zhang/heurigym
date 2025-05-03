@@ -1,4 +1,4 @@
-# Gloabl Routing
+# Global Routing
 
 ## Background
 
@@ -23,46 +23,86 @@ The smaller the weighted score, the better.
 ## Input Format
 There are two input files for each testcase: a routing resource file (with a .cap extension) and a net information file (with a .net extension). The routing resource file offers a detailed representation of the GCell grid graph and the routing resources it encompasses. Meanwhile, the net information file shows the access points for all the pins within each net.
 
-The routing resource file follows this format:
+### Routing Resource File (.cap)
 
-    # Dimensions of GCell graph 
-    nLayers xSize ySize      
-    # Weights of performance metrics  
-    UnitLengthWireCost UnitViaCost OFWeight[0] OFWeight[1] OFWeight[2] ...   
-    # Lengths of horizontal GCell edges (edge count = xSize - 1)  
-    HorizontalGCellEdgeLengths[0] HorizontalGCellEdgeLengths[1] HorizontalGCellEdgeLengths[2] ...   
-    # Lengths of vertical GCell edges (edge count = ySize - 1)  
-    VerticalGCellEdgeLengths[0] VerticalGCellEdgeLengths[1] VerticalGCellEdgeLengths[2] ...   
-    # Information for the 0-th layer  
-    ## Layer name, preferred direction (Direction: 0 = horizontal, 1 = vertical) and minimum length of a wire at this metal layer (Not useful here)
-    layerName layerDirection layerMinLength   
-    ## Routing capacities of GCell edges at the 0-th layer    
-    ### Capacities of GCell at [x(0), y(0)], [x(1), y(0)], ...  
-    10 10 10 ...     
-    ### Capacities of GCell at [x(0), y(1)], [x(1), y(1)], ...  
-    10 10 10 ...    
-    ...      
-    ## Information for the 1-th layer 
-    ...
+The routing resource file follows this format, with each value on a new line (line-by-line breakdown):
+
+#### Line 1: Grid Dimensions
+```
+nLayers xSize ySize
+```
+- `nLayers` (integer): Number of metal layers in the routing grid
+- `xSize` (integer): Width of the GCell grid (number of GCells in the x direction)
+- `ySize` (integer): Height of the GCell grid (number of GCells in the y direction)
+
+#### Line 2: Cost Weights
+```
+UnitLengthWireCost UnitViaCost OFWeight[0] OFWeight[1] OFWeight[2] ... OFWeight[nLayers-1]
+```
+- `UnitLengthWireCost` (float): Cost per unit length of wire
+- `UnitViaCost` (float): Cost per via
+- `OFWeight[i]` (float): Overflow weight for the i-th layer (array of nLayers float values)
+
+#### Line 3: Horizontal GCell Edge Lengths
+```
+HorizontalGCellEdgeLengths[0] HorizontalGCellEdgeLengths[1] ... HorizontalGCellEdgeLengths[xSize-2]
+```
+- `HorizontalGCellEdgeLengths[i]` (integer): Length of the i-th horizontal GCell edge (array of xSize-1 integer values)
+
+#### Line 4: Vertical GCell Edge Lengths
+```
+VerticalGCellEdgeLengths[0] VerticalGCellEdgeLengths[1] ... VerticalGCellEdgeLengths[ySize-2]
+```
+- `VerticalGCellEdgeLengths[i]` (integer): Length of the i-th vertical GCell edge (array of ySize-1 integer values)
+
+#### Layer Information (for each layer from 0 to nLayers-1)
+For each layer, there will be 1 + ySize lines:
+
+##### Layer Header
+```
+layerName layerDirection layerMinLength
+```
+- `layerName` (string): Name of the layer
+- `layerDirection` (integer): Preferred routing direction (0 = horizontal, 1 = vertical)
+- `layerMinLength` (float): Minimum length of a wire at this metal layer (not used in this problem)
+
+##### Capacity Grid (one line for each y-coordinate)
+For each y from 0 to ySize-1:
+```
+capacity[0,y] capacity[1,y] ... capacity[xSize-1,y]
+```
+- `capacity[x,y]` (float): Routing capacity of the GCell edge at position [x,y] for the current layer
+
+### Net Information File (.net)
 
 The net information file follows this format:
 
-    # Net name  
-    Net0  
-    (  
-    # Access point locations (layer, x, y) for pin 0  
-    [(location of access point 0), (location of access point 1), ...]      
-    # Access point locations for pin 1  
-    [(location of access point 0), (location of access point 1), ...]        
-    ...  
-    )       
-    Net1  
-    (  
-    [(location of access point 0), (location of access point 1), ...]  
-    [(location of access point 0), (location of access point 1), ...]                
-    ... 
-    )       
-    ... 
+```
+# Net name
+Net0
+(
+# Access point locations (layer, x, y) for pin 0
+[(0 0 0) (0 1 2) ...] 
+# Access point locations for pin 1
+[(1 5 6) (2 5 6) ...]
+...
+)
+Net1
+(
+...
+)
+```
+
+Each net consists of:
+- Net name (string)
+- Opening bracket '('
+- List of pins, where each pin has one or more access points
+- Each access point is formatted as `(layer x y)` where:
+  - `layer` (integer): Layer index
+  - `x` (integer): x-coordinate
+  - `y` (integer): y-coordinate
+- Access points for a pin are enclosed in square brackets and separated by spaces
+- Closing bracket ')'
 
 ## Output Format
 The GR solution is described in the GCell coordinate system. To enhance routability and ensure pin accessibility during the subsequent detailed routing process, we enforce following constraints:
