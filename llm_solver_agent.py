@@ -268,9 +268,10 @@ class ProgramExecutor:
 class LLMInterface:
     """Interface for interacting with different LLM providers."""
     
-    def __init__(self, models_to_use: List[str], timeout: int = 10):
+    def __init__(self, models_to_use: List[str], timeout: int = 10, temperature: float = 0.7):
         load_dotenv()
         self.timeout = timeout
+        self.temperature = temperature
         
         # Initialize clients only for models that will be used
         self.openai_client = None
@@ -477,6 +478,7 @@ Your goal is to improve the solution for as many test cases as possible, with sp
             response = self.openai_client.chat.completions.create(
                 model=model,
                 max_tokens=8192,
+                temperature=self.temperature,
                 messages=[
                     {"role": "system", "content": "You are an expert optimization algorithm designer. You are given a problem and try to solve it. Please only output the code for the solver."},
                     {"role": "user", "content": prompt}
@@ -490,6 +492,7 @@ Your goal is to improve the solution for as many test cases as possible, with sp
             response = self.anthropic_client.messages.create(
                 model=model,
                 max_tokens=8192,
+                temperature=self.temperature,
                 messages=[{
                     "role": "user",
                     "content": prompt
@@ -504,6 +507,7 @@ Your goal is to improve the solution for as many test cases as possible, with sp
             response = self.deepseek_client.chat.completions.create(
                 model=model,
                 max_tokens=8192,
+                temperature=self.temperature,
                 messages=[
                     {"role": "system", "content": "You are an expert optimization algorithm designer. You are given a problem and try to solve it. Please only output the code for the solver."},
                     {"role": "user", "content": prompt}
@@ -524,7 +528,8 @@ Your goal is to improve the solution for as many test cases as possible, with sp
             # Generate content with Gemini
             response = self.gemini_client.models.generate_content(
                 model=model,
-                contents=full_prompt
+                contents=full_prompt,
+                generation_config={"temperature": self.temperature}
             )
             
             # Extract the text from the response
@@ -641,6 +646,9 @@ def parse_arguments():
     parser.add_argument('--timeout', type=int, default=10,
                         help='Timeout in seconds for program execution (default: 10)')
     
+    parser.add_argument('--temperature', type=float, default=0.8,
+                        help='Temperature for LLM generation (default: 0.8)')
+    
     return parser.parse_args()
 
 def main():
@@ -651,7 +659,7 @@ def main():
     
     # Initialize components
     problem_reader = ProblemReader(workspace_root)
-    llm_interface = LLMInterface(args.models, args.timeout)  # Pass the models and timeout to use
+    llm_interface = LLMInterface(args.models, args.timeout, args.temperature)  # Pass the models, timeout and temperature to use
     
     # Get problem folders
     problem_folders = problem_reader.get_problem_folders()
