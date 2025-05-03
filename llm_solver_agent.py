@@ -134,6 +134,9 @@ class ProgramExecutor:
             
             # Run the program for each group of files
             all_outputs = []
+            total_execution_time = 0
+            total_evaluation_time = 0
+            
             for base_name, group_files in file_groups.items():
                 # Run the main program
                 shutil.copy(
@@ -151,6 +154,8 @@ class ProgramExecutor:
                     cmd.extend(sorted([str(f) for f in group_files]))  # Add all input files
                     cmd.append(str(output_file))  # Add output file
                     
+                    # Measure execution time
+                    exec_start_time = time.time()
                     run_result = subprocess.run(
                         cmd,
                         cwd=str(self.solution_folder),
@@ -158,6 +163,9 @@ class ProgramExecutor:
                         text=True,
                         timeout=self.timeout  # Use the timeout from constructor
                     )
+                    exec_time = time.time() - exec_start_time
+                    total_execution_time += exec_time
+                    
                 except subprocess.TimeoutExpired:
                     error_data = {
                         "message": f"Program execution timed out after {self.timeout} seconds"
@@ -188,12 +196,16 @@ class ProgramExecutor:
                 eval_cmd.extend(sorted([str(f) for f in group_files]))  # Add all input files
                 eval_cmd.append(str(output_file))  # Add output file
                 
+                # Measure evaluation time
+                eval_start_time = time.time()
                 eval_result = subprocess.run(
                     eval_cmd,
                     cwd=str(self.solution_folder),
                     capture_output=True,
                     text=True
                 )
+                eval_time = time.time() - eval_start_time
+                total_evaluation_time += eval_time
                 
                 if eval_result.returncode != 0:
                     # Save evaluator error to cost file
@@ -227,8 +239,14 @@ class ProgramExecutor:
                         json.dump(error_data, f, indent=2)
                     all_outputs.append(f"Test case {base_name}: No cost file generated")
             
+            # Add timing information to the output
+            timing_info = f"\n\nTiming Information:\n"
+            timing_info += f"Total Execution Time: {total_execution_time:.2f} seconds\n"
+            timing_info += f"Total Evaluation Time: {total_evaluation_time:.2f} seconds\n"
+            timing_info += f"Total Time: {(total_execution_time + total_evaluation_time):.2f} seconds"
+            
             # Combine all outputs
-            combined_output = "\n\n".join(all_outputs)
+            combined_output = "\n\n".join(all_outputs) + timing_info
             return True, combined_output
             
         except Exception as e:
@@ -475,6 +493,9 @@ Your goal is to improve the solution for as many test cases as possible, with sp
                 f.write(prompt)
                 f.write("\n\n")
         
+        # Measure API call time
+        api_start_time = time.time()
+        
         if model.startswith("gpt"):
             if not self.openai_client:
                 raise ValueError("OpenAI client not initialized. OPENAI_API_KEY is required for OpenAI models.")
@@ -541,6 +562,13 @@ Your goal is to improve the solution for as many test cases as possible, with sp
         else:
             raise ValueError(f"Unsupported model: {model}")
             
+        api_time = time.time() - api_start_time
+        
+        # Log API timing information
+        if hasattr(self, 'current_log_file'):
+            with open(self.current_log_file, 'a') as f:
+                f.write(f"API Call Time: {api_time:.2f} seconds\n\n")
+        
         return raw_response
     
     def get_iterative_program(self,
