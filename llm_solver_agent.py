@@ -38,19 +38,21 @@ class ProblemReader:
         with open(readme_path, 'r') as f:
             md_content = f.read()
             
-        # Parse markdown content directly
+        # Parse markdown content
         sections = {}
         current_section = "overview"
         current_content = []
         
         for line in md_content.split('\n'):
-            # Check for headers (## or #)
-            if line.startswith('##') or line.startswith('#'):
+            # Check for main headers (level 1 or 2)
+            if line.startswith('#') and not line.startswith('###'):
+                # Save previous section content if exists
                 if current_content:
                     sections[current_section] = '\n'.join(current_content).strip()
+                    current_content = []
+                
                 # Extract section name from header
                 current_section = line.lstrip('#').strip().lower().replace(' ', '_')
-                current_content = []
             else:
                 current_content.append(line)
         
@@ -327,17 +329,18 @@ class LLMInterface:
         
     def _format_problem_info(self, problem_desc: Dict[str, str]) -> str:
         """Formats the problem information section for the prompt."""
-        return f"""Description:
-{problem_desc['sections'].get('background', '')}
-
-Formalization:
-{problem_desc['sections'].get('formalization', '')}
-
-Input Format:
-{problem_desc['sections'].get('input_format', '')}
-
-Output Format:
-{problem_desc['sections'].get('output_format', '')}"""
+        sections = []
+        
+        # Add each section if it exists in the problem description
+        for section_name in ['background', 'formalization', 'input_format', 'output_format']:
+            section_content = problem_desc['sections'].get(section_name, '')
+            if section_content:
+                # Convert section name to title case for display
+                title = section_name.replace('_', ' ').title()
+                sections.append(f"## {title}\n{section_content}")
+        
+        # Join all sections with double newlines
+        return "\n\n".join(sections)
         
     def _get_example_program(self, problem_desc: Dict[str, str]) -> str:
         """Gets an example program template for the problem."""
