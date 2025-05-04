@@ -9,6 +9,8 @@ The technology mapping process involves covering a Boolean network with K-LUTs i
 
 Here our optimization target is to minimize the number of LUTs, which represents the area of the mapped logic network. This is an NP-hard problem. 
 
+In this problem, we specify K = 6. 
+
 ## Formalization
 
 Consider a directed acyclic graph (DAG) $G = (V, E)$ representing a Boolean network, where each node $v \in V$ represents a logic gate, and each edge $(u, v) \in E$ indicates that the output of node $u$ is an input to node $v$. Let $PI$ denote the set of primary inputs and $PO$ denote the set of primary outputs in the network.
@@ -27,74 +29,151 @@ $Cost(M) = \sum_{v \in V'} 1$
 
 where $V'$ is the set of nodes that are actually used in the final implementation (nodes whose outputs are either primary outputs or inputs to other selected LUTs).
 
-The K-LUT technology mapping problem can be formulated as:
+The K-LUT technology mapping problem can be formulated as: $\min_{M} Cost(M)$. 
 
-$\min_{M} Cost(M)$
+Here we specify K = 6 in our implmentation. 
 
 
 ## Input Format
 
-The input logic network is specified using the Berkeley Logic Interchange Format (BLIF). BLIF is a human-readable text format for describing logic circuits at the gate level. Here's an example of a simple circuit in BLIF format:
+The input logic network is specified using the Berkeley Logic Interchange Format (BLIF). BLIF is a human-readable text format for describing logic circuits at the gate level. Here's several examples of some simple circuits in BLIF format:
 
 ```blif
-# Benchmark "c17" written by ABC
-.model c17
+# Circuit 1. Lines starting with '#' are comments. 
+.model c1
 .inputs 1 2 3 6 7
 .outputs 22 23
 .names 1 3 new_10
 11 0
 .names 3 6 new_11
-11 0
+11 1
 .names 2 new_11 new_16
-11 0
+1- 0
 .names new_11 7 new_19
 11 0
 .names new_10 new_16 22
-11 0
+00 1
 .names new_16 new_19 23
-11 0
+-1 0
 .end
 ```
+
+```blif
+# Circuit 2. Lines starting with '#' are comments. 
+.model c2
+.inputs 1 2 3 6 7
+.outputs 22 23
+.names 2 7 new_11 23
+011 1
+100 1
+101 1
+110 1
+111 1
+.names new_16 1 3 22
+000 1
+001 1
+010 1
+011 1
+111 1
+.names 6 2 3 new_16
+000 1
+001 1
+100 1
+101 1
+.names 6 3 new_11
+11 1
+.end
+```
+
 
 In this format:
 - `.model` specifies the name of the circuit
 - `.inputs` lists the primary inputs
 - `.outputs` lists the primary outputs
-- `.names` blocks define the logic functions for internal nodes and outputs
-- The rows following a `.names` line define the truth table entries that produce a 1 output (or 0 if explicitly specified)
-- `.end` marks the end of the circuit description
+- `.names` blocks define the logic functions for internal nodes and outputs. A logic function is declared as follows: 
+    ```
+    .names <input-1> <input-2> ... <input-N> <output>
+    <single-output-cover>
+    ```
+    where `<input-1>`, `<input-2>`, ..., `<input-N>` are the inputs to the logic function, and `<output>` is the output of the function. The `<single-output-cover>` is a truth table that specifies the output for each combination of inputs.
 
-The LUT size `K` is specified as a command-line argument.
+- The rows following a `.names` line define the truth table in a "single-output-cover" format:
+  - The format uses {0, 1, -} in the n-bit wide "input plane" and {0, 1} in the 1-bit wide "output plane"
+  - If the output plane is all 1's (omitted in the file), the first n columns represent input patterns that produce output 1, all other input patterns produce 0
+  - For rows with explicit output 0 (like in the example): only these input patterns produce 0, all others produce 1
+  - The symbol "-" represents don't care terms
+  - There can be multiple rows for a single gate, each representing a different input pattern that produces the specified output
+  - A sample logic function with 4 inputs and 1 output: 
+    ```
+    .names a b c d out
+    1--0 1
+    -1-1 1
+    0-11 1
+    ```
+    The translation of the above sample logic function into a sum-of-products notation is: `output = (ad') + (bd) + (a'cd)`
+
+
+- Special cases:
+  - To assign the constant "1" to some logic gate `j`, use the following construct: 
+    ```
+    .names j
+    1
+    ```
+  - To assign the constant "0" to some logic gate `j`, use the following construct: 
+    ```
+    .names j
+    ```
+
 
 ## Output Format
 
 The output of the technology mapping is also provided in BLIF format, but with the logic network implemented using only K-LUTs. Each LUT is represented by a `.names` block with at most K inputs. The output BLIF preserves the primary inputs and outputs of the original network.
 
-Example output for the above circuit after mapping to 3-LUTs:
+You should ensure the truth tables for the LUTs are derived correctly from the original logic functions. 
+
+An example output of a simple circuit after mapping to 3-LUTs (K=3) is as follows: 
 
 ```blif
-# Benchmark "c17" mapped to 3-LUTs
-.model c17
+# A simple circuit that mapped to 3-LUTs
+.model c3
 .inputs 1 2 3 6 7
 .outputs 22 23
-.names 1 3 6 lut_1
-101 1
-.names 2 3 6 lut_2
-011 1
-.names 3 6 7 lut_3
-110 1
-.names lut_1 lut_2 22
+.names 1 3 new_n10 22
+--1 1
+11- 1
+.names 6 3 2 new_n10
+-01 1
+0-1 1
+.names 7 2 new_n12 23
+-10 1
+1-0 1
+.names 3 6 new_n12
 11 1
-.names lut_2 lut_3 23
-11 1
+.end
+```
+
+An example output of a simple circuit after mapping to 6-LUTs (K=6) is as follows: 
+
+```blif
+# A simple circuit that mapped to 6-LUTs
+.model c4
+.inputs 1 2 3 6 7
+.outputs 22 23
+.names 6 1 3 2 22
+--01 1
+-11- 1
+0--1 1
+.names 6 3 2 7 23
+--00 0
+11-- 0
 .end
 ```
 
 In this output:
 - Each `.names` block corresponds to a LUT in the final implementation
-- Each LUT has at most K inputs (3 in this example)
-- The network correctly implements the functionality of the original circuit
-- The total number of LUTs used is reported (5 in this example)
+- Each LUT has at most K inputs
+- The network should correctly implements the functionality of the original circuit
+
 
 ## References
 1. J. Cong and Y. Ding, "FlowMap: An Optimal Technology Mapping Algorithm for Delay Optimization in Lookup-Table Based FPGA Designs," IEEE Transactions on Computer-Aided Design of Integrated Circuits and Systems, 1994.
