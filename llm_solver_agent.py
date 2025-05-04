@@ -502,8 +502,15 @@ Your goal is to improve the solution for as many test cases as possible, with sp
         """Gets a program from the specified LLM."""
         prompt = self.format_prompt(problem_desc, iteration, previous_program, solution_dir)
         
-        # Save the prompt to the log file if it's provided
+        # Save the prompt to a separate file for this iteration
         if hasattr(self, 'current_log_file'):
+            prompt_file = self.current_log_file.parent / f"prompt{iteration}.txt"
+            with open(prompt_file, 'w') as f:
+                f.write(f"PROMPT FOR ITERATION {iteration}:\n")
+                f.write(prompt)
+                f.write("\n\n")
+            
+            # Also append to the main log file for reference
             with open(self.current_log_file, 'a') as f:
                 f.write(f"PROMPT FOR ITERATION {iteration}:\n")
                 f.write(prompt)
