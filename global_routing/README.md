@@ -133,7 +133,7 @@ Here is an example of a global routing solution for a net:
     3 3 0 3 3 1
     )
 
-where each row ($x_l$ $y_l$ $z_l$ $x_h$ $y_h$ $z_h$) describes a line/rectangle in the 3D GCell graph, spanning from $(x_l, y_l, z_l)$ to $(x_h, y_h, z_h)$.
+where each row ($x_l$ $y_l$ $z_l$ $x_h$ $y_h$ $z_h$) describes a line/rectangle in the 3D GCell graph, spanning from $(x_l, y_l, z_l)$ to $(x_h, y_h, z_h)$, where $x_l\leq x_h$, $y_l\leq y_h$, and $z_l\leq z_h$.
 
 ## Note
 The problem presented here is a simplified version of the ISPD 2024 Global Routing Contest [1], with certain constraints relaxed and the computation of performance metrics simplified.
