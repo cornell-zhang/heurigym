@@ -107,7 +107,7 @@ class ProgramExecutor:
         
         # Copy all files from the original program folder to the solution folder
         for file in self.program_folder.iterdir():
-            if file.is_file():
+            if file.is_file() and (file.suffix or file.name.lower() == 'makefile'):
                 target_file = self.solution_folder / file.name
                 with open(file, 'r') as src, open(target_file, 'w') as dst:
                     dst.write(src.read())
@@ -417,42 +417,51 @@ This is the program you generated in the previous iteration:
             problem_folder = workspace_root / problem_desc['name']
             demo_folder = problem_folder / "dataset" / "demo"
             if demo_folder.exists():
-                # Find all files in the demo folder
+                # Find all files in the demo folder and group them by base name
                 input_files = [f for f in demo_folder.iterdir() if f.is_file()]
-                
-                # For each test case, show input and its result
+                file_groups = {}
                 for input_file in input_files:
-                    test_case = input_file.stem
-                    prompt += f"\n## Test Case: {test_case}\n\n"
-                    
-                    # Show input data
-                    try:
-                        with open(input_file, 'r') as f:
-                            content = f.read()
-                            # Limit to first 50 lines if content is too large
-                            lines = content.split('\n')
-                            if len(lines) > 50:
-                                content = '\n'.join(lines[:50]) + '\n... (truncated)'
-                        prompt += f"**Input Data:**\n```\n{content}\n```\n\n"
-                    except Exception as e:
-                        prompt += f"**Input Data:** Error reading file: {str(e)}\n\n"
-                    
-                    # Show result
-                    cost_file = solution_dir / f"output{iteration - 1}" / f"{test_case}.cost"
-                    if cost_file.exists():
-                        with open(cost_file, 'r') as f:
-                            cost_data = json.load(f)
-                            if 'validity' in cost_data and 'cost' in cost_data:
-                                if cost_data['validity']:
-                                    prompt += f"**Result:** Valid solution with cost {cost_data['cost']}\n\n"
+                    base_name = input_file.stem
+                    if base_name not in file_groups:
+                        file_groups[base_name] = []
+                    file_groups[base_name].append(input_file)
+                
+                if not file_groups:
+                    prompt += f"\nNo test cases found in the demo dataset folder: {demo_folder}\n\n"
+                else:
+                    # For each group of files, show them together
+                    for base_name, group_files in file_groups.items():
+                        prompt += f"\n## Test Case: {base_name}\n\n"
+                        
+                        # Show all input files in this group
+                        for input_file in sorted(group_files):
+                            try:
+                                with open(input_file, 'r') as f:
+                                    content = f.read()
+                                    # Limit to first 50 lines if content is too large
+                                    lines = content.split('\n')
+                                    if len(lines) > 50:
+                                        content = '\n'.join(lines[:50]) + '\n... (truncated)'
+                                prompt += f"**Input File: {input_file.name}**\n```\n{content}\n```\n\n"
+                            except Exception as e:
+                                prompt += f"**Input File: {input_file.name}** Error reading file: {str(e)}\n\n"
+                        
+                        # Show result for this group
+                        cost_file = solution_dir / f"output{iteration - 1}" / f"{base_name}.cost"
+                        if cost_file.exists():
+                            with open(cost_file, 'r') as f:
+                                cost_data = json.load(f)
+                                if 'validity' in cost_data and 'cost' in cost_data:
+                                    if cost_data['validity']:
+                                        prompt += f"**Result:** Valid solution with cost {cost_data['cost']}\n\n"
+                                    else:
+                                        prompt += f"**Result:** Invalid solution with cost {cost_data['cost']}\n"
+                                        prompt += f"**Error:** {cost_data['message']}\n\n"
                                 else:
-                                    prompt += f"**Result:** Invalid solution with cost {cost_data['cost']}\n"
+                                    prompt += f"**Result:** Error occurred\n"
                                     prompt += f"**Error:** {cost_data['message']}\n\n"
-                            else:
-                                prompt += f"**Result:** Error occurred\n"
-                                prompt += f"**Error:** {cost_data['message']}\n\n"
-                    else:
-                        prompt += "**Result:** No output generated\n\n"
+                        else:
+                            prompt += "**Result:** No output generated\n\n"
             else:
                 prompt += f"\nNo test cases found in the demo dataset folder: {demo_folder}\n\n"
 
