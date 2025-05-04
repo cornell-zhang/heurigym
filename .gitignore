@@ -80,3 +80,5 @@ venv.bak/
 
 # tech mapping ABC history
 abc.history
+run_abc.sh
+run_baseline.sh
