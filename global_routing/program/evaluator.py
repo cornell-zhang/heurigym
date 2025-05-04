@@ -58,6 +58,15 @@ def evaluate(cap_file: str, net_file: str, solution_file: str) -> float:
     if not output_lines:
         raise ValueError("Evaluator produced no output")
     
+    # check if subprocess exited correctly
+    if result.returncode != 0:
+        error_msg = f"Evaluator exited with non-zero status: {result.returncode}\n"
+        if result.stdout:
+            error_msg += f"stdout:\n{result.stdout}\n"
+        if result.stderr:
+            error_msg += f"stderr:\n{result.stderr}"
+        raise ValueError(error_msg)
+    
     last_line = output_lines[-1]
     if not last_line.startswith("total cost"):
         raise ValueError(f"Unexpected output format. Last line: {last_line}")
