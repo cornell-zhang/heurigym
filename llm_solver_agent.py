@@ -105,11 +105,11 @@ class ProgramExecutor:
         output_dir = self.solution_folder / f"output{iteration}"
         os.makedirs(output_dir, exist_ok=True)
         
-        # Copy all Python files from the original program folder to the solution folder
-        for py_file in self.program_folder.glob("*.py"):
-            if py_file.name != "solve.py":  # Skip solve.py as we'll write it separately
-                target_file = self.solution_folder / py_file.name
-                with open(py_file, 'r') as src, open(target_file, 'w') as dst:
+        # Copy all files from the original program folder to the solution folder
+        for file in self.program_folder.iterdir():
+            if file.is_file():
+                target_file = self.solution_folder / file.name
+                with open(file, 'r') as src, open(target_file, 'w') as dst:
                     dst.write(src.read())
         
         # Save the LLM's program to solver.py
