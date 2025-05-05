@@ -7,7 +7,7 @@ class Node:
         self.num = num
         self.type = type
         self.delay = delay
-        self.asap = 1
+        self.asap = 0
         self.alap = None
         self.predecessors = []
         self.successors = []
@@ -94,7 +94,7 @@ class Graph:
         """Calculate As Soon As Possible (ASAP) times"""
         # Reset ASAP times
         for node in self.adjacency_list:
-            node.asap = 1
+            node.asap = 0
         
         # Process nodes in topological order
         for node in self.topological_order:
@@ -106,7 +106,7 @@ class Graph:
         """Calculate As Late As Possible (ALAP) times"""
         # Reset ALAP times
         for node in self.adjacency_list:
-            node.alap = self.constrained_latency if self.constrained_latency else self.vertex_count
+            node.alap = (self.constrained_latency - 1) if self.constrained_latency else (self.vertex_count - 1)
         
         # Process nodes in reverse topological order
         for node in reversed(self.topological_order):
@@ -121,9 +121,6 @@ class Graph:
     def generate_time_constrained_ilp(self, outfile):
         """Generate ILP for time-constrained problems"""
         self.topological_sort_dfs()
-        print("Time frame:")
-        for i, node in enumerate(self.adjacency_list):
-            print(f"{i+1}: [ {node.asap} , {node.alap} ]")
         print("\nStart generating ILP formulas for latency-constrained problems...")
 
         outfile.write("Minimize\n")
@@ -146,21 +143,28 @@ class Graph:
                     self.resource_usage[j][resource_type] = []
                 self.resource_usage[j][resource_type].append(i)
 
-        for i in range(1, self.constrained_latency + 1):
-            for resource_type, nodes in self.resource_usage[i].items():
-                if len(nodes) < 2:
+        # Initialize resource usage for all time steps
+        for i in range(0, self.vertex_count):
+            if i not in self.resource_usage:
+                self.resource_usage[i] = {}
+            for resource_type in self.max_resources.keys():
+                if resource_type not in self.resource_usage[i]:
+                    self.resource_usage[i][resource_type] = []
+
+        for i in range(0, self.vertex_count):
+            for resource_type in self.max_resources.keys():
+                if len(self.resource_usage[i][resource_type]) < 2:
                     continue
-                for j, node_idx in enumerate(nodes):
+                for j, node_idx in enumerate(self.resource_usage[i][resource_type]):
                     node = self.adjacency_list[node_idx]
                     for d in range(node.delay):
-                        if i - d >= 1:
+                        if i - d >= 0:
                             outfile.write(f"x{node_idx},{i-d}")
-                            if not (j == len(nodes) - 1 and (d == node.delay - 1 or i - d == 1)):
+                            if not (j == len(self.resource_usage[i][resource_type]) - 1 and (d == node.delay - 1 or i - d == 0)):
                                 outfile.write(" + ")
-                if resource_type == "MUL":
-                    outfile.write(" - M1 <= 0\n")
-                else:
-                    outfile.write(" - M2 <= 0\n")
+                        else:
+                            break
+                outfile.write(f" <= {self.max_resources.get(resource_type, 1)}\n")
         print("Resource constraints generated.")
 
         # Precedence constraints
@@ -208,7 +212,7 @@ class Graph:
             time_frame = [f"x{i},{j}" for j in range(node.asap, node.alap + 1)]
             outfile.write(" + ".join(time_frame) + " = 1\n")
             for j in range(node.asap, node.alap + 1):
-                outfile.write(f"{j + node.delay - 1} x{i},{j} - L <= 0\n")
+                outfile.write(f"{j + node.delay} x{i},{j} - L <= 0\n")
         print("Time frame and upper latency constraints generated.")
 
         # Resource constraints
@@ -221,16 +225,24 @@ class Graph:
                     self.resource_usage[j][resource_type] = []
                 self.resource_usage[j][resource_type].append(i)
 
-        for i in range(1, self.vertex_count + 1):
+        # Initialize resource usage for all time steps
+        for i in range(0, self.vertex_count):
+            if i not in self.resource_usage:
+                self.resource_usage[i] = {}
             for resource_type in self.max_resources.keys():
-                if resource_type not in self.resource_usage[i] or len(self.resource_usage[i][resource_type]) < 2:
+                if resource_type not in self.resource_usage[i]:
+                    self.resource_usage[i][resource_type] = []
+
+        for i in range(0, self.vertex_count):
+            for resource_type in self.max_resources.keys():
+                if len(self.resource_usage[i][resource_type]) < 2:
                     continue
                 for j, node_idx in enumerate(self.resource_usage[i][resource_type]):
                     node = self.adjacency_list[node_idx]
                     for d in range(node.delay):
-                        if i - d >= 1:
+                        if i - d >= 0:
                             outfile.write(f"x{node_idx},{i-d}")
-                            if not (j == len(self.resource_usage[i][resource_type]) - 1 and (d == node.delay - 1 or i - d == 1)):
+                            if not (j == len(self.resource_usage[i][resource_type]) - 1 and (d == node.delay - 1 or i - d == 0)):
                                 outfile.write(" + ")
                         else:
                             break
