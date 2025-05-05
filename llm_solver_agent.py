@@ -803,7 +803,15 @@ def parse_arguments():
     parser = argparse.ArgumentParser(description='LLM Solver Agent for optimization problems')
     
     parser.add_argument('--models', type=str, nargs='+', 
-                        default=["deepseek-chat", "deepseek-reasoner", "gemini-2.5-flash-preview-04-17", "gemini-2.5-pro-exp-03-25"],
+                        default=[
+                            "openrouter/deepseek/deepseek-chat-v3-0324:free", # "deepseek-chat"
+                            "openrouter/deepseek/deepseek-r1:free", # "deepseek-reasoner"
+                            "gemini-2.5-flash-preview-04-17",
+                            "gemini-2.5-pro-exp-03-25",
+                            "openrouter/qwen/qwen3-235b-a22b:free",
+                            "openrouter/meta-llama/llama-3.3-70b-instruct:free",
+                            "openrouter/meta-llama/llama-4-maverick:free"
+                        ],
                         help='List of models to use (default: deepseek-chat, deepseek-reasoner)')
     
     parser.add_argument('--iterations', type=int, default=3,
