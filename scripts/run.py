@@ -139,6 +139,12 @@ def main():
 
     print("=" * 50)
 
+    # Save results to JSON file
+    results_dict = {dataset: cost for dataset, cost in results}
+    with open("results.json", "w") as f:
+        json.dump(results_dict, f, indent=2)
+    print("\nResults have been saved to results.json")
+
 
 if __name__ == "__main__":
     main()

@@ -102,19 +102,27 @@ class ProgramExecutor:
                     # Extract just the code between the markers
                     program = program[first_newline + 1:end_idx].strip()
         
-        # Create output directory in the solution folder for this iteration
-        output_dir = self.solution_folder / f"output{iteration}"
+        # Create iteration-specific folders
+        iteration_dir = self.solution_folder / f"iteration{iteration}"
+        output_dir = iteration_dir / "output"
+        os.makedirs(iteration_dir, exist_ok=True)
         os.makedirs(output_dir, exist_ok=True)
         
-        # Copy all files from the original program folder to the solution folder
+        # Copy all files from the original program folder to the iteration folder
         for file in self.program_folder.iterdir():
             if file.is_file() and (file.suffix or file.name.lower() == 'makefile'):
-                target_file = self.solution_folder / file.name
+                target_file = iteration_dir / file.name
                 with open(file, 'r') as src, open(target_file, 'w') as dst:
                     dst.write(src.read())
+
+        # Also copy the run.py script
+        shutil.copy(
+            "scripts/run.py",
+            iteration_dir / "run.py"
+        )
         
-        # Save the LLM's program to solver.py
-        target_file = self.solution_folder / "solver.py"
+        # Save the LLM's program to solver.py in the iteration folder
+        target_file = iteration_dir / "solver.py"
         with open(target_file, 'w') as f:
             f.write(program)
         logger.info(f"Saved program to {target_file}")
@@ -145,14 +153,16 @@ class ProgramExecutor:
             total_execution_time = 0
             total_evaluation_time = 0
             
+            # Get the iteration-specific folders
+            iteration_dir = self.solution_folder / f"iteration{iteration}"
+            output_dir = iteration_dir / "output"
+            
             for base_name, group_files in file_groups.items():
                 # Run the main program
                 shutil.copy(
                     "scripts/main.py",
-                    self.solution_folder / "main.py"
+                    iteration_dir / "main.py"
                 )
-                output_dir = self.solution_folder / f"output{iteration}"
-                os.makedirs(output_dir, exist_ok=True)
                 output_file = output_dir / f"{base_name}.output"
                 cost_file = output_dir / f"{base_name}.cost"
                 
@@ -166,7 +176,7 @@ class ProgramExecutor:
                     exec_start_time = time.time()
                     run_result = subprocess.run(
                         cmd,
-                        cwd=str(self.solution_folder),
+                        cwd=str(iteration_dir),
                         capture_output=True,
                         text=True,
                         timeout=self.timeout  # Use the timeout from constructor
@@ -196,7 +206,7 @@ class ProgramExecutor:
                 # Run the evaluator
                 shutil.copy(
                     "scripts/feedback.py",
-                    self.solution_folder / "feedback.py"
+                    iteration_dir / "feedback.py"
                 )
                 
                 # Prepare evaluator command with all input files
@@ -208,7 +218,7 @@ class ProgramExecutor:
                 eval_start_time = time.time()
                 eval_result = subprocess.run(
                     eval_cmd,
-                    cwd=str(self.solution_folder),
+                    cwd=str(iteration_dir),
                     capture_output=True,
                     text=True
                 )
@@ -533,7 +543,9 @@ Your goal is to improve the solution for as many test cases as possible, with sp
         
         # Save the prompt to a separate file for this iteration
         if hasattr(self, 'current_log_file'):
-            prompt_file = self.current_log_file.parent / f"prompt{iteration}.txt"
+            prompt_dir = self.current_log_file.parent / "prompt"
+            prompt_dir.mkdir(exist_ok=True)
+            prompt_file = prompt_dir / f"prompt{iteration}.txt"
             with open(prompt_file, 'w') as f:
                 f.write(f"PROMPT FOR ITERATION {iteration}:\n")
                 f.write(prompt)
@@ -693,7 +705,9 @@ Your goal is to improve the solution for as many test cases as possible, with sp
                 )
                 
                 # Save the program to a separate file
-                program_file = log_dir / f"response{iteration}.txt"
+                response_dir = log_dir / "responses"
+                response_dir.mkdir(exist_ok=True)
+                program_file = response_dir / f"response{iteration}.txt"
                 with open(program_file, 'w') as f:
                     f.write(raw_response)
                 
