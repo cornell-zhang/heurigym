@@ -30,7 +30,7 @@ def run_optimization(input_path, output_dir="output"):
 
         # Run the main program to generate output
         main_result = subprocess.run(
-            ["python3", "main.py", input_path],
+            ["python3", "main.py", input_path, output_file],
             capture_output=True,
             text=True,
             check=False,
@@ -96,7 +96,7 @@ def find_all_datasets(base_dir):
 
 def main():
     # Path to dataset directory
-    dataset_dir = "../dataset"
+    dataset_dir = "../dataset/full"
 
     # Allow dataset directory to be specified via command line
     if len(sys.argv) > 1:
