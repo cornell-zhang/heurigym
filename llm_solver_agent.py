@@ -13,6 +13,7 @@ from openai import OpenAI
 from anthropic import Anthropic
 from google import genai
 from datetime import datetime
+from config import calculate_cost
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -493,6 +494,34 @@ Your goal is to improve the solution for as many test cases as possible, with sp
         
         return prompt
     
+    def _save_api_info_to_json(self, model: str, iteration: int, api_time: float, prompt_tokens: int, completion_tokens: int, total_cost: float) -> None:
+        """Saves API information to a JSON file."""
+        if not hasattr(self, 'current_log_file'):
+            return
+            
+        # Create API info directory if it doesn't exist
+        api_info_dir = self.current_log_file.parent / "api_info"
+        api_info_dir.mkdir(exist_ok=True)
+        
+        # Create JSON file path with simplified naming
+        json_file = api_info_dir / f"api_info_iter_{iteration}.json"
+        
+        # Prepare API info data
+        api_info = {
+            "model": model,
+            "iteration": iteration,
+            "api_call_time_seconds": round(api_time, 2),
+            "prompt_tokens": prompt_tokens,
+            "completion_tokens": completion_tokens,
+            "total_tokens": prompt_tokens + completion_tokens,
+            "estimated_cost": round(total_cost, 4),
+            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        }
+        
+        # Save to JSON file
+        with open(json_file, 'w') as f:
+            json.dump(api_info, f, indent=2)
+            
     def get_program(self, 
                     problem_desc: Dict[str, str], 
                     model: str = "gpt-4-turbo-preview",
@@ -519,6 +548,10 @@ Your goal is to improve the solution for as many test cases as possible, with sp
         # Measure API call time
         api_start_time = time.time()
         
+        # Initialize token counts
+        prompt_tokens = 0
+        completion_tokens = 0
+        
         if model.startswith("gpt"):
             if not self.openai_client:
                 raise ValueError("OpenAI client not initialized. OPENAI_API_KEY is required for OpenAI models.")
@@ -532,6 +565,8 @@ Your goal is to improve the solution for as many test cases as possible, with sp
                 ]
             )
             raw_response = response.choices[0].message.content
+            prompt_tokens = response.usage.prompt_tokens
+            completion_tokens = response.usage.completion_tokens
             
         elif model.startswith("claude"):
             if not self.anthropic_client:
@@ -546,6 +581,8 @@ Your goal is to improve the solution for as many test cases as possible, with sp
                 }]
             )
             raw_response = response.content[0].text
+            prompt_tokens = response.usage.input_tokens
+            completion_tokens = response.usage.output_tokens
         
         elif model.startswith("deepseek"):
             if not self.deepseek_client:
@@ -561,6 +598,8 @@ Your goal is to improve the solution for as many test cases as possible, with sp
                 ]
             )
             raw_response = response.choices[0].message.content
+            prompt_tokens = response.usage.prompt_tokens
+            completion_tokens = response.usage.completion_tokens
             
         elif model.startswith("gemini"):
             if not self.gemini_client:
@@ -581,16 +620,28 @@ Your goal is to improve the solution for as many test cases as possible, with sp
             
             # Extract the text from the response
             raw_response = response.text
+            prompt_tokens = response.usage.prompt_token_count
+            completion_tokens = response.usage.candidates_token_count
         
         else:
             raise ValueError(f"Unsupported model: {model}")
             
         api_time = time.time() - api_start_time
         
-        # Log API timing information
+        # Calculate cost using the config module
+        total_cost = calculate_cost(model, prompt_tokens, completion_tokens)
+        
+        # Save API info to JSON file
+        self._save_api_info_to_json(model, iteration, api_time, prompt_tokens, completion_tokens, total_cost)
+        
+        # Log API timing and cost information to the main log file
         if hasattr(self, 'current_log_file'):
             with open(self.current_log_file, 'a') as f:
-                f.write(f"API Call Time: {api_time:.2f} seconds\n\n")
+                f.write(f"API Call Time: {api_time:.2f} seconds\n")
+                f.write(f"Prompt Tokens: {prompt_tokens}\n")
+                f.write(f"Completion Tokens: {completion_tokens}\n")
+                f.write(f"Total Tokens: {prompt_tokens + completion_tokens}\n")
+                f.write(f"Estimated Cost: ${total_cost:.4f}\n\n")
         
         return raw_response
     
