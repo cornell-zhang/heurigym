@@ -316,12 +316,14 @@ class LLMInterface:
         self.deepseek_client = None
         self.anthropic_client = None
         self.gemini_client = None
+        self.openrouter_client = None
         
         # Check which models are being used and initialize appropriate clients
         openai_models = [m for m in models_to_use if m.startswith("gpt")]
         deepseek_models = [m for m in models_to_use if m.startswith("deepseek")]
         anthropic_models = [m for m in models_to_use if m.startswith("claude")]
         gemini_models = [m for m in models_to_use if m.startswith("gemini")]
+        openrouter_models = [m for m in models_to_use if m.startswith("openrouter/")]
         
         if openai_models:
             if not os.getenv('OPENAI_API_KEY'):
@@ -345,6 +347,14 @@ class LLMInterface:
             if not os.getenv('GOOGLE_API_KEY'):
                 raise ValueError("GOOGLE_API_KEY is required for Gemini models but not provided")
             self.gemini_client = genai.Client(api_key=os.getenv('GOOGLE_API_KEY'))
+
+        if openrouter_models:
+            if not os.getenv('OPENROUTER_API_KEY'):
+                raise ValueError("OPENROUTER_API_KEY is required for OpenRouter models but not provided")
+            self.openrouter_client = OpenAI(
+                api_key=os.getenv('OPENROUTER_API_KEY'),
+                base_url="https://openrouter.ai/api/v1"
+            )
         
         # Load prompt template
         self.prompt_template = self._load_prompt_template()
@@ -639,7 +649,25 @@ Your goal is to improve the solution for as many test cases as possible, with sp
                 if hasattr(response.usage_metadata, "prompt_token_count"):
                     prompt_tokens = response.usage_metadata.prompt_token_count
                 if hasattr(response.usage_metadata, "total_token_count"):
-                    completion_tokens = response.usage_metadata.total_token_count - prompt_tokens #corrected attribute name
+                    completion_tokens = response.usage_metadata.total_token_count - prompt_tokens
+
+        elif model.startswith("openrouter/"):
+            if not self.openrouter_client:
+                raise ValueError("OpenRouter client not initialized. OPENROUTER_API_KEY is required for OpenRouter models.")
+            # Extract the actual model name from the openrouter/ prefix
+            actual_model = model.replace("openrouter/", "", 1)
+            response = self.openrouter_client.chat.completions.create(
+                model=actual_model,
+                max_tokens=32768,  # OpenRouter supports various models with different limits
+                temperature=self.temperature,
+                messages=[
+                    {"role": "system", "content": "You are an expert optimization algorithm designer. You are given a problem and try to solve it. Please only output the code for the solver."},
+                    {"role": "user", "content": prompt}
+                ],
+            )
+            raw_response = response.choices[0].message.content
+            prompt_tokens = response.usage.prompt_tokens
+            completion_tokens = response.usage.completion_tokens
         
         else:
             raise ValueError(f"Unsupported model: {model}")
@@ -663,6 +691,22 @@ Your goal is to improve the solution for as many test cases as possible, with sp
         
         return raw_response
     
+    def _get_base_model_name(self, model: str) -> str:
+        """Extracts the base model name from a model identifier."""
+        # Remove openrouter/ prefix if present
+        if model.startswith("openrouter/"):
+            model = model.replace("openrouter/", "", 1)
+        
+        # Remove provider prefix if present (e.g., deepseek/, anthropic/, etc.)
+        parts = model.split("/")
+        if len(parts) > 1:
+            model = parts[-1]
+        
+        # Remove any suffixes after : (e.g., :free, :latest, etc.)
+        model = model.split(":")[0]
+        
+        return model
+
     def get_iterative_program(self,
                               problem_desc: Dict[str, str],
                               model: str,
@@ -677,8 +721,9 @@ Your goal is to improve the solution for as many test cases as possible, with sp
         log_dir = solution_dir / "logs"
         log_dir.mkdir(parents=True, exist_ok=True)
         
-        # Create a log file for this run
-        log_file = log_dir / f"{model}.log"
+        # Use base model name for log file
+        base_model_name = self._get_base_model_name(model)
+        log_file = log_dir / f"{base_model_name}.log"
         
         # Store the log file path in the LLMInterface instance
         self.current_log_file = log_file
@@ -808,9 +853,12 @@ def main():
             
             # Get solutions from each model
             for model in args.models:
+                # Get base model name for directory
+                base_model_name = llm_interface._get_base_model_name(model)
+                
                 # Create the solution directory for this model
                 workspace_root = Path(os.getcwd())
-                solution_dir = workspace_root / "llm_solutions" / timestamp / problem_desc['name'] / model
+                solution_dir = workspace_root / "llm_solutions" / timestamp / problem_desc['name'] / base_model_name
                 solution_dir.mkdir(parents=True, exist_ok=True)
                 
                 # Initialize program executor with the solution directory

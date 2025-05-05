@@ -110,6 +110,9 @@ DEFAULT_PRICING: ModelPricing = {
 
 def get_model_pricing(model_name: str) -> ModelPricing:
     """Get pricing information for a specific model."""
+    # Handle OpenRouter models by removing the prefix
+    if model_name.startswith("openrouter/"):
+        model_name = model_name.replace("openrouter/", "", 1)
     return MODEL_PRICING.get(model_name, DEFAULT_PRICING)
 
 def calculate_cost(model_name: str, prompt_tokens: int, completion_tokens: int) -> float:
