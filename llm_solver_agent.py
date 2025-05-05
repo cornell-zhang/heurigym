@@ -557,7 +557,7 @@ Your goal is to improve the solution for as many test cases as possible, with sp
                 raise ValueError("OpenAI client not initialized. OPENAI_API_KEY is required for OpenAI models.")
             response = self.openai_client.chat.completions.create(
                 model=model,
-                max_tokens=8192,
+                max_tokens=16384,
                 temperature=self.temperature,
                 messages=[
                     {"role": "system", "content": "You are an expert optimization algorithm designer. You are given a problem and try to solve it. Please only output the code for the solver."},
@@ -573,7 +573,7 @@ Your goal is to improve the solution for as many test cases as possible, with sp
                 raise ValueError("Anthropic client not initialized. ANTHROPIC_API_KEY is required for Claude models.")
             response = self.anthropic_client.messages.create(
                 model=model,
-                max_tokens=8192,
+                max_tokens=64 * 1024,
                 temperature=self.temperature,
                 messages=[{
                     "role": "user",
@@ -615,13 +615,19 @@ Your goal is to improve the solution for as many test cases as possible, with sp
             response = self.gemini_client.models.generate_content(
                 model=model,
                 contents=full_prompt,
-                config={"temperature": self.temperature}
+                config={"temperature": self.temperature, "max_output_tokens": 65536}
             )
             
             # Extract the text from the response
             raw_response = response.text
-            prompt_tokens = response.usage.prompt_token_count
-            completion_tokens = response.usage.candidates_token_count
+            # Check if usage_metadata exists before accessing it
+            prompt_tokens = 0  # Default values
+            completion_tokens = 0
+            if hasattr(response, "usage_metadata") and response.usage_metadata:
+                if hasattr(response.usage_metadata, "prompt_token_count"):
+                    prompt_tokens = response.usage_metadata.prompt_token_count
+                if hasattr(response.usage_metadata, "total_token_count"):
+                    completion_tokens = response.usage_metadata.total_token_count - prompt_tokens #corrected attribute name
         
         else:
             raise ValueError(f"Unsupported model: {model}")
@@ -738,8 +744,8 @@ def parse_arguments():
     parser = argparse.ArgumentParser(description='LLM Solver Agent for optimization problems')
     
     parser.add_argument('--models', type=str, nargs='+', 
-                        default=["deepseek-chat", "deepseek-reasoner", "gemini-2.0-flash"],
-                        help='List of models to use (default: deepseek-chat, deepseek-reasoner, gemini-2.0-flash)')
+                        default=["deepseek-chat", "deepseek-reasoner", "gemini-2.5-flash-preview-04-17", "gemini-2.5-pro-exp-03-25"],
+                        help='List of models to use (default: deepseek-chat, deepseek-reasoner)')
     
     parser.add_argument('--iterations', type=int, default=3,
                         help='Maximum number of iterations for each model (default: 3)')
