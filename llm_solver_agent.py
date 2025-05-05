@@ -664,6 +664,10 @@ Your goal is to improve the solution for as many test cases as possible, with sp
                     {"role": "system", "content": "You are an expert optimization algorithm designer. You are given a problem and try to solve it. Please only output the code for the solver."},
                     {"role": "user", "content": prompt}
                 ],
+                extra_headers={
+                    "HTTP-Referer": "https://github.com/cornell-zhang/optbench", # Optional. Site URL for rankings on openrouter.ai.
+                    "X-Title": "HeuriGen", # Optional. Site title for rankings on openrouter.ai.
+                },
             )
             raw_response = response.choices[0].message.content
             prompt_tokens = response.usage.prompt_tokens
