@@ -13,6 +13,7 @@ You are an optimization expert tasked with solving the following problem by writ
     - numpy
     - scipy
     - networkx
+    - pandas
 4. Your submission should consist of a single file named `solver.py` that contains the complete implementation of the `solve` function. Do NOT include any explanations, comments, additional text, or Markdown formatting.
 5. You will get execution feedback after submitting your solution.
 

@@ -2,27 +2,24 @@
 
 ## Background  
 Airlines must build _pairings_ (multi‑day sequences of flight legs) so that every scheduled leg is covered by exactly one legal crew duty‑tour while respecting collective‑bargaining rules (maximum duty hours, minimum rest, domicile start/end, etc.).  
-A good pairing plan minimises total operating cost (wages, per‑diem, hotel) and downstream disruption risk, while staying within the limited reserve of pilots based at each crew _domicile_ (base).  
-Mathematically this is a large set‑partitioning problem: choose a subset of feasible pairings so that each flight leg appears in exactly one chosen pairing and overall cost is minimised.
+A good pairing plan minimises total operating cost (wages, per‑diem, hotel) and downstream disruption risk, while staying within the limited reserve of pilots based at each crew _domicile_ (base).
 
-The **Data A** file you uploaded contains one month (Aug 2021) of flight‑leg data for a single aircraft fleet operating out of base **NKX**. Each row is one leg on one calendar day; from it we can derive legal pairings and compute their costs.
+The **Data A** file contains one month (Aug 2021) of flight‑leg data for a single aircraft fleet operating out of base **NKX**. Each row is one leg on one calendar day; from it we can derive legal pairings and compute their costs.
 
----
-
-## Formalisation  
+## Formalization
 
 | Symbol | Meaning |
 | ------ | ------- |
-| **F** | set of flight legs \(f = 1,\dots,|F|\). |
+| **F** | set of flight legs $f = 1,\dots,\|F\|$. |
 | **P** | set of _feasible_ pairings generated from **F** according to duty‑time, block‑time, minimum‑rest and base‑return rules. |
-| $c_p$ | cost of pairing \(p\)—here computed from duty time and block time (see below). |
-| $x_p \in \{0,1\}$ | decision variable: 1 if pairing \(p\) is selected. |
+| $c_p$ | cost of pairing $p$—here computed from duty time and block time (see below). |
+| $x_p \in \{0,1\}$ | decision variable: 1 if pairing $p$ is selected. |
 
-The classic set‑partitioning model is  
+The objective is to minimize the total cost of the selected pairings:
 
 $$
 \begin{aligned}
-\min_{x}\; &\sum_{p\in P} c_p\,x_p \\[2pt]
+\min_{x}\; &\sum_{p\in P} c_p\,x_p \\
 \text{s.t. } &\sum_{p:\,f\in p} x_p \;=\; 1 &&\forall f\in F \quad(\text{cover each leg once})\\
              &x_p \in \{0,1\} &&\forall p\in P .
 \end{aligned}
@@ -38,8 +35,6 @@ c_p \;=\; (\text{duty\_hours}_p)\times\text{DutyCostPerHour}_{\text{base}(p)}
 $$
 
 All other costs (hotel, dead‑head, etc.) could be added in the same way if the data were available.
-
----
 
 ## Input Format  
 
@@ -62,13 +57,11 @@ All other costs (hotel, dead‑head, etc.) could be added in the same way if the
 
 * The base (domicile) for all pairings is **NKX** (every pairing must start and end at NKX).  
 * Where `DutyCostPerHour` or `ParingCostPerHour` is missing, forward‑fill the last non‑missing value because the rate is constant for the fleet.  
-* Legal‑rule parameters used when generating \(P\) (may be tuned per airline):  
+* Legal‑rule parameters used when generating $P$ (may be tuned per airline):  
   – max duty hours = 13 h  
   – max block hours per duty = 8 h  
   – max legs per duty = 4  
   – min rest between duties = 10 h  
-
----
 
 ## Output Format  
 
@@ -86,8 +79,6 @@ The file may contain any number of lines. Feasibility requirements:
 1. Every leg in **Data A** appears in **exactly one** line.  
 2. Within each line, legs obey temporal order and legal duty/rest rules.  
 3. The pairing starts and ends at the same station/airpot.
-
----
 
 ## References  
 - https://github.com/zhanwen/MathModel/tree/master/国赛试题/2021年研究生数学建模竞赛试题/F
