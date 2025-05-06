@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import sys
 from typing import Tuple
 from utils import read_instance, calculate_distance

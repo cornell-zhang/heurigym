@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Cost-only evaluator for the Airline Crew-Pairing Problem.
 
 Signature matches the grading spec:

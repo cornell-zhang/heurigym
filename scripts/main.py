@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import sys
 
 # solver needs to be implemented by LLM

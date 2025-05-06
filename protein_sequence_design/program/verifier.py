@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 from typing import Tuple
 from Bio.PDB import PDBParser
 from Bio.PDB.Polypeptide import is_aa

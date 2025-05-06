@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 from Bio.PDB import PDBParser
 from Bio.PDB.Polypeptide import is_aa
 from Bio.SeqUtils import seq1

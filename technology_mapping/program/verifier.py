@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 verifier.py - BLIF-to-BLIF equivalence checker using ABC's CEC engine.
 """

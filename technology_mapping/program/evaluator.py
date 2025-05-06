@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 evaluator.py - cost evaluator for LUT-mapped BLIF designs.
 

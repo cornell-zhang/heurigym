@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 from utils import parse_json, parse_schedule
 
 

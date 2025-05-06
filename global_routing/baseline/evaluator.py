@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 from typing import Union, List
 import math
 from dataclasses import dataclass, field

@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Utility helpers for the Airline Crew‑Pairing benchmark.
 
 Provides

@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Verifier for E-Graph extraction solutions.
 
