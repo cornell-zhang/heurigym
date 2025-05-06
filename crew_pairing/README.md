@@ -58,10 +58,10 @@ All other costs (hotel, dead‑head, etc.) could be added in the same way if the
 * The base (domicile) for all pairings is **NKX** (every pairing must start and end at NKX).  
 * Where `DutyCostPerHour` or `ParingCostPerHour` is missing, forward‑fill the last non‑missing value because the rate is constant for the fleet.  
 * Legal‑rule parameters used when generating $P$ (may be tuned per airline):  
-  – max duty hours = 13 h  
-  – max block hours per duty = 8 h  
-  – max legs per duty = 4  
-  – min rest between duties = 10 h  
+  – max duty hours = 14 h  
+  – max block hours per duty = 10 h  
+  – max legs per duty = 6  
+  – min rest between duties = 9 h  
 
 ## Output Format  
 

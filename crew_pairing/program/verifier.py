@@ -3,10 +3,10 @@ from typing import List, Tuple
 from utils import HOURS, read_instance, FlightLeg
 
 # ------------------------------- legality parameters ------------------------
-MAX_DUTY_HOURS = 13.0  # h
-MAX_BLOCK_HOURS = 8.0  # h per duty
-MAX_LEGS_PER_DUTY = 4
-MIN_REST_HOURS = 10.0  # h between duties
+MAX_DUTY_HOURS = 14.0  # h
+MAX_BLOCK_HOURS = 10.0  # h per duty
+MAX_LEGS_PER_DUTY = 6
+MIN_REST_HOURS = 9.0  # h between duties
 BASE = "NKX"  # domicile
 
 
