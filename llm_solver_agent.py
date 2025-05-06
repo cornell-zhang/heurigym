@@ -478,7 +478,7 @@ This is the program you generated in the previous iteration:
                                 prompt += f"**Input File: {input_file.name}** Error reading file: {str(e)}\n\n"
                         
                         # Show result for this group
-                        cost_file = solution_dir / f"output{iteration - 1}" / f"{base_name}.cost"
+                        cost_file = solution_dir / f"iteration{iteration - 1}" / "output" / f"{base_name}.cost"
                         if cost_file.exists():
                             with open(cost_file, 'r') as f:
                                 cost_data = json.load(f)
@@ -499,7 +499,7 @@ This is the program you generated in the previous iteration:
             # Add improvement guidance
             any_failed = any(
                 not json.load(open(f))['validity'] if 'validity' in json.load(open(f)) else True 
-                for f in (solution_dir / f"output{iteration - 1}").glob("*.cost")
+                for f in (solution_dir / f"iteration{iteration - 1}" / "output").glob("*.cost")
             )
             
             if any_failed:
@@ -509,7 +509,7 @@ The program failed to produce valid solutions for some test cases. Please fix th
 1. Check for compilation errors or runtime exceptions
 2. Ensure the program handles all edge cases and meets the problem constraints correctly
 3. Verify that the input and output format matches the expected format
-4. Make sure all required functions are implemented correctly
+4. Make sure all required functions are implemented correctly, and no external forbidden libraries are used
 5. If the program is not able to produce valid solutions for any test case, please try to find the root cause and fix it.
 6. If the program is able to produce valid solutions for some test cases, please try to improve the solution."""
             else:
