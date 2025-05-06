@@ -38,6 +38,13 @@ def run_optimization(input_path, output_dir="output"):
 
         # Check if main.py executed successfully
         if main_result.returncode != 0:
+            error_data = {
+                "message": f"Python execution error: {main_result.stderr}",
+                "validity": False,
+                "cost": None
+            }
+            with open(cost_file, 'w') as f:
+                json.dump(error_data, f, indent=2)
             print(f"Error running main.py on {input_path}: {main_result.stderr}")
             return False, None
 
@@ -51,6 +58,13 @@ def run_optimization(input_path, output_dir="output"):
 
         # Check if feedback.py executed successfully
         if eval_result.returncode != 0:
+            error_data = {
+                "message": f"Evaluator error: {eval_result.stderr}",
+                "validity": False,
+                "cost": None
+            }
+            with open(cost_file, 'w') as f:
+                json.dump(error_data, f, indent=2)
             print(f"Error running feedback.py on {input_path}: {eval_result.stderr}")
             return False, None
 
@@ -60,12 +74,31 @@ def run_optimization(input_path, output_dir="output"):
                 cost_data = json.load(f)
                 if cost_data.get("validity", False):
                     return True, cost_data.get("cost")
+                else:
+                    # If solution is invalid, return False with the error message
+                    print(f"Invalid solution for {input_path}: {cost_data.get('message', 'Unknown error')}")
+                    return False, None
 
         # If we get here, something went wrong
+        error_data = {
+            "message": "No cost file generated",
+            "validity": False,
+            "cost": None
+        }
+        with open(cost_file, 'w') as f:
+            json.dump(error_data, f, indent=2)
         print(f"Warning: Could not extract cost for {input_path}")
         return False, None
 
     except Exception as e:
+        # Create error cost file for any unexpected exceptions
+        error_data = {
+            "message": f"Unexpected error: {str(e)}",
+            "validity": False,
+            "cost": None
+        }
+        with open(cost_file, 'w') as f:
+            json.dump(error_data, f, indent=2)
         print(f"Error processing {input_path}: {e}")
         return False, None
 
