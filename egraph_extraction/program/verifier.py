@@ -56,7 +56,8 @@ def _build_aux(nodes: Dict[str, dict]):
         child_ecs: Set[str] = set()
         for child in rec["children"]:
             if child not in nodes:
-                raise ValueError(f"Node '{nid}' references unknown child '{child}'")
+                raise ValueError(
+                    f"Node '{nid}' references unknown child '{child}'")
             child_ecs.add(nodes[child]["eclass"])
         child_ecs_of_node[nid] = child_ecs
 
