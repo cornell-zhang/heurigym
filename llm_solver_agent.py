@@ -203,6 +203,16 @@ class ProgramExecutor:
                     all_outputs.append(f"Test case {base_name}:\n{run_result.stderr}")
                     continue
                 
+                # Check if output file exists and has content
+                if not output_file.exists() or output_file.stat().st_size == 0:
+                    error_data = {
+                        "message": "Evaluator error: No output file generated or output file is empty"
+                    }
+                    with open(cost_file, 'w') as f:
+                        json.dump(error_data, f, indent=2)
+                    all_outputs.append(f"Test case {base_name}:\nNo output file generated or output file is empty")
+                    continue
+                
                 # Run the evaluator
                 shutil.copy(
                     "scripts/feedback.py",
