@@ -838,8 +838,9 @@ def parse_arguments():
     parser.add_argument('--timeout', type=int, default=10,
                         help='Timeout in seconds for program execution (default: 10)')
     
-    parser.add_argument('--temperature', type=float, default=0.8,
-                        help='Temperature for LLM generation (default: 0.8)')
+    parser.add_argument('--temperature', type=float, default=0.0,
+                        # 0.0 for deterministic output
+                        help='Temperature for LLM generation (default: 0.0)')
     
     return parser.parse_args()
 
