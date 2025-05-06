@@ -42,7 +42,7 @@ def main():
     output_data = {
         "validity": valid,
         "cost": cost,
-        "message": "Verification failed: " if not valid else "" + error_message,
+        "message": ("Verification failed: " if not valid else "") + error_message,
     }
 
     # Write the output to a JSON file
