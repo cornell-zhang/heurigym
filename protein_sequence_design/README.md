@@ -11,12 +11,12 @@ Protein sequence design (or inverse protein folding) aims to find an amino acid 
     * Each residue position $i$ has a calculated solvent-accessible area $s_i$.
     * Pairwise distances $d_{ij}$ between residue side chain centers are known.
 * **Fitness Function:**
-    * A sequence $S$ is an element of $`\{H, P\}`^n$. $S_H$ denotes the set of indices $k$ where $S_k = H$.
+    * A sequence $S$ is an element of `{H, P}`$^n$. $S_H$ denotes the set of indices $k$ where $S_k = H$.
     * The fitness $\Phi(S)$ is given by: $\Phi(S) = \alpha \sum_{i,j \in S_H} g(d_{ij}) + \beta \sum_{i \in S_H} s_i$.
     * $\alpha < 0$ weights favorable H-H contacts, $\beta > 0$ penalizes solvent exposure of H residues.
     * $g(d_{ij})$ is a contact function (e.g., sigmoidal or step) rewarding small distances between H residues.
 * **Optimization Goal:**
-    * Find a sequence $S \in `\{H,P\}`^n$ that *minimizes* $\Phi(S)$.
+    * Find a sequence $S \in$ `{H, P}`$^n$ that *minimizes* $\Phi(S)$.
 
 ## Input Format
 
