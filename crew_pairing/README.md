@@ -1,36 +1,81 @@
 # Airline Crew‑Pairing Problem (CPP)
 
 ## Background  
-Airlines must build _pairings_ (multi‑day sequences of flight legs) so that every scheduled leg is covered by exactly one legal crew duty‑tour while respecting collective‑bargaining rules (maximum duty hours, minimum rest, domicile start/end, etc.).  
-A good pairing plan minimises total operating cost (wages, per‑diem, hotel) and downstream disruption risk, while staying within the limited reserve of pilots based at each crew _domicile_ (base).
+
+Airlines must build _pairings_ (multi‑day sequences of flight legs) so that every scheduled leg is covered by exactly one legal crew duty‑tour while respecting rules (such as maximum duty hours, minimum rest, domicile start/end, etc.).  
+
+A feasible solution must:
+
+* **Cover** each flight leg exactly once.
+* **Respect** all duty‑time and rest constraints *within* every pairing.
+* **Return** the crew to its *domicile* (base) at the end of the tour.
+
+Given the increasing volume of flights, operational planners then need to choose the subset of pairings that minimises total cost (wages, per‑diem, hotels) while ensuring sufficient reserve pilots remain at the base to absorb disruptions.  In our simplified benchmark we ignore reserve sizing and hotel detail; cost depends only on duty and block hours.
+
 
 ## Formalization
 
-| Symbol | Meaning |
-| ------ | ------- |
-| $\mathcal{F}$ | set of flight legs $f = 1,\dots,\|\mathcal{F}\|$. |
-| $\mathcal{P}$ | set of _feasible_ pairings generated from $\mathcal{F}$ according to duty‑time, block‑time, minimum‑rest and base‑return rules. |
-| $c_p$ | cost of pairing $p$—here computed from duty time and block time (see below). |
-| $x_p \in \{0,1\}$ | decision variable: 1 if pairing $p$ is selected. |
+**Key definitions**:
+
+* $\mathcal F$ — set of all scheduled flight legs (each leg is a single aircraft movement defined by departure station/time and arrival station/time); indexed by $f$. 
+* $\mathcal P$ — set of *feasible* pairings.  A pairing $p \in \mathcal P$ is a sequence $\{ f_1,\dots,f_{|p|}\}$ satisfying all of the following rules:
+  * Chronological order: $\mathrm{arr}(f_i) \le \mathrm{dep}(f_{i+1})$.
+  * Base return: $\mathrm{depStn}(f_1)=\mathrm{arrStn}(f_{|p|})=Base$.
+  * Each internal rest gap that splits duties is $\ge R_{min}$.
+  * Within every duty segment $d\subseteq p$:
+
+    * $\text{dutyHours}(d) \le H^d_{max}$
+    * $\text{blockHours}(d) \le H^b_{max}$
+    * $|d| \le L_{max}$.
+
+
+**Legal‑rule parameters**:
+
+* Maximum duty span $H^d_{max}$ = 14 h
+* Maximum block hours per duty $H^b_{max}$ = 10 h
+* Maximum legs per duty $L_{max}$ = 6
+* Minimum rest between consecutive duties $R_{min}$ = 9 h
+* Base / domicile $Base = NKX$
+
+**Decision variables**:
+$$
+x_p = \begin{cases}
+1 & \text{if pairing } p \text{ is selected} \\
+0 & \text{otherwise}
+\end{cases}
+\qquad \text{for all } p \in \mathcal{P}
+$$
+
+**Cost of a pairing**:
+
+Let $D_p$ be the set of duty segments inside pairing $p$ and let $F_p$ be its flight legs.  Then,
+
+$$
+\displaystyle c_p\;=\;\underbrace{\sum_{d\in D_p} H^{duty}_d}_{\text{duty hours}}\;\cdot\;\text{DutyCostPerHour}\;
+\;\;+\underbrace{\sum_{f\in F_p} H^{block}_f}_{\text{block hours}}\;\cdot\;\text{ParingCostPerHour}.
+$$
+
+where
+
+* $H^{duty}_d$ = clock‑time length of duty $d$ (report to release).
+* $H^{block}_f$ = airborne/block time of flight leg $f$.
+
+
+**Objective**:
 
 The objective is to minimize the total cost of the selected pairings:
 
 $$
 \begin{aligned}
-\min_{x}\; &\sum_{p\in P} c_p\,x_p \\
-\text{s.t. } &\sum_{p:\,f\in p} x_p \;=\; 1 &&\forall f\in \mathcal{F} \quad(\text{cover each leg once})\\
-             &x_p \in \{0,1\} &&\forall p\in \mathcal{P} .
+\min_{x}\; & \sum_{p\in\mathcal P} c_p\,x_p \\
+\text{s.t.}\; & \sum_{p:\,f\in p} x_p = 1 \quad &\forall f\in \mathcal F\;\; (\text{each leg covered once}) \\
+& x_p \in \{0,1\} &\forall p\in\mathcal P
 \end{aligned}
 $$
 
-### Pairing‑cost expression  
+The legality rules above are *baked into* the definition of $\mathcal P$; hence no additional constraints are needed in the objective of problem.
 
-We provide the hourly wage rates `DutyCostPerHour` (paid for every on‑duty hour) and `ParingCostPerHour` (per‑diem during block hours) and embed all direct economics into
 
-$$
-c_p \;=\; (\text{duty\_hours}_p)\times\text{DutyCostPerHour}_{\text{base}(p)}
-       + (\text{block\_hours}_p)\times\text{ParingCostPerHour}_{\text{base}(p)} 
-$$
 
 
 ## Input Format  
@@ -55,11 +100,7 @@ It has the following columns:
 
 * The base (domicile) for all pairings is **NKX** (every pairing must start and end at NKX).  
 * Where `DutyCostPerHour` or `ParingCostPerHour` is missing, forward‑fill the last non‑missing value because the rate is constant for the fleet.  
-* Legal‑rule parameters used when generating $\mathcal{P}$ (may be tuned per airline):  
-  – max duty hours = 14 h  
-  – max block hours per duty = 10 h  
-  – max legs per duty = 6  
-  – min rest between duties = 9 h  
+* Legal‑rule parameters are listed above. 
 
 ## Output Format  
 

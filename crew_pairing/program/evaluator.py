@@ -8,7 +8,7 @@ from typing import List
 from utils import read_instance, HOURS  # HOURS: lambda td.total_seconds()/3600.0
 
 # A crew duty ends when the next report time is at least this many hours
-REST_THRESHOLD_HOURS: float = 10.0
+REST_THRESHOLD_HOURS: float = 9.0
 
 
 def _parse_schedule(path: str) -> List[List[str]]:
