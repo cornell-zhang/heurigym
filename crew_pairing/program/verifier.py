@@ -65,9 +65,9 @@ def verify(input_file: str, output_file: str) -> Tuple[bool, str]:
                     f"after departure of {leg_objs[i].token}."
                 )
 
-        # base start/end
-        if leg_objs[0].dep_stn != BASE or leg_objs[-1].arr_stn != BASE:
-            return False, f"Pairing {idx} does not start and end at base {BASE}."
+        ## base start/end
+        #if leg_objs[0].dep_stn != BASE or leg_objs[-1].arr_stn != BASE:
+        #    return False, f"Pairing {idx} does not start and end at base {BASE}."    
 
         # iterate duty segments separated by >=10h rest
         duty_start_idx = 0

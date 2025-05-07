@@ -9,6 +9,7 @@ from utils import read_instance, HOURS  # HOURS: lambda td.total_seconds()/3600.
 
 # A crew duty ends when the next report time is at least this many hours
 REST_THRESHOLD_HOURS: float = 9.0
+BASE = "NKX"
 
 
 def _parse_schedule(path: str) -> List[List[str]]:
@@ -106,7 +107,9 @@ def evaluate(input_file: str, solution_file: str) -> float:
         # close final duty
         duty_hours += HOURS(prev_arr - duty_start)
 
-        total_cost += duty_hours * duty_rate + block_hours * pairing_rate
+        #total_cost += duty_hours * duty_rate + block_hours * pairing_rate
+        pos_fee = 10_000 if leg_objs[0].dep_stn != BASE else 0.0
+        total_cost += duty_hours * duty_rate + block_hours * pairing_rate + pos_fee
 
     return total_cost
 
