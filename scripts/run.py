@@ -61,6 +61,18 @@ def run_optimization(input_path, output_dir="output", timeout=10):
             print(f"Error running main.py on {input_path}: {main_result.stderr}")
             return False, None
 
+        # Check if output file is empty
+        if os.path.getsize(output_file) == 0:
+            error_data = {
+                "message": "Evaluator error: Output file is empty",
+                "validity": False,
+                "cost": None
+            }
+            with open(cost_file, 'w') as f:
+                json.dump(error_data, f, indent=2)
+            print(f"Error: Output file is empty for {input_path}")
+            return False, None
+
         # Run the evaluator to evaluate the output
         eval_result = subprocess.run(
             ["python3", "feedback.py", input_path, output_file],
