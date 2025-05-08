@@ -100,7 +100,7 @@ def main():
             source = os.path.relpath(result["source"], base_dir)
             print(f"{dataset:<40} | {result['cost']:<10} | {source:<30}")
         else:
-            print(f"{dataset:<40} | {result['cost']:<10} | {None:<30}")
+            print(f"{dataset:<40} | {result['cost']:<10} | \"None\"")
     
     print("=" * 80)
     
