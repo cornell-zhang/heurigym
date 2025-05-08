@@ -87,7 +87,7 @@ The legality rules above are *baked into* the definition of $\mathcal P$; hence 
 
 ## Input Format  
 
-The input file is a comma‑separated file containing one month (Aug 2021) of flight‑leg data for a single aircraft fleet operating out of base **NKX**. Each row is one leg on one calendar day.
+The input file is a comma‑separated file containing flight‑leg data for a single aircraft fleet operating out of base **NKX**. Each row is one leg on one calendar day.
 It has the following columns:
 
 | Column | Type | Description |

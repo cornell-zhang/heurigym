@@ -41,7 +41,7 @@ except ModuleNotFoundError as e:  # pragma: no cover
 
 def default_paths() -> tuple[Path, Path]:
     """Return (input_csv, output_txt) based on repo layout."""
-    in_path = ROOT / "dataset" / "demo" / "DataA.csv"
+    in_path = ROOT / "dataset" / "demo" / "instance1.csv"
     out_path = ROOT / "dataset" / "demo" / "baseline_solution.txt"
     return in_path, out_path
 
