@@ -4,13 +4,14 @@ import sys
 import json
 
 
-def run_optimization(input_path, output_dir="output"):
+def run_optimization(input_path, output_dir="output", timeout=10):
     """
     Run the optimization program on the given dataset and return the result.
 
     Args:
         input_path (str): Path to the input file
         output_dir (str): Directory to store output files
+        timeout (int): Timeout in seconds for program execution (default: 10)
 
     Returns:
         tuple: (success, cost) where success is a boolean and cost is an integer or None
@@ -29,12 +30,24 @@ def run_optimization(input_path, output_dir="output"):
         cost_file = os.path.join(output_dir, f"{dataset_name}.cost")
 
         # Run the main program to generate output
-        main_result = subprocess.run(
-            ["python3", "main.py", input_path, output_file],
-            capture_output=True,
-            text=True,
-            check=False,
-        )
+        try:
+            main_result = subprocess.run(
+                ["python3", "main.py", input_path, output_file],
+                capture_output=True,
+                text=True,
+                check=False,
+                timeout=timeout
+            )
+        except subprocess.TimeoutExpired:
+            error_data = {
+                "message": f"Program execution timed out after {timeout} seconds",
+                "validity": False,
+                "cost": None
+            }
+            with open(cost_file, 'w') as f:
+                json.dump(error_data, f, indent=2)
+            print(f"Error: Program execution timed out after {timeout} seconds")
+            return False, None
 
         # Check if main.py executed successfully
         if main_result.returncode != 0:
@@ -46,6 +59,18 @@ def run_optimization(input_path, output_dir="output"):
             with open(cost_file, 'w') as f:
                 json.dump(error_data, f, indent=2)
             print(f"Error running main.py on {input_path}: {main_result.stderr}")
+            return False, None
+
+        # Check if output file is empty
+        if os.path.getsize(output_file) == 0:
+            error_data = {
+                "message": "Evaluator error: Output file is empty",
+                "validity": False,
+                "cost": None
+            }
+            with open(cost_file, 'w') as f:
+                json.dump(error_data, f, indent=2)
+            print(f"Error: Output file is empty for {input_path}")
             return False, None
 
         # Run the evaluator to evaluate the output

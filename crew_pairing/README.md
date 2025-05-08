@@ -8,7 +8,8 @@ A feasible solution must:
 
 * **Cover** each flight leg exactly once.
 * **Respect** all duty‑time and rest constraints *within* every pairing.
-* **Return** the crew to its *domicile* (base) at the end of the tour.
+* A pairing may **begin at any airport**.  If the first leg departs a station other than the base, the crew is assumed to position-fly there before the tour starts.  A flat **positioning-cost** will be charged for each such pairing.
+* A pairing may **end anywhere** (crews dead-head home after the horizon).
 
 Given the increasing volume of flights, operational planners then need to choose the subset of pairings that minimises total cost (wages, per‑diem, hotels) while ensuring sufficient reserve pilots remain at the base to absorb disruptions.  In our simplified benchmark we ignore reserve sizing and hotel detail; cost depends only on duty and block hours.
 
@@ -20,14 +21,13 @@ Given the increasing volume of flights, operational planners then need to choose
 * $\mathcal F$ — set of all scheduled flight legs (each leg is a single aircraft movement defined by departure station/time and arrival station/time); indexed by $f$. 
 * $\mathcal P$ — set of *feasible* pairings.  A pairing $p \in \mathcal P$ is a sequence $\{ f_1,\dots,f_{|p|}\}$ satisfying all of the following rules:
   * Chronological order: $\mathrm{arr}(f_i) \le \mathrm{dep}(f_{i+1})$.
-  * Base return: $\mathrm{depStn}(f_1)=\mathrm{arrStn}(f_{|p|})=Base$.
   * Each internal rest gap that splits duties is $\ge R_{min}$.
   * Within every duty segment $d\subseteq p$:
 
     * $\text{dutyHours}(d) \le H^d_{max}$
     * $\text{blockHours}(d) \le H^b_{max}$
     * $|d| \le L_{max}$.
-
+    $\operatorname{arr}(f_i) \le \operatorname{dep}(f_{i+1})$  (chronological order);
 
 **Legal‑rule parameters**:
 
@@ -36,6 +36,7 @@ Given the increasing volume of flights, operational planners then need to choose
 * Maximum legs per duty $L_{max}$ = 6
 * Minimum rest between consecutive duties $R_{min}$ = 9 h
 * Base / domicile $Base = NKX$
+* Positioning fee $C_{\text{pos}} = \$10000$
 
 **Decision variables**:
 $$
@@ -48,18 +49,26 @@ $$
 
 **Cost of a pairing**:
 
-Let $D_p$ be the set of duty segments inside pairing $p$ and let $F_p$ be its flight legs.  Then,
+Let $D_p$ be the set of duty segments inside pairing $p$ and let $F_p$ be its flight legs.  
 
 $$
-\displaystyle c_p\;=\;\underbrace{\sum_{d\in D_p} H^{duty}_d}_{\text{duty hours}}\;\cdot\;\text{DutyCostPerHour}\;
-\;\;+\underbrace{\sum_{f\in F_p} H^{block}_f}_{\text{block hours}}\;\cdot\;\text{ParingCostPerHour}.
+\delta_p \;=\; \begin{cases}
+1 & \text{if } \operatorname{depStn}(f_1) \ne \text{Base},\\
+0 & \text{otherwise.}\
+\end{cases}
+$$
+
+Then,
+
+$$
+c_p = \underbrace{\sum_{d\in D_p} H^{\text{duty}}_d}_{\text{duty hours}}\,\texttt{DutyCostPerHour}
+\; +\; \underbrace{\sum_{f\in F_p} H^{\text{block}}_f}_{\text{block hours}}\,\texttt{ParingCostPerHour}
+\; +\; \delta_p\,C_{\text{pos}}.
 $$
 
 where
-
 * $H^{duty}_d$ = clock‑time length of duty $d$ (report to release).
 * $H^{block}_f$ = airborne/block time of flight leg $f$.
-
 
 **Objective**:
 
@@ -76,11 +85,9 @@ $$
 The legality rules above are *baked into* the definition of $\mathcal P$; hence no additional constraints are needed in the objective of problem.
 
 
-
-
 ## Input Format  
 
-The input file is a comma‑separated file containing one month (Aug 2021) of flight‑leg data for a single aircraft fleet operating out of base **NKX**. Each row is one leg on one calendar day.
+The input file is a comma‑separated file containing flight‑leg data for a single aircraft fleet operating out of base **NKX**. Each row is one leg on one calendar day.
 It has the following columns:
 
 | Column | Type | Description |
@@ -116,8 +123,7 @@ FA680_2021-08-11 FA2_2021-08-12 FA872_2021-08-13
 The file may contain any number of lines. Feasibility requirements:
 
 1. Every leg in the input file appears in **exactly one** line.  
-2. Within each line, legs obey temporal order and legal duty/rest rules.  
-3. The pairing starts and ends at the same station/airport.
+2. Within each line, legs obey the legality rules listed above.
 
 ## References  
 - https://github.com/zhanwen/MathModel/tree/master/国赛试题/2021年研究生数学建模竞赛试题/F

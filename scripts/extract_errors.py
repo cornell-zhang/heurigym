@@ -19,14 +19,14 @@ def find_iteration_dirs(base_dir):
 def classify_error(message):
     """Classify error message into operator scheduling specific categories."""
     if not message:
-        return "No Error"
+        return "Stage IV: No Error!!"
     
     message = message.lower()
     
     # Define error categories specific to operator scheduling
     error_patterns = {
         "Stage I: Execution Error": r"execution error|runtime error",
-        "Stage II: Evaluation Error": r"evaluator error",
+        "Stage II: Output Error": r"evaluator error|timed out",
         "Stage III: Verification Error": r"verification failed|dependency constraint violated",
         "Other Error": r".*"  # Catch-all for other errors
     }
@@ -97,7 +97,7 @@ def main():
     
     # Print error statistics
     print("\nError Statistics by Iteration:")
-    print("=" * 80)
+    print("=" * 100)
     
     # Get all unique error types across all iterations
     all_error_types = set()
@@ -120,20 +120,20 @@ def main():
         print(line)
     
     # Print test case statistics
-    print("\nError Statistics by Test Case:")
-    print("=" * 80)
-    header = "Test Case".ljust(15)
-    for error_type in sorted(all_error_types):
-        header += f" | {error_type.ljust(20)}"
-    print(header)
-    print("-" * len(header))
+    # print("\nError Statistics by Test Case:")
+    # print("=" * 100)
+    # header = "Test Case".ljust(15)
+    # for error_type in sorted(all_error_types):
+    #     header += f" | {error_type.ljust(20)}"
+    # print(header)
+    # print("-" * len(header))
     
-    for test_case in sorted(test_case_stats.keys()):
-        line = test_case.ljust(15)
-        for error_type in sorted(all_error_types):
-            count = test_case_stats[test_case].get(error_type, 0)
-            line += f" | {str(count).ljust(20)}"
-        print(line)
+    # for test_case in sorted(test_case_stats.keys()):
+    #     line = test_case.ljust(15)
+    #     for error_type in sorted(all_error_types):
+    #         count = test_case_stats[test_case].get(error_type, 0)
+    #         line += f" | {str(count).ljust(20)}"
+    #     print(line)
     
     # Print overall statistics
     print("\nOverall Error Statistics:")

@@ -83,3 +83,6 @@ venv.bak/
 abc.history
 run_abc.sh
 run_baseline.sh
+
+.DS_Store
+run.sh

@@ -6,6 +6,7 @@ import time
 import argparse
 import subprocess
 import shutil
+import sys
 from pathlib import Path
 from typing import Dict, List, Tuple
 from dotenv import load_dotenv
@@ -314,61 +315,91 @@ class ProgramExecutor:
             
 
 class LLMInterface:
-    """Interface for interacting with different LLM providers."""
+    """Interface for interacting with different LLM providers using unified OpenAI API format."""
     
     def __init__(self, models_to_use: List[str], timeout: int = 10, temperature: float = 0.7):
         load_dotenv()
         self.timeout = timeout
         self.temperature = temperature
+        self.conversation_history = {}  # Store conversation history for each model
         
-        # Initialize clients only for models that will be used
-        self.openai_client = None
-        self.deepseek_client = None
-        self.anthropic_client = None
-        self.gemini_client = None
-        self.openrouter_client = None
+        # Initialize clients for each provider
+        self.clients = {}
         
-        # Check which models are being used and initialize appropriate clients
-        openai_models = [m for m in models_to_use if m.startswith("gpt")]
-        deepseek_models = [m for m in models_to_use if m.startswith("deepseek")]
-        anthropic_models = [m for m in models_to_use if m.startswith("claude")]
-        gemini_models = [m for m in models_to_use if m.startswith("gemini")]
-        openrouter_models = [m for m in models_to_use if m.startswith("openrouter/")]
+        # Map of model prefixes to their API configurations
+        self.model_configs = {
+            "gpt": {
+                "api_key": os.getenv('OPENAI_API_KEY'),
+                "base_url": "https://api.openai.com/v1"
+            },
+            "deepseek": {
+                "api_key": os.getenv('DEEPSEEK_API_KEY'),
+                "base_url": "https://api.deepseek.com/v1"
+            },
+            "claude": {
+                "api_key": os.getenv('ANTHROPIC_API_KEY'),
+                "base_url": "https://api.anthropic.com/v1"
+            },
+            "gemini": {
+                "api_key": os.getenv('GOOGLE_API_KEY'),
+                "base_url": "https://generativelanguage.googleapis.com/v1beta/openai"
+            },
+            "openrouter": {
+                "api_key": os.getenv('OPENROUTER_API_KEY'),
+                "base_url": "https://openrouter.ai/api/v1"
+            },
+            "qwen": {
+                "api_key": os.getenv('DASHSCOPE_API_KEY'),
+                "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1"
+            }
+        }
         
-        if openai_models:
-            if not os.getenv('OPENAI_API_KEY'):
-                raise ValueError("OPENAI_API_KEY is required for OpenAI models but not provided")
-            self.openai_client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
-            
-        if deepseek_models:
-            if not os.getenv('DEEPSEEK_API_KEY'):
-                raise ValueError("DEEPSEEK_API_KEY is required for DeepSeek models but not provided")
-            self.deepseek_client = OpenAI(
-                api_key=os.getenv('DEEPSEEK_API_KEY'),
-                base_url="https://api.deepseek.com"
-            )
-            
-        if anthropic_models:
-            if not os.getenv('ANTHROPIC_API_KEY'):
-                raise ValueError("ANTHROPIC_API_KEY is required for Anthropic models but not provided")
-            self.anthropic_client = Anthropic(api_key=os.getenv('ANTHROPIC_API_KEY'))
-            
-        if gemini_models:
-            if not os.getenv('GOOGLE_API_KEY'):
-                raise ValueError("GOOGLE_API_KEY is required for Gemini models but not provided")
-            self.gemini_client = genai.Client(api_key=os.getenv('GOOGLE_API_KEY'))
-
-        if openrouter_models:
-            if not os.getenv('OPENROUTER_API_KEY'):
-                raise ValueError("OPENROUTER_API_KEY is required for OpenRouter models but not provided")
-            self.openrouter_client = OpenAI(
-                api_key=os.getenv('OPENROUTER_API_KEY'),
-                base_url="https://openrouter.ai/api/v1"
-            )
+        # Initialize clients for each provider that will be used
+        for model in models_to_use:
+            provider = self._get_provider(model)
+            if provider and provider not in self.clients:
+                config = self.model_configs[provider]
+                if not config['api_key']:
+                    raise ValueError(f"{provider.upper()}_API_KEY is required for {provider} models but not provided")
+                self.clients[provider] = OpenAI(
+                    api_key=config['api_key'],
+                    base_url=config['base_url']
+                )
         
         # Load prompt template
         self.prompt_template = self._load_prompt_template()
         
+    def _get_provider(self, model: str) -> str:
+        """Get the provider name from a model identifier."""
+        if model.startswith("openrouter/"):
+            return "openrouter"
+        for provider in self.model_configs.keys():
+            if model.startswith(provider):
+                return provider
+        return None
+
+    def _get_actual_model_name(self, model: str) -> str:
+        """Get the actual model name to use with the API."""
+        if model.startswith("openrouter/"):
+            return model.replace("openrouter/", "", 1)
+        return model
+
+    def _get_base_model_name(self, model: str) -> str:
+        """Extracts the base model name from a model identifier for file paths."""
+        # Remove openrouter/ prefix if present
+        if model.startswith("openrouter/"):
+            model = model.replace("openrouter/", "", 1)
+        
+        # Remove provider prefix if present (e.g., deepseek/, anthropic/, etc.)
+        parts = model.split("/")
+        if len(parts) > 1:
+            model = parts[-1]
+        
+        # Remove any suffixes after : (e.g., :free, :latest, etc.)
+        model = model.split(":")[0]
+        
+        return model
+
     def _load_prompt_template(self) -> str:
         """Loads the prompt template from prompt.md."""
         template_path = Path(os.getcwd()) / "prompt.md"
@@ -421,27 +452,26 @@ class LLMInterface:
                      previous_program: str = None,
                      solution_dir: Path = None) -> str:
         """Formats the problem description into a prompt for the LLM."""
-        # Format the problem information
-        problem_info = self._format_problem_info(problem_desc)
+        prompt = ""
         
-        # Get the example program
-        example_program = self._get_example_program(problem_desc)
-        
-        # Replace placeholders in the template
-        prompt = self.prompt_template.replace("{PROBLEM}", problem_info)
-        prompt = prompt.replace("{EXAMPLE_PROGRAM}", example_program)
-        prompt = prompt.replace("{TIMEOUT}", str(self.timeout))
-        
-        # If this is an iteration beyond the first, add the previous program and its results
-        if iteration > 0 and previous_program and solution_dir:
-            prompt += f"""
+        # Only include problem description and example program in the first iteration
+        if iteration == 0:
+            # Format the problem information
+            problem_info = self._format_problem_info(problem_desc)
+            
+            # Get the example program
+            example_program = self._get_example_program(problem_desc)
+            
+            # Replace placeholders in the template
+            prompt = self.prompt_template.replace("{PROBLEM}", problem_info)
+            prompt = prompt.replace("{EXAMPLE_PROGRAM}", example_program)
+            prompt = prompt.replace("{TIMEOUT}", str(self.timeout))
+        else:
+            # For later iterations, just include the feedback and improvement guidance
+            prompt = f"""
 # Feedback from Previous Iteration (Iteration {iteration-1})
-This is the program you generated in the previous iteration:
-```python
-{previous_program}
-```
-
-# Test Cases and Results"""
+These are the test cases and results from the previous iteration:
+"""
 
             # Get the absolute path to the demo folder
             workspace_root = Path(os.getcwd())
@@ -558,8 +588,17 @@ Your goal is to improve the solution for as many test cases as possible, with sp
                     iteration: int = 0,
                     previous_program: str = None,
                     solution_dir: Path = None) -> str:
-        """Gets a program from the specified LLM."""
+        """Gets a program from the specified LLM using unified OpenAI API format."""
         prompt = self.format_prompt(problem_desc, iteration, previous_program, solution_dir)
+        
+        # Initialize conversation history for this model if not exists
+        if model not in self.conversation_history:
+            self.conversation_history[model] = [
+                {"role": "system", "content": "You are an optimization expert tasked with solving the following problem by writing an efficient program. Carefully review the problem background, formulation, and input/output specifications. Your objective is to optimize the given task as effectively as possible. You may implement any algorithm you like. Please strictly follow the instructions below."}
+            ]
+        
+        # Add the current prompt to conversation history
+        self.conversation_history[model].append({"role": "user", "content": prompt})
         
         # Save the prompt to a separate file for this iteration
         if hasattr(self, 'current_log_file'):
@@ -580,111 +619,46 @@ Your goal is to improve the solution for as many test cases as possible, with sp
         # Measure API call time
         api_start_time = time.time()
         
-        # Initialize token counts
-        prompt_tokens = 0
-        completion_tokens = 0
+        # Get provider and client
+        provider = self._get_provider(model)
+        if not provider or provider not in self.clients:
+            raise ValueError(f"Unsupported model or missing client: {model}")
         
-        if model.startswith("gpt"):
-            if not self.openai_client:
-                raise ValueError("OpenAI client not initialized. OPENAI_API_KEY is required for OpenAI models.")
-            response = self.openai_client.chat.completions.create(
-                model=model,
-                max_tokens=16384,
-                temperature=self.temperature,
-                messages=[
-                    {"role": "system", "content": "You are an expert optimization algorithm designer. You are given a problem and try to solve it. Please only output the code for the solver."},
-                    {"role": "user", "content": prompt}
-                ]
-            )
-            raw_response = response.choices[0].message.content
-            prompt_tokens = response.usage.prompt_tokens
-            completion_tokens = response.usage.completion_tokens
-            
-        elif model.startswith("claude"):
-            if not self.anthropic_client:
-                raise ValueError("Anthropic client not initialized. ANTHROPIC_API_KEY is required for Claude models.")
-            response = self.anthropic_client.messages.create(
-                model=model,
-                max_tokens=64 * 1024,
-                temperature=self.temperature,
-                messages=[{
-                    "role": "user",
-                    "content": prompt
-                }]
-            )
-            raw_response = response.content[0].text
-            prompt_tokens = response.usage.input_tokens
-            completion_tokens = response.usage.output_tokens
+        client = self.clients[provider]
+        actual_model = self._get_actual_model_name(model)
         
-        elif model.startswith("deepseek"):
-            if not self.deepseek_client:
-                raise ValueError("DeepSeek client not initialized. DEEPSEEK_API_KEY is required for DeepSeek models.")
-            # Use OpenAI SDK with DeepSeek's base URL
-            response = self.deepseek_client.chat.completions.create(
-                model=model,
-                max_tokens=8192,
-                temperature=self.temperature,
-                messages=[
-                    {"role": "system", "content": "You are an expert optimization algorithm designer. You are given a problem and try to solve it. Please only output the code for the solver."},
-                    {"role": "user", "content": prompt}
-                ]
-            )
-            raw_response = response.choices[0].message.content
-            prompt_tokens = response.usage.prompt_tokens
-            completion_tokens = response.usage.completion_tokens
-            
-        elif model.startswith("gemini"):
-            if not self.gemini_client:
-                raise ValueError("Gemini client not initialized. GOOGLE_API_KEY is required for Gemini models.")
-            
-            # Create a system prompt for Gemini
-            system_prompt = "You are an expert optimization algorithm designer. You are given a problem and try to solve it. Please only output the code for the solver."
-            
-            # Combine system prompt and user prompt
-            full_prompt = f"{system_prompt}\n\n{prompt}"
-            
-            # Generate content with Gemini
-            response = self.gemini_client.models.generate_content(
-                model=model,
-                contents=full_prompt,
-                config={"temperature": self.temperature, "max_output_tokens": 65536}
-            )
-            
-            # Extract the text from the response
-            raw_response = response.text
-            # Check if usage_metadata exists before accessing it
-            prompt_tokens = 0  # Default values
-            completion_tokens = 0
-            if hasattr(response, "usage_metadata") and response.usage_metadata:
-                if hasattr(response.usage_metadata, "prompt_token_count"):
-                    prompt_tokens = response.usage_metadata.prompt_token_count
-                if hasattr(response.usage_metadata, "total_token_count"):
-                    completion_tokens = response.usage_metadata.total_token_count - prompt_tokens
-
-        elif model.startswith("openrouter/"):
-            if not self.openrouter_client:
-                raise ValueError("OpenRouter client not initialized. OPENROUTER_API_KEY is required for OpenRouter models.")
-            # Extract the actual model name from the openrouter/ prefix
-            actual_model = model.replace("openrouter/", "", 1)
-            response = self.openrouter_client.chat.completions.create(
+        try:
+            # Make API call using unified OpenAI format
+            response = client.chat.completions.create(
                 model=actual_model,
-                max_tokens=32768,  # OpenRouter supports various models with different limits
+                max_tokens=32768,
                 temperature=self.temperature,
-                messages=[
-                    {"role": "system", "content": "You are an expert optimization algorithm designer. You are given a problem and try to solve it. Please only output the code for the solver."},
-                    {"role": "user", "content": prompt}
-                ],
-                extra_headers={
-                    "HTTP-Referer": "https://github.com/cornell-zhang/optbench", # Optional. Site URL for rankings on openrouter.ai.
-                    "X-Title": "HeuriGen", # Optional. Site title for rankings on openrouter.ai.
-                },
+                messages=self.conversation_history[model]
             )
+            
+            if not response or not response.choices:
+                error_msg = f"Error: Invalid response received from model {model}!!! Exiting..."
+                logger.error(error_msg)
+                sys.exit(1)
+                
             raw_response = response.choices[0].message.content
+            # Add assistant's response to conversation history
+            self.conversation_history[model].append({"role": "assistant", "content": raw_response})
+            
+            # Get token counts
             prompt_tokens = response.usage.prompt_tokens
             completion_tokens = response.usage.completion_tokens
-        
-        else:
-            raise ValueError(f"Unsupported model: {model}")
+            
+        except Exception as e:
+            error_msg = f"Error: Failed to get response from model {model}: {str(e)}!!! Exiting..."
+            logger.error(error_msg)
+            sys.exit(1)
+            
+        # Check if raw_response is empty
+        if not raw_response or not raw_response.strip():
+            error_msg = f"Error: Empty response received from model {model}!!! Exiting..."
+            logger.error(error_msg)
+            sys.exit(1)
             
         api_time = time.time() - api_start_time
         
@@ -705,22 +679,6 @@ Your goal is to improve the solution for as many test cases as possible, with sp
         
         return raw_response
     
-    def _get_base_model_name(self, model: str) -> str:
-        """Extracts the base model name from a model identifier."""
-        # Remove openrouter/ prefix if present
-        if model.startswith("openrouter/"):
-            model = model.replace("openrouter/", "", 1)
-        
-        # Remove provider prefix if present (e.g., deepseek/, anthropic/, etc.)
-        parts = model.split("/")
-        if len(parts) > 1:
-            model = parts[-1]
-        
-        # Remove any suffixes after : (e.g., :free, :latest, etc.)
-        model = model.split(":")[0]
-        
-        return model
-
     def get_iterative_program(self,
                               problem_desc: Dict[str, str],
                               model: str,
@@ -824,7 +782,8 @@ def parse_arguments():
                             "gemini-2.5-pro-exp-03-25",
                             "openrouter/qwen/qwen3-235b-a22b:free",
                             "openrouter/meta-llama/llama-3.3-70b-instruct:free",
-                            "openrouter/meta-llama/llama-4-maverick:free"
+                            "openrouter/meta-llama/llama-4-maverick:free",
+                            "qwen3-235b-a22b"
                         ],
                         help='List of models to use (default: deepseek-chat, deepseek-reasoner)')
     
@@ -852,7 +811,7 @@ def main():
     
     # Initialize components
     problem_reader = ProblemReader(workspace_root)
-    llm_interface = LLMInterface(args.models, args.timeout, args.temperature)  # Pass the models, timeout and temperature to use
+    llm_interface = LLMInterface(args.models, args.timeout, args.temperature)
     
     # Get problem folders
     problem_folders = problem_reader.get_problem_folders()
