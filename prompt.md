@@ -1,5 +1,3 @@
-You are an optimization expert tasked with solving the following problem by writing an efficient program. Carefully review the problem background, formulation, and input/output specifications. Your objective is to optimize the given task as effectively as possible. You may implement any algorithm you like. Please strictly follow the instructions below.
-
 # Problem Information
 {PROBLEM}
 

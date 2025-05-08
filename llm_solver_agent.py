@@ -575,7 +575,7 @@ Your goal is to improve the solution for as many test cases as possible, with sp
         # Initialize conversation history for this model if not exists
         if model not in self.conversation_history:
             self.conversation_history[model] = [
-                {"role": "system", "content": "You are an expert optimization algorithm designer. You are given a problem and try to solve it. Please only output the code for the solver."}
+                {"role": "system", "content": "You are an optimization expert tasked with solving the following problem by writing an efficient program. Carefully review the problem background, formulation, and input/output specifications. Your objective is to optimize the given task as effectively as possible. You may implement any algorithm you like. Please strictly follow the instructions below."}
             ]
         
         # Add the current prompt to conversation history
