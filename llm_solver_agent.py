@@ -321,6 +321,7 @@ class LLMInterface:
         load_dotenv()
         self.timeout = timeout
         self.temperature = temperature
+        self.conversation_history = {}  # Store conversation history for each model
         
         # Initialize clients only for models that will be used
         self.openai_client = None
@@ -432,27 +433,26 @@ class LLMInterface:
                      previous_program: str = None,
                      solution_dir: Path = None) -> str:
         """Formats the problem description into a prompt for the LLM."""
-        # Format the problem information
-        problem_info = self._format_problem_info(problem_desc)
+        prompt = ""
         
-        # Get the example program
-        example_program = self._get_example_program(problem_desc)
-        
-        # Replace placeholders in the template
-        prompt = self.prompt_template.replace("{PROBLEM}", problem_info)
-        prompt = prompt.replace("{EXAMPLE_PROGRAM}", example_program)
-        prompt = prompt.replace("{TIMEOUT}", str(self.timeout))
-        
-        # If this is an iteration beyond the first, add the previous program and its results
-        if iteration > 0 and previous_program and solution_dir:
-            prompt += f"""
+        # Only include problem description and example program in the first iteration
+        if iteration == 0:
+            # Format the problem information
+            problem_info = self._format_problem_info(problem_desc)
+            
+            # Get the example program
+            example_program = self._get_example_program(problem_desc)
+            
+            # Replace placeholders in the template
+            prompt = self.prompt_template.replace("{PROBLEM}", problem_info)
+            prompt = prompt.replace("{EXAMPLE_PROGRAM}", example_program)
+            prompt = prompt.replace("{TIMEOUT}", str(self.timeout))
+        else:
+            # For later iterations, just include the feedback and improvement guidance
+            prompt = f"""
 # Feedback from Previous Iteration (Iteration {iteration-1})
-This is the program you generated in the previous iteration:
-```python
-{previous_program}
-```
-
-# Test Cases and Results"""
+These are the test cases and results from the previous iteration:
+"""
 
             # Get the absolute path to the demo folder
             workspace_root = Path(os.getcwd())
@@ -572,6 +572,15 @@ Your goal is to improve the solution for as many test cases as possible, with sp
         """Gets a program from the specified LLM."""
         prompt = self.format_prompt(problem_desc, iteration, previous_program, solution_dir)
         
+        # Initialize conversation history for this model if not exists
+        if model not in self.conversation_history:
+            self.conversation_history[model] = [
+                {"role": "system", "content": "You are an expert optimization algorithm designer. You are given a problem and try to solve it. Please only output the code for the solver."}
+            ]
+        
+        # Add the current prompt to conversation history
+        self.conversation_history[model].append({"role": "user", "content": prompt})
+        
         # Save the prompt to a separate file for this iteration
         if hasattr(self, 'current_log_file'):
             prompt_dir = self.current_log_file.parent / "prompt"
@@ -603,16 +612,15 @@ Your goal is to improve the solution for as many test cases as possible, with sp
                     model=model,
                     max_tokens=16384,
                     temperature=self.temperature,
-                    messages=[
-                        {"role": "system", "content": "You are an expert optimization algorithm designer. You are given a problem and try to solve it. Please only output the code for the solver."},
-                        {"role": "user", "content": prompt}
-                    ]
+                    messages=self.conversation_history[model]
                 )
                 if not response or not response.choices:
                     error_msg = f"Error: Invalid response received from model {model}!!! Exiting..."
                     logger.error(error_msg)
                     sys.exit(1)
                 raw_response = response.choices[0].message.content
+                # Add assistant's response to conversation history
+                self.conversation_history[model].append({"role": "assistant", "content": raw_response})
                 prompt_tokens = response.usage.prompt_tokens
                 completion_tokens = response.usage.completion_tokens
             except Exception as e:
@@ -628,16 +636,15 @@ Your goal is to improve the solution for as many test cases as possible, with sp
                     model=model,
                     max_tokens=64 * 1024,
                     temperature=self.temperature,
-                    messages=[{
-                        "role": "user",
-                        "content": prompt
-                    }]
+                    messages=self.conversation_history[model]
                 )
                 if not response or not response.content:
                     error_msg = f"Error: Invalid response received from model {model}!!! Exiting..."
                     logger.error(error_msg)
                     sys.exit(1)
                 raw_response = response.content[0].text
+                # Add assistant's response to conversation history
+                self.conversation_history[model].append({"role": "assistant", "content": raw_response})
                 prompt_tokens = response.usage.input_tokens
                 completion_tokens = response.usage.output_tokens
             except Exception as e:
@@ -649,21 +656,19 @@ Your goal is to improve the solution for as many test cases as possible, with sp
             if not self.deepseek_client:
                 raise ValueError("DeepSeek client not initialized. DEEPSEEK_API_KEY is required for DeepSeek models.")
             try:
-                # Use OpenAI SDK with DeepSeek's base URL
                 response = self.deepseek_client.chat.completions.create(
                     model=model,
                     max_tokens=8192,
                     temperature=self.temperature,
-                    messages=[
-                        {"role": "system", "content": "You are an expert optimization algorithm designer. You are given a problem and try to solve it. Please only output the code for the solver."},
-                        {"role": "user", "content": prompt}
-                    ]
+                    messages=self.conversation_history[model]
                 )
                 if not response or not response.choices:
                     error_msg = f"Error: Invalid response received from model {model}!!! Exiting..."
                     logger.error(error_msg)
                     sys.exit(1)
                 raw_response = response.choices[0].message.content
+                # Add assistant's response to conversation history
+                self.conversation_history[model].append({"role": "assistant", "content": raw_response})
                 prompt_tokens = response.usage.prompt_tokens
                 completion_tokens = response.usage.completion_tokens
             except Exception as e:
@@ -675,16 +680,17 @@ Your goal is to improve the solution for as many test cases as possible, with sp
             if not self.gemini_client:
                 raise ValueError("Gemini client not initialized. GOOGLE_API_KEY is required for Gemini models.")
             try:
-                # Create a system prompt for Gemini
-                system_prompt = "You are an expert optimization algorithm designer. You are given a problem and try to solve it. Please only output the code for the solver."
+                # Convert conversation history to Gemini format
+                gemini_messages = []
+                for msg in self.conversation_history[model]:
+                    if msg["role"] == "system":
+                        gemini_messages.append({"role": "user", "parts": [msg["content"]]})
+                    else:
+                        gemini_messages.append({"role": msg["role"], "parts": [msg["content"]]})
                 
-                # Combine system prompt and user prompt
-                full_prompt = f"{system_prompt}\n\n{prompt}"
-                
-                # Generate content with Gemini
                 response = self.gemini_client.models.generate_content(
                     model=model,
-                    contents=full_prompt,
+                    contents=gemini_messages,
                     config={"temperature": self.temperature, "max_output_tokens": 32768}
                 )
                 
@@ -693,10 +699,10 @@ Your goal is to improve the solution for as many test cases as possible, with sp
                     logger.error(error_msg)
                     sys.exit(1)
                 
-                # Extract the text from the response
                 raw_response = response.text
-                # Check if usage_metadata exists before accessing it
-                prompt_tokens = 0  # Default values
+                # Add assistant's response to conversation history
+                self.conversation_history[model].append({"role": "assistant", "content": raw_response})
+                prompt_tokens = 0
                 completion_tokens = 0
                 if hasattr(response, "usage_metadata") and response.usage_metadata:
                     if hasattr(response.usage_metadata, "prompt_token_count"):
@@ -712,19 +718,15 @@ Your goal is to improve the solution for as many test cases as possible, with sp
             if not self.openrouter_client:
                 raise ValueError("OpenRouter client not initialized. OPENROUTER_API_KEY is required for OpenRouter models.")
             try:
-                # Extract the actual model name from the openrouter/ prefix
                 actual_model = model.replace("openrouter/", "", 1)
                 response = self.openrouter_client.chat.completions.create(
                     model=actual_model,
-                    max_tokens=32768,  # OpenRouter supports various models with different limits
+                    max_tokens=32768,
                     temperature=self.temperature,
-                    messages=[
-                        {"role": "system", "content": "You are an expert optimization algorithm designer. You are given a problem and try to solve it. Please only output the code for the solver."},
-                        {"role": "user", "content": prompt}
-                    ],
+                    messages=self.conversation_history[model],
                     extra_headers={
-                        "HTTP-Referer": "https://github.com/cornell-zhang/optbench", # Optional. Site URL for rankings on openrouter.ai.
-                        "X-Title": "HeuriGen", # Optional. Site title for rankings on openrouter.ai.
+                        "HTTP-Referer": "https://github.com/cornell-zhang/optbench",
+                        "X-Title": "HeuriGen",
                     },
                 )
                 if not response or not response.choices:
@@ -732,6 +734,8 @@ Your goal is to improve the solution for as many test cases as possible, with sp
                     logger.error(error_msg)
                     sys.exit(1)
                 raw_response = response.choices[0].message.content
+                # Add assistant's response to conversation history
+                self.conversation_history[model].append({"role": "assistant", "content": raw_response})
                 prompt_tokens = response.usage.prompt_tokens
                 completion_tokens = response.usage.completion_tokens
             except Exception as e:
@@ -747,17 +751,16 @@ Your goal is to improve the solution for as many test cases as possible, with sp
                     model=model,
                     max_tokens=32768,
                     temperature=self.temperature,
-                    messages=[
-                        {"role": "system", "content": "You are an expert optimization algorithm designer. You are given a problem and try to solve it. Please only output the code for the solver."},
-                        {"role": "user", "content": prompt}
-                    ],
-                    extra_body={"enable_thinking": False}  # Disable thinking process for Qwen models
+                    messages=self.conversation_history[model],
+                    extra_body={"enable_thinking": False}
                 )
                 if not response or not response.choices:
                     error_msg = f"Error: Invalid response received from model {model}!!! Exiting..."
                     logger.error(error_msg)
                     sys.exit(1)
                 raw_response = response.choices[0].message.content
+                # Add assistant's response to conversation history
+                self.conversation_history[model].append({"role": "assistant", "content": raw_response})
                 prompt_tokens = response.usage.prompt_tokens
                 completion_tokens = response.usage.completion_tokens
             except Exception as e:
