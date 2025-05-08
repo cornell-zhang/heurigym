@@ -6,6 +6,7 @@ import time
 import argparse
 import subprocess
 import shutil
+import sys
 from pathlib import Path
 from typing import Dict, List, Tuple
 from dotenv import load_dotenv
@@ -685,6 +686,12 @@ Your goal is to improve the solution for as many test cases as possible, with sp
         
         else:
             raise ValueError(f"Unsupported model: {model}")
+            
+        # Check if raw_response is empty
+        if not raw_response or not raw_response.strip():
+            error_msg = f"Empty response received from model {model}"
+            logger.error(error_msg)
+            sys.exit(1)  # Exit with error code 1
             
         api_time = time.time() - api_start_time
         
