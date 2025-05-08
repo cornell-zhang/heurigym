@@ -98,6 +98,51 @@ The agent will:
 4. Save solutions in the `llm_solutions` directory
 
 
+### Analysis Scripts
+
+After running the LLM solver agent, you can use the following scripts to analyze the results:
+
+#### Collect Best Results
+
+The `collect_results.py` script analyzes all solutions and finds the best result for each test case:
+
+```bash
+python scripts/collect_results.py <llm_solutions_dir> <dataset_path> [--timeout TIMEOUT]
+```
+
+Arguments:
+- `llm_solutions_dir`: Directory containing the LLM solutions for *a specific model*
+- `dataset_path`: Path to the dataset directory
+- `--timeout TIMEOUT`: (Optional) Timeout in seconds for each solution (default: 10)
+
+The script will:
+1. Find all `run.py` files in iteration directories
+2. Run each solution with the specified dataset
+3. Compare results and identify the best solution for each test case
+4. Generate a summary table and save results to `best_results.json`
+
+#### Extract Error Analysis
+
+The `extract_errors.py` script analyzes error patterns across all solutions:
+
+```bash
+python scripts/extract_errors.py <llm_solutions_dir>
+```
+
+Arguments:
+- `llm_solutions_dir`: Directory containing the LLM solutions for *a specific model*
+
+The script will:
+1. Find all iteration directories
+2. Analyze `.cost` files in each iteration's output directory
+3. Classify errors into categories:
+   - Stage I: Execution Error
+   - Stage II: Output Error
+   - Stage III: Verification Error
+   - Stage IV: No Error
+4. Generate error statistics by iteration and test case
+5. Save detailed analysis to `error_summary.json`
+
 ### Prompt Template
 
 The agent uses a customizable prompt template from `prompt.md`. This template includes placeholders that are replaced with problem-specific information:
