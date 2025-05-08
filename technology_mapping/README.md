@@ -30,7 +30,7 @@ every edge in the graph is entirely within a cone, or is an output edge of a con
 In our area-optimal mapping problem, the number of cones selected to cover the graph is to be minimized. 
 Formally, a mapping solution $M$ is to select a set of cones $Cone(v_1), Cone(v_2), \ldots, Cone(v_n)$, where $v_i \in V$ but $v_i \notin PI$, such that: 
 - For each edge $e \in E$, $e$ is entirely within a cone, or is an output edge of a cone, or is the output edge of a PI node. 
-- The cost to be minimized is the number of cones selected, i.e., $Cost(M) = |V'|$, where $V' = \{v_1, v_2, \ldots, v_n\}$. 
+- The cost to be minimized is the number of cones selected, i.e., $Cost(M) = |V'|$, where $V' = \\{v_1, v_2, \ldots, v_n\\}$. 
 
 
 Here we specify K = 6 in our implementation. 
