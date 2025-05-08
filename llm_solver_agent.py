@@ -11,8 +11,6 @@ from pathlib import Path
 from typing import Dict, List, Tuple
 from dotenv import load_dotenv
 from openai import OpenAI
-from anthropic import Anthropic
-from google import genai
 from datetime import datetime
 from config import calculate_cost
 
@@ -328,7 +326,7 @@ class LLMInterface:
         
         # Map of model prefixes to their API configurations
         self.model_configs = {
-            "gpt": {
+            "openai": {
                 "api_key": os.getenv('OPENAI_API_KEY'),
                 "base_url": "https://api.openai.com/v1",
                 "max_tokens": 16384
@@ -338,12 +336,12 @@ class LLMInterface:
                 "base_url": "https://api.deepseek.com/v1",
                 "max_tokens": 8192
             },
-            "claude": {
+            "anthropic": {
                 "api_key": os.getenv('ANTHROPIC_API_KEY'),
                 "base_url": "https://api.anthropic.com/v1",
                 "max_tokens": 65536
             },
-            "gemini": {
+            "google": {
                 "api_key": os.getenv('GOOGLE_API_KEY'),
                 "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
                 "max_tokens": 32768
@@ -353,7 +351,7 @@ class LLMInterface:
                 "base_url": "https://openrouter.ai/api/v1",
                 "max_tokens": 32768
             },
-            "qwen": {
+            "alibaba": {
                 "api_key": os.getenv('DASHSCOPE_API_KEY'),
                 "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
                 "max_tokens": 32768
@@ -377,11 +375,24 @@ class LLMInterface:
         
     def _get_provider(self, model: str) -> str:
         """Get the provider name from a model identifier."""
+        # Map model prefixes to their company providers
+        model_to_provider = {
+            "gpt": "openai",
+            "deepseek": "deepseek",
+            "claude": "anthropic",
+            "gemini": "google",
+            "openrouter": "openrouter",
+            "qwen": "alibaba",
+            "llama": "meta"  # Meta's models through OpenRouter
+        }
+        
         if model.startswith("openrouter/"):
             return "openrouter"
-        for provider in self.model_configs.keys():
-            if model.startswith(provider):
+            
+        for prefix, provider in model_to_provider.items():
+            if model.startswith(prefix):
                 return provider
+                
         return None
 
     def _get_actual_model_name(self, model: str) -> str:
