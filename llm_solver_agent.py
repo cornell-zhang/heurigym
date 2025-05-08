@@ -18,6 +18,17 @@ from config import calculate_cost
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+def get_git_commit_id() -> str:
+    """Get the current git commit ID."""
+    try:
+        result = subprocess.run(['git', 'rev-parse', 'HEAD'], 
+                              capture_output=True, 
+                              text=True, 
+                              check=True)
+        return result.stdout.strip()
+    except subprocess.CalledProcessError:
+        return "Unknown (not a git repository or git command failed)"
+
 class ProblemReader:
     """Reads and parses problem descriptions from README files."""
     
@@ -730,6 +741,7 @@ Your goal is to improve the solution for as many test cases as possible, with sp
         
         # Initialize the log file with a header
         with open(log_file, 'w') as f:
+            f.write(f"Git Commit ID: {get_git_commit_id()}\n")
             f.write(f"Problem: {problem_desc['name']}\n")
             f.write(f"Model: {model}\n")
             f.write(f"Max Iterations: {max_iterations}\n")
