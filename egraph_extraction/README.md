@@ -13,7 +13,8 @@ This is a known NP-hard problem, and various heuristics have been proposed to so
 ## Formalization
 In an e-graph, all functionally equivalent terms are organized in the same equivalent classes, known as e-classes ($\{m_j\}_{j=0}^{M-1}$).
 Nodes within each e-class that represent values or operators are called e-nodes ($\{n_i\}^{N-1}_{i=0}$).
-Edges in e-graphs are directed, which point from e-nodes to their child e-classes, indicating the dependency between operators and operands.
+E-classes are a partition of e-nodes, where each e-node belongs to exactly one e-class.
+Dependencies in e-graphs are directed, which point from e-nodes to their children e-classes, indicating the operator (e-node) requires the values (e-nodes) from the child e-classes to compute its value.
 
 The notations are defined as follows:
 - Let $\{m_j\}_{j=0}^{M-1}$ denote the set of all e-classes in the e-graph.
@@ -23,19 +24,26 @@ The notations are defined as follows:
 - $pa_j$ denotes the set of parent e-nodes of e-class $m_j$.
 - $ec(i)$ returns the index of the e-class that contains e-node $n_i$, namely $n_i \in m_{ec(i)}$.
 - Let $s\in \{0,1\}$^N represent the binary decision vector of the e-nodes, where $s_i=1$ indicates that e-node $n_i$ is selected for extraction, and $s_i=0$ indicates that it is not selected.
-- We have a linear cost function that maps the selected e-nodes to a cost value, denoted as $C(s) = \sum_{i=0}^{N-1} c_i s_i$, where $c_i\ge 0$ is the cost of e-node $n_i$.
+- We have a linear cost function that maps the selected e-nodes to a cost value, denoted as $C(s) = \sum_{i=0}^{N-1} c_i s_i$, where $c_i \in R^+$ is the cost of e-node $n_i$.
 
 Next, we define a legal extraction of the e-graph:
-1. Exactly one e-node is selected from root e-classes.
+1. For each root e-class, one e-node needs to be selected from it.
    - This ensures the functional equivalence of the selected e-nodes.
    - i.e., $\sum_{n_k \in m_r} s_k = 1, \forall m_r \in R$.
 2. If an e-node is selected, exactly one e-node must be selected from each of its child e-classes.
+   - If an e-node has no children, it is a leaf node (i.e., constant) and can be selected without any constraints.
    - This ensures that the selected e-nodes are functionally equivalent.
    - i.e.: $\sum_{n_k \in ch_i} s_k = s_i, \forall i$.
 3. No cycles are included in the extraction.
+   - A cycle is defined as a path in the e-graph that starts and ends at the same e-node. There might be many potential cycles in the e-graph, and your algorithm need to carefully avoid the cycles that are formed by the selected e-nodes.
+   - A simplest example of a cycle is when an e-node has a child e-class that contains itself.
    - This ensures no cyclic dependencies are included in the extraction.
 
 The goal is to find the optimal extraction of the e-graph that minimizes the cost function $C(s)$ while satisfying the above constraints.
+
+### Problem Size
+The test cases contains a suite of e-graphs with different sizes and complexities.
+The number of e-nodes $N$ in the e-graph can range from 10 to 1,000,000.
 
 ## Input Format
 The input format is a JSON file containing with two required top‑level fields:
@@ -52,13 +60,15 @@ Every value in `nodes` is itself an object with the following schema, assuming 
 | Key | Type | Description |
 |-----|------|-------------|
 | **op** | string | Symbol or token representing the node’s operation. It can be a literal (e.g. `"add"`, `"mul"`). Can be ignored in this task. |
-| **cost** | number | Cost $c_i$ associated with this e-node. |
+| **cost** | number | Cost $c_i$ associated with this e-node, assuming it is a floating point number. |
 | **eclass** | string | The e-class that this e-node belongs to (i.e. $pa_i$) |
-| **children** | array<string> | List of **node_id** strings referencing this node’s children e-classes. Use **node_id** to represent the e-class that they belong to. (i.e. $ch_i$) |
+| **children** | array<string> | List of **node_id** strings referencing the e-classes that this e-node belongs to (i.e. $ch_i$). |
 
 ### root_eclasses
 The **root_eclasses** field is a list of strings, representing the IDs of the e-classes that are roots of the computation.
 i.e., $R = \{m_r\}$.
+In the examples following, the list only contains one root e-class, but in general, it can contain multiple root e-classes.
+
 
 ### Example
 ```
@@ -69,7 +79,14 @@ i.e., $R = \{m_r\}$.
             "cost": 0.1,
             "eclass": "0",
             "children": [
-                "1__0",
+                "1__0"
+            ]
+        },
+        "0__1": {
+            "op": "0.1",
+            "cost": 0.1,
+            "eclass": "0",
+            "children": [
                 "2__0"
             ]
         },
@@ -85,24 +102,14 @@ i.e., $R = \{m_r\}$.
             "op": "0.1",
             "cost": 0.1,
             "eclass": "1",
-            "children": [
-                "3__0"
-            ]
-        },
-        "1__2": {
-            "op": "0.1",
-            "cost": 0.1,
-            "eclass": "1",
-            "children": [
-                "4__0"
-            ]
+            "children": []
         },
         "2__0": {
             "op": "0.1",
             "cost": 0.1,
             "eclass": "2",
             "children": [
-                "3__0"
+                "0__0"
             ]
         },
         "2__1": {
@@ -110,29 +117,14 @@ i.e., $R = \{m_r\}$.
             "cost": 0.1,
             "eclass": "2",
             "children": [
-                "5__0"
+                "3__0"
             ]
         },
         "3__0": {
             "op": "0.1",
             "cost": 0.1,
             "eclass": "3",
-            "children": [
-            ]
-        },
-        "4__0": {
-            "op": "0.1",
-            "cost": 0.1,
-            "eclass": "4",
-            "children": [
-            ]
-        },
-        "5__0": {
-            "op": "0.1",
-            "cost": 0.1,
-            "eclass": "5",
-            "children": [
-            ]
+            "children": []
         }
     },
     "root_eclasses": [
@@ -142,14 +134,12 @@ i.e., $R = \{m_r\}$.
 ```
 
 ## Output Format
-The solver function should output a string containing a list of selected e-nodes in the format of `["node_id_1", "node_id_2", ...]`, where each `node_id` is a string representing the ID of the selected e-node.
+The solver function should output a string containing a list of all selected e-nodes in the format of `["node_id_1", "node_id_2", ...]`, where each `node_id` is a string representing the ID of the selected e-node.
+The order of the selected e-nodes in the output list does not matter.
 ```
 [
     "0__0",
-    "1__0",
-    "2__1",
-    "3__0",
-    "5__0"
+    "1__1",
 ]
 ```
 
