@@ -147,7 +147,7 @@ def main():
         if results:
             # Update best results for each dataset
             for dataset, data in results.items():
-                cost = int(data) if data != "X" else float("inf")
+                cost = float(data) if data != "X" else float("inf")
                 if cost < best_results[dataset]["cost"]:
                     best_results[dataset] = {
                         "cost": cost,
