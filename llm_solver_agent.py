@@ -588,108 +588,153 @@ Your goal is to improve the solution for as many test cases as possible, with sp
         if model.startswith("gpt"):
             if not self.openai_client:
                 raise ValueError("OpenAI client not initialized. OPENAI_API_KEY is required for OpenAI models.")
-            response = self.openai_client.chat.completions.create(
-                model=model,
-                max_tokens=16384,
-                temperature=self.temperature,
-                messages=[
-                    {"role": "system", "content": "You are an expert optimization algorithm designer. You are given a problem and try to solve it. Please only output the code for the solver."},
-                    {"role": "user", "content": prompt}
-                ]
-            )
-            raw_response = response.choices[0].message.content
-            prompt_tokens = response.usage.prompt_tokens
-            completion_tokens = response.usage.completion_tokens
+            try:
+                response = self.openai_client.chat.completions.create(
+                    model=model,
+                    max_tokens=16384,
+                    temperature=self.temperature,
+                    messages=[
+                        {"role": "system", "content": "You are an expert optimization algorithm designer. You are given a problem and try to solve it. Please only output the code for the solver."},
+                        {"role": "user", "content": prompt}
+                    ]
+                )
+                if not response or not response.choices:
+                    error_msg = f"Error: Invalid response received from model {model}!!! Exiting..."
+                    logger.error(error_msg)
+                    sys.exit(1)
+                raw_response = response.choices[0].message.content
+                prompt_tokens = response.usage.prompt_tokens
+                completion_tokens = response.usage.completion_tokens
+            except Exception as e:
+                error_msg = f"Error: Failed to get response from model {model}: {str(e)}!!! Exiting..."
+                logger.error(error_msg)
+                sys.exit(1)
             
         elif model.startswith("claude"):
             if not self.anthropic_client:
                 raise ValueError("Anthropic client not initialized. ANTHROPIC_API_KEY is required for Claude models.")
-            response = self.anthropic_client.messages.create(
-                model=model,
-                max_tokens=64 * 1024,
-                temperature=self.temperature,
-                messages=[{
-                    "role": "user",
-                    "content": prompt
-                }]
-            )
-            raw_response = response.content[0].text
-            prompt_tokens = response.usage.input_tokens
-            completion_tokens = response.usage.output_tokens
+            try:
+                response = self.anthropic_client.messages.create(
+                    model=model,
+                    max_tokens=64 * 1024,
+                    temperature=self.temperature,
+                    messages=[{
+                        "role": "user",
+                        "content": prompt
+                    }]
+                )
+                if not response or not response.content:
+                    error_msg = f"Error: Invalid response received from model {model}!!! Exiting..."
+                    logger.error(error_msg)
+                    sys.exit(1)
+                raw_response = response.content[0].text
+                prompt_tokens = response.usage.input_tokens
+                completion_tokens = response.usage.output_tokens
+            except Exception as e:
+                error_msg = f"Error: Failed to get response from model {model}: {str(e)}!!! Exiting..."
+                logger.error(error_msg)
+                sys.exit(1)
         
         elif model.startswith("deepseek"):
             if not self.deepseek_client:
                 raise ValueError("DeepSeek client not initialized. DEEPSEEK_API_KEY is required for DeepSeek models.")
-            # Use OpenAI SDK with DeepSeek's base URL
-            response = self.deepseek_client.chat.completions.create(
-                model=model,
-                max_tokens=8192,
-                temperature=self.temperature,
-                messages=[
-                    {"role": "system", "content": "You are an expert optimization algorithm designer. You are given a problem and try to solve it. Please only output the code for the solver."},
-                    {"role": "user", "content": prompt}
-                ]
-            )
-            raw_response = response.choices[0].message.content
-            prompt_tokens = response.usage.prompt_tokens
-            completion_tokens = response.usage.completion_tokens
+            try:
+                # Use OpenAI SDK with DeepSeek's base URL
+                response = self.deepseek_client.chat.completions.create(
+                    model=model,
+                    max_tokens=8192,
+                    temperature=self.temperature,
+                    messages=[
+                        {"role": "system", "content": "You are an expert optimization algorithm designer. You are given a problem and try to solve it. Please only output the code for the solver."},
+                        {"role": "user", "content": prompt}
+                    ]
+                )
+                if not response or not response.choices:
+                    error_msg = f"Error: Invalid response received from model {model}!!! Exiting..."
+                    logger.error(error_msg)
+                    sys.exit(1)
+                raw_response = response.choices[0].message.content
+                prompt_tokens = response.usage.prompt_tokens
+                completion_tokens = response.usage.completion_tokens
+            except Exception as e:
+                error_msg = f"Error: Failed to get response from model {model}: {str(e)}!!! Exiting..."
+                logger.error(error_msg)
+                sys.exit(1)
             
         elif model.startswith("gemini"):
             if not self.gemini_client:
                 raise ValueError("Gemini client not initialized. GOOGLE_API_KEY is required for Gemini models.")
-            
-            # Create a system prompt for Gemini
-            system_prompt = "You are an expert optimization algorithm designer. You are given a problem and try to solve it. Please only output the code for the solver."
-            
-            # Combine system prompt and user prompt
-            full_prompt = f"{system_prompt}\n\n{prompt}"
-            
-            # Generate content with Gemini
-            response = self.gemini_client.models.generate_content(
-                model=model,
-                contents=full_prompt,
-                config={"temperature": self.temperature, "max_output_tokens": 65536}
-            )
-            
-            # Extract the text from the response
-            raw_response = response.text
-            # Check if usage_metadata exists before accessing it
-            prompt_tokens = 0  # Default values
-            completion_tokens = 0
-            if hasattr(response, "usage_metadata") and response.usage_metadata:
-                if hasattr(response.usage_metadata, "prompt_token_count"):
-                    prompt_tokens = response.usage_metadata.prompt_token_count
-                if hasattr(response.usage_metadata, "total_token_count"):
-                    completion_tokens = response.usage_metadata.total_token_count - prompt_tokens
+            try:
+                # Create a system prompt for Gemini
+                system_prompt = "You are an expert optimization algorithm designer. You are given a problem and try to solve it. Please only output the code for the solver."
+                
+                # Combine system prompt and user prompt
+                full_prompt = f"{system_prompt}\n\n{prompt}"
+                
+                # Generate content with Gemini
+                response = self.gemini_client.models.generate_content(
+                    model=model,
+                    contents=full_prompt,
+                    config={"temperature": self.temperature, "max_output_tokens": 32768}
+                )
+                
+                if not response:
+                    error_msg = f"Error: Invalid response received from model {model}!!! Exiting..."
+                    logger.error(error_msg)
+                    sys.exit(1)
+                
+                # Extract the text from the response
+                raw_response = response.text
+                # Check if usage_metadata exists before accessing it
+                prompt_tokens = 0  # Default values
+                completion_tokens = 0
+                if hasattr(response, "usage_metadata") and response.usage_metadata:
+                    if hasattr(response.usage_metadata, "prompt_token_count"):
+                        prompt_tokens = response.usage_metadata.prompt_token_count
+                    if hasattr(response.usage_metadata, "total_token_count"):
+                        completion_tokens = response.usage_metadata.total_token_count - prompt_tokens
+            except Exception as e:
+                error_msg = f"Error: Failed to get response from model {model}: {str(e)}!!! Exiting..."
+                logger.error(error_msg)
+                sys.exit(1)
 
         elif model.startswith("openrouter/"):
             if not self.openrouter_client:
                 raise ValueError("OpenRouter client not initialized. OPENROUTER_API_KEY is required for OpenRouter models.")
-            # Extract the actual model name from the openrouter/ prefix
-            actual_model = model.replace("openrouter/", "", 1)
-            response = self.openrouter_client.chat.completions.create(
-                model=actual_model,
-                max_tokens=32768,  # OpenRouter supports various models with different limits
-                temperature=self.temperature,
-                messages=[
-                    {"role": "system", "content": "You are an expert optimization algorithm designer. You are given a problem and try to solve it. Please only output the code for the solver."},
-                    {"role": "user", "content": prompt}
-                ],
-                extra_headers={
-                    "HTTP-Referer": "https://github.com/cornell-zhang/optbench", # Optional. Site URL for rankings on openrouter.ai.
-                    "X-Title": "HeuriGen", # Optional. Site title for rankings on openrouter.ai.
-                },
-            )
-            raw_response = response.choices[0].message.content
-            prompt_tokens = response.usage.prompt_tokens
-            completion_tokens = response.usage.completion_tokens
+            try:
+                # Extract the actual model name from the openrouter/ prefix
+                actual_model = model.replace("openrouter/", "", 1)
+                response = self.openrouter_client.chat.completions.create(
+                    model=actual_model,
+                    max_tokens=32768,  # OpenRouter supports various models with different limits
+                    temperature=self.temperature,
+                    messages=[
+                        {"role": "system", "content": "You are an expert optimization algorithm designer. You are given a problem and try to solve it. Please only output the code for the solver."},
+                        {"role": "user", "content": prompt}
+                    ],
+                    extra_headers={
+                        "HTTP-Referer": "https://github.com/cornell-zhang/optbench", # Optional. Site URL for rankings on openrouter.ai.
+                        "X-Title": "HeuriGen", # Optional. Site title for rankings on openrouter.ai.
+                    },
+                )
+                if not response or not response.choices:
+                    error_msg = f"Error: Invalid response received from model {model}!!! Exiting..."
+                    logger.error(error_msg)
+                    sys.exit(1)
+                raw_response = response.choices[0].message.content
+                prompt_tokens = response.usage.prompt_tokens
+                completion_tokens = response.usage.completion_tokens
+            except Exception as e:
+                error_msg = f"Error: Failed to get response from model {model}: {str(e)}!!! Exiting..."
+                logger.error(error_msg)
+                sys.exit(1)
         
         else:
             raise ValueError(f"Unsupported model: {model}")
             
         # Check if raw_response is empty
         if not raw_response or not raw_response.strip():
-            error_msg = f"Empty response received from model {model}"
+            error_msg = f"Error: Empty response received from model {model}!!! Exiting..."
             logger.error(error_msg)
             sys.exit(1)  # Exit with error code 1
             
