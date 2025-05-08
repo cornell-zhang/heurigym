@@ -5,7 +5,9 @@
 
 Technology mapping is a critical stage in the FPGA design flow where a technology-independent logic network is transformed into a network of lookup tables (LUTs). A K-input lookup table (K-LUT) is a basic programmable logic element in FPGAs that can implement any Boolean function with up to K inputs. The quality of technology mapping directly impacts the area, performance, and power consumption of the final FPGA implementation.
 
-The technology mapping process involves covering a Boolean network with K-LUTs in a way that optimizes specific design metrics. Traditional approaches include cut enumeration, where potential K-feasible cuts (subgraphs with at most K inputs) are identified and selected to form an optimal cover of the network. The mapping process must ensure that the resulting network correctly implements the original logic function while minimizing resource usage.
+Here we consider the structural mapping problem, which consider the circuit graph as a given and find a covering of the graph with K-input subgraphs corresponding to LUTs. 
+
+Traditional approaches include cut enumeration, where potential K-feasible cuts (subgraphs with at most K inputs) are identified and selected to form an optimal cover of the network. The mapping process must ensure that the resulting network correctly implements the original logic function while minimizing resource usage.
 
 Here our optimization target is to minimize the number of LUTs, which represents the area of the mapped logic network. This is an NP-hard problem. 
 
@@ -13,25 +15,25 @@ In this problem, we specify K = 6.
 
 ## Formalization
 
-Consider a directed acyclic graph (DAG) $G = (V, E)$ representing a Boolean network, where each node $v \in V$ represents a logic gate, and each edge $(u, v) \in E$ indicates that the output of node $u$ is an input to node $v$. Let $PI$ denote the set of primary inputs and $PO$ denote the set of primary outputs in the network.
+Consider a directed acyclic graph (DAG) $G = (V, E)$ representing a Boolean network, where each node $v \in V$ represents a logic gate, and each edge $(u, v) \in E$ indicates that the output of node $u$ is an input to node $v$. Let $PI$ denote the set of primary inputs and $PO$ denote the set of primary outputs in the network. A primary input (PI) node is a node that has no input edges. A primary output (PO) node is a node that has no output edges. An internal node has both input and output edges. 
 
-A cut $C(v)$ of a node $v$ is a set of nodes such that every path from a primary input to $v$ passes through at least one node in $C(v)$. A cut is K-feasible if $|C(v)| \leq K$, meaning it has at most K nodes.
+A cone of a node $v$, $Cone(v)$, is a subgraph consisting of $v$ and some of its non-PI predecessors, such that any node $u \in Cone(v)$ has a path to $v$ that lies entirely in $Cone(v)$. Node $v$ is the root of the cone. 
+At a cone $Cone(v)$, the set of input edges iedge($Cone(v)$) is the set of edges with head in $Cone(v)$ and tail outside $Cone(v)$; and the set of output edges oedge($Cone(v)$) is the set of edges with $v$ as the tail. 
+With input and output edges so defined, a cone can be viewed as a node, and notions of "inode", "onode", "K-feasibility" can be extended to handle cones. 
 
-For each node $v$, let $Cuts(v)$ be the set of all K-feasible cuts of node $v$. Each cut $c \in Cuts(v)$ represents a potential implementation of the logic function at node $v$ using a single K-LUT.
+The set of distinct nodes that supplies input edges to $Cone(v)$ is referred to as inode($Cone(v)$), and the set of distinct nodes that receives output edges from $Cone(v)$ is referred to as onode($Cone(v)$). 
+A cone $Cone(v)$ is K-feasible if $|inode(Cone(v))| \leq K$. 
 
-The technology mapping problem is to select a cut for each node $v \in V$ such that:
-1. The selected cuts form a valid cover of the network
-2. The total number of LUTs used is minimized
+A K-input LUT (K-LUT) can implement any K-feasible cone. Thus, the technology mapping problem for LUTs is selecting a set of K-feasible cones to cover the graph in such a way that: 
+every edge in the graph is entirely within a cone, or is an output edge of a cone, or is the output edge of a PI node. 
 
-Formally, we define a mapping solution $M$ as a function that assigns to each node $v \in V$ a cut $M(v) \in Cuts(v)$. The cost of a mapping solution, denoted as $Cost(M)$, is the number of LUTs required to implement the network:
+In our area-optimal mapping problem, the number of cones selected to cover the graph is to be minimized. 
+Formally, a mapping solution $M$ is to select a set of cones $Cone(v_1), Cone(v_2), \ldots, Cone(v_n)$, where $v_i \in V$ but $v_i \notin PI$, such that: 
+- For each edge $e \in E$, $e$ is entirely within a cone, or is an output edge of a cone, or is the output edge of a PI node. 
+- The cost to be minimized is the number of cones selected, i.e., $Cost(M) = |V'|$, where $V' = \{v_1, v_2, \ldots, v_n\}$. 
 
-$Cost(M) = \sum_{v \in V'} 1$
 
-where $V'$ is the set of nodes that are actually used in the final implementation (nodes whose outputs are either primary outputs or inputs to other selected LUTs).
-
-The K-LUT technology mapping problem can be formulated as: $\min_{M} Cost(M)$. 
-
-Here we specify K = 6 in our implmentation. 
+Here we specify K = 6 in our implementation. 
 
 
 ## Input Format
