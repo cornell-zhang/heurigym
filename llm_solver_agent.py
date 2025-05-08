@@ -315,7 +315,7 @@ class ProgramExecutor:
             
 
 class LLMInterface:
-    """Interface for interacting with different LLM providers."""
+    """Interface for interacting with different LLM providers using unified OpenAI API format."""
     
     def __init__(self, models_to_use: List[str], timeout: int = 10, temperature: float = 0.7):
         load_dotenv()
@@ -323,64 +323,83 @@ class LLMInterface:
         self.temperature = temperature
         self.conversation_history = {}  # Store conversation history for each model
         
-        # Initialize clients only for models that will be used
-        self.openai_client = None
-        self.deepseek_client = None
-        self.anthropic_client = None
-        self.gemini_client = None
-        self.openrouter_client = None
-        self.qwen_client = None  # Add Qwen client
+        # Initialize clients for each provider
+        self.clients = {}
         
-        # Check which models are being used and initialize appropriate clients
-        openai_models = [m for m in models_to_use if m.startswith("gpt")]
-        deepseek_models = [m for m in models_to_use if m.startswith("deepseek")]
-        anthropic_models = [m for m in models_to_use if m.startswith("claude")]
-        gemini_models = [m for m in models_to_use if m.startswith("gemini")]
-        openrouter_models = [m for m in models_to_use if m.startswith("openrouter/")]
-        qwen_models = [m for m in models_to_use if m.startswith("qwen")]  # Add Qwen models
+        # Map of model prefixes to their API configurations
+        self.model_configs = {
+            "gpt": {
+                "api_key": os.getenv('OPENAI_API_KEY'),
+                "base_url": "https://api.openai.com/v1"
+            },
+            "deepseek": {
+                "api_key": os.getenv('DEEPSEEK_API_KEY'),
+                "base_url": "https://api.deepseek.com/v1"
+            },
+            "claude": {
+                "api_key": os.getenv('ANTHROPIC_API_KEY'),
+                "base_url": "https://api.anthropic.com/v1"
+            },
+            "gemini": {
+                "api_key": os.getenv('GOOGLE_API_KEY'),
+                "base_url": "https://generativelanguage.googleapis.com/v1beta/openai"
+            },
+            "openrouter": {
+                "api_key": os.getenv('OPENROUTER_API_KEY'),
+                "base_url": "https://openrouter.ai/api/v1"
+            },
+            "qwen": {
+                "api_key": os.getenv('DASHSCOPE_API_KEY'),
+                "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1"
+            }
+        }
         
-        if openai_models:
-            if not os.getenv('OPENAI_API_KEY'):
-                raise ValueError("OPENAI_API_KEY is required for OpenAI models but not provided")
-            self.openai_client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
-            
-        if deepseek_models:
-            if not os.getenv('DEEPSEEK_API_KEY'):
-                raise ValueError("DEEPSEEK_API_KEY is required for DeepSeek models but not provided")
-            self.deepseek_client = OpenAI(
-                api_key=os.getenv('DEEPSEEK_API_KEY'),
-                base_url="https://api.deepseek.com"
-            )
-            
-        if anthropic_models:
-            if not os.getenv('ANTHROPIC_API_KEY'):
-                raise ValueError("ANTHROPIC_API_KEY is required for Anthropic models but not provided")
-            self.anthropic_client = Anthropic(api_key=os.getenv('ANTHROPIC_API_KEY'))
-            
-        if gemini_models:
-            if not os.getenv('GOOGLE_API_KEY'):
-                raise ValueError("GOOGLE_API_KEY is required for Gemini models but not provided")
-            self.gemini_client = genai.Client(api_key=os.getenv('GOOGLE_API_KEY'))
-
-        if openrouter_models:
-            if not os.getenv('OPENROUTER_API_KEY'):
-                raise ValueError("OPENROUTER_API_KEY is required for OpenRouter models but not provided")
-            self.openrouter_client = OpenAI(
-                api_key=os.getenv('OPENROUTER_API_KEY'),
-                base_url="https://openrouter.ai/api/v1"
-            )
-
-        if qwen_models:
-            if not os.getenv('DASHSCOPE_API_KEY'):
-                raise ValueError("DASHSCOPE_API_KEY is required for Qwen models but not provided")
-            self.qwen_client = OpenAI(
-                api_key=os.getenv('DASHSCOPE_API_KEY'),
-                base_url="https://dashscope.aliyuncs.com/compatible-mode/v1"
-            )
+        # Initialize clients for each provider that will be used
+        for model in models_to_use:
+            provider = self._get_provider(model)
+            if provider and provider not in self.clients:
+                config = self.model_configs[provider]
+                if not config['api_key']:
+                    raise ValueError(f"{provider.upper()}_API_KEY is required for {provider} models but not provided")
+                self.clients[provider] = OpenAI(
+                    api_key=config['api_key'],
+                    base_url=config['base_url']
+                )
         
         # Load prompt template
         self.prompt_template = self._load_prompt_template()
         
+    def _get_provider(self, model: str) -> str:
+        """Get the provider name from a model identifier."""
+        if model.startswith("openrouter/"):
+            return "openrouter"
+        for provider in self.model_configs.keys():
+            if model.startswith(provider):
+                return provider
+        return None
+
+    def _get_actual_model_name(self, model: str) -> str:
+        """Get the actual model name to use with the API."""
+        if model.startswith("openrouter/"):
+            return model.replace("openrouter/", "", 1)
+        return model
+
+    def _get_base_model_name(self, model: str) -> str:
+        """Extracts the base model name from a model identifier for file paths."""
+        # Remove openrouter/ prefix if present
+        if model.startswith("openrouter/"):
+            model = model.replace("openrouter/", "", 1)
+        
+        # Remove provider prefix if present (e.g., deepseek/, anthropic/, etc.)
+        parts = model.split("/")
+        if len(parts) > 1:
+            model = parts[-1]
+        
+        # Remove any suffixes after : (e.g., :free, :latest, etc.)
+        model = model.split(":")[0]
+        
+        return model
+
     def _load_prompt_template(self) -> str:
         """Loads the prompt template from prompt.md."""
         template_path = Path(os.getcwd()) / "prompt.md"
@@ -569,7 +588,7 @@ Your goal is to improve the solution for as many test cases as possible, with sp
                     iteration: int = 0,
                     previous_program: str = None,
                     solution_dir: Path = None) -> str:
-        """Gets a program from the specified LLM."""
+        """Gets a program from the specified LLM using unified OpenAI API format."""
         prompt = self.format_prompt(problem_desc, iteration, previous_program, solution_dir)
         
         # Initialize conversation history for this model if not exists
@@ -600,182 +619,46 @@ Your goal is to improve the solution for as many test cases as possible, with sp
         # Measure API call time
         api_start_time = time.time()
         
-        # Initialize token counts
-        prompt_tokens = 0
-        completion_tokens = 0
+        # Get provider and client
+        provider = self._get_provider(model)
+        if not provider or provider not in self.clients:
+            raise ValueError(f"Unsupported model or missing client: {model}")
         
-        if model.startswith("gpt"):
-            if not self.openai_client:
-                raise ValueError("OpenAI client not initialized. OPENAI_API_KEY is required for OpenAI models.")
-            try:
-                response = self.openai_client.chat.completions.create(
-                    model=model,
-                    max_tokens=16384,
-                    temperature=self.temperature,
-                    messages=self.conversation_history[model]
-                )
-                if not response or not response.choices:
-                    error_msg = f"Error: Invalid response received from model {model}!!! Exiting..."
-                    logger.error(error_msg)
-                    sys.exit(1)
-                raw_response = response.choices[0].message.content
-                # Add assistant's response to conversation history
-                self.conversation_history[model].append({"role": "assistant", "content": raw_response})
-                prompt_tokens = response.usage.prompt_tokens
-                completion_tokens = response.usage.completion_tokens
-            except Exception as e:
-                error_msg = f"Error: Failed to get response from model {model}: {str(e)}!!! Exiting..."
-                logger.error(error_msg)
-                sys.exit(1)
+        client = self.clients[provider]
+        actual_model = self._get_actual_model_name(model)
+        
+        try:
+            # Make API call using unified OpenAI format
+            response = client.chat.completions.create(
+                model=actual_model,
+                max_tokens=32768,
+                temperature=self.temperature,
+                messages=self.conversation_history[model]
+            )
             
-        elif model.startswith("claude"):
-            if not self.anthropic_client:
-                raise ValueError("Anthropic client not initialized. ANTHROPIC_API_KEY is required for Claude models.")
-            try:
-                response = self.anthropic_client.messages.create(
-                    model=model,
-                    max_tokens=64 * 1024,
-                    temperature=self.temperature,
-                    messages=self.conversation_history[model]
-                )
-                if not response or not response.content:
-                    error_msg = f"Error: Invalid response received from model {model}!!! Exiting..."
-                    logger.error(error_msg)
-                    sys.exit(1)
-                raw_response = response.content[0].text
-                # Add assistant's response to conversation history
-                self.conversation_history[model].append({"role": "assistant", "content": raw_response})
-                prompt_tokens = response.usage.input_tokens
-                completion_tokens = response.usage.output_tokens
-            except Exception as e:
-                error_msg = f"Error: Failed to get response from model {model}: {str(e)}!!! Exiting..."
+            if not response or not response.choices:
+                error_msg = f"Error: Invalid response received from model {model}!!! Exiting..."
                 logger.error(error_msg)
                 sys.exit(1)
-        
-        elif model.startswith("deepseek"):
-            if not self.deepseek_client:
-                raise ValueError("DeepSeek client not initialized. DEEPSEEK_API_KEY is required for DeepSeek models.")
-            try:
-                response = self.deepseek_client.chat.completions.create(
-                    model=model,
-                    max_tokens=8192,
-                    temperature=self.temperature,
-                    messages=self.conversation_history[model]
-                )
-                if not response or not response.choices:
-                    error_msg = f"Error: Invalid response received from model {model}!!! Exiting..."
-                    logger.error(error_msg)
-                    sys.exit(1)
-                raw_response = response.choices[0].message.content
-                # Add assistant's response to conversation history
-                self.conversation_history[model].append({"role": "assistant", "content": raw_response})
-                prompt_tokens = response.usage.prompt_tokens
-                completion_tokens = response.usage.completion_tokens
-            except Exception as e:
-                error_msg = f"Error: Failed to get response from model {model}: {str(e)}!!! Exiting..."
-                logger.error(error_msg)
-                sys.exit(1)
+                
+            raw_response = response.choices[0].message.content
+            # Add assistant's response to conversation history
+            self.conversation_history[model].append({"role": "assistant", "content": raw_response})
             
-        elif model.startswith("gemini"):
-            if not self.gemini_client:
-                raise ValueError("Gemini client not initialized. GOOGLE_API_KEY is required for Gemini models.")
-            try:
-                # Convert conversation history to Gemini format
-                gemini_messages = []
-                for msg in self.conversation_history[model]:
-                    if msg["role"] == "system":
-                        gemini_messages.append({"role": "user", "parts": [msg["content"]]})
-                    else:
-                        gemini_messages.append({"role": msg["role"], "parts": [msg["content"]]})
-                
-                response = self.gemini_client.models.generate_content(
-                    model=model,
-                    contents=gemini_messages,
-                    config={"temperature": self.temperature, "max_output_tokens": 32768}
-                )
-                
-                if not response:
-                    error_msg = f"Error: Invalid response received from model {model}!!! Exiting..."
-                    logger.error(error_msg)
-                    sys.exit(1)
-                
-                raw_response = response.text
-                # Add assistant's response to conversation history
-                self.conversation_history[model].append({"role": "assistant", "content": raw_response})
-                prompt_tokens = 0
-                completion_tokens = 0
-                if hasattr(response, "usage_metadata") and response.usage_metadata:
-                    if hasattr(response.usage_metadata, "prompt_token_count"):
-                        prompt_tokens = response.usage_metadata.prompt_token_count
-                    if hasattr(response.usage_metadata, "total_token_count"):
-                        completion_tokens = response.usage_metadata.total_token_count - prompt_tokens
-            except Exception as e:
-                error_msg = f"Error: Failed to get response from model {model}: {str(e)}!!! Exiting..."
-                logger.error(error_msg)
-                sys.exit(1)
-
-        elif model.startswith("openrouter/"):
-            if not self.openrouter_client:
-                raise ValueError("OpenRouter client not initialized. OPENROUTER_API_KEY is required for OpenRouter models.")
-            try:
-                actual_model = model.replace("openrouter/", "", 1)
-                response = self.openrouter_client.chat.completions.create(
-                    model=actual_model,
-                    max_tokens=32768,
-                    temperature=self.temperature,
-                    messages=self.conversation_history[model],
-                    extra_headers={
-                        "HTTP-Referer": "https://github.com/cornell-zhang/optbench",
-                        "X-Title": "HeuriGen",
-                    },
-                )
-                if not response or not response.choices:
-                    error_msg = f"Error: Invalid response received from model {model}!!! Exiting..."
-                    logger.error(error_msg)
-                    sys.exit(1)
-                raw_response = response.choices[0].message.content
-                # Add assistant's response to conversation history
-                self.conversation_history[model].append({"role": "assistant", "content": raw_response})
-                prompt_tokens = response.usage.prompt_tokens
-                completion_tokens = response.usage.completion_tokens
-            except Exception as e:
-                error_msg = f"Error: Failed to get response from model {model}: {str(e)}!!! Exiting..."
-                logger.error(error_msg)
-                sys.exit(1)
-        
-        elif model.startswith("qwen"):
-            if not self.qwen_client:
-                raise ValueError("Qwen client not initialized. DASHSCOPE_API_KEY is required for Qwen models.")
-            try:
-                response = self.qwen_client.chat.completions.create(
-                    model=model,
-                    max_tokens=32768,
-                    temperature=self.temperature,
-                    messages=self.conversation_history[model],
-                    extra_body={"enable_thinking": False}
-                )
-                if not response or not response.choices:
-                    error_msg = f"Error: Invalid response received from model {model}!!! Exiting..."
-                    logger.error(error_msg)
-                    sys.exit(1)
-                raw_response = response.choices[0].message.content
-                # Add assistant's response to conversation history
-                self.conversation_history[model].append({"role": "assistant", "content": raw_response})
-                prompt_tokens = response.usage.prompt_tokens
-                completion_tokens = response.usage.completion_tokens
-            except Exception as e:
-                error_msg = f"Error: Failed to get response from model {model}: {str(e)}!!! Exiting..."
-                logger.error(error_msg)
-                sys.exit(1)
-        
-        else:
-            raise ValueError(f"Unsupported model: {model}")
+            # Get token counts
+            prompt_tokens = response.usage.prompt_tokens
+            completion_tokens = response.usage.completion_tokens
+            
+        except Exception as e:
+            error_msg = f"Error: Failed to get response from model {model}: {str(e)}!!! Exiting..."
+            logger.error(error_msg)
+            sys.exit(1)
             
         # Check if raw_response is empty
         if not raw_response or not raw_response.strip():
             error_msg = f"Error: Empty response received from model {model}!!! Exiting..."
             logger.error(error_msg)
-            sys.exit(1)  # Exit with error code 1
+            sys.exit(1)
             
         api_time = time.time() - api_start_time
         
@@ -796,22 +679,6 @@ Your goal is to improve the solution for as many test cases as possible, with sp
         
         return raw_response
     
-    def _get_base_model_name(self, model: str) -> str:
-        """Extracts the base model name from a model identifier."""
-        # Remove openrouter/ prefix if present
-        if model.startswith("openrouter/"):
-            model = model.replace("openrouter/", "", 1)
-        
-        # Remove provider prefix if present (e.g., deepseek/, anthropic/, etc.)
-        parts = model.split("/")
-        if len(parts) > 1:
-            model = parts[-1]
-        
-        # Remove any suffixes after : (e.g., :free, :latest, etc.)
-        model = model.split(":")[0]
-        
-        return model
-
     def get_iterative_program(self,
                               problem_desc: Dict[str, str],
                               model: str,
@@ -944,7 +811,7 @@ def main():
     
     # Initialize components
     problem_reader = ProblemReader(workspace_root)
-    llm_interface = LLMInterface(args.models, args.timeout, args.temperature)  # Pass the models, timeout and temperature to use
+    llm_interface = LLMInterface(args.models, args.timeout, args.temperature)
     
     # Get problem folders
     problem_folders = problem_reader.get_problem_folders()
