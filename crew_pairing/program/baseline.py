@@ -25,8 +25,8 @@ from typing import List
 # ---------------------------------------------------------------------------
 #  locate utils.py without requiring an installed package
 # ---------------------------------------------------------------------------
-ROOT = Path(__file__).resolve().parent        # crew_pairing/
-PROG = ROOT / "program"
+PROG = Path(__file__).resolve().parent           # crew_pairing/program
+ROOT = PROG.parent                               # crew_pairing/
 if str(PROG) not in sys.path:
     sys.path.insert(0, str(PROG))
 
@@ -58,7 +58,7 @@ def write_schedule(pairings: List[List[str]], out_file: Path) -> None:
 # ---------------------------------------------------------------------------
 
 def build_pairings(legs: dict[str, FlightLeg]) -> List[List[str]]:
-    # sort by departure for a tidy output order
+    """Return a list of single‑leg pairings sorted by departure."""
     sorted_legs = sorted(legs.values(), key=lambda l: l.dep_dt)
     return [[leg.token] for leg in sorted_legs]
 
@@ -67,13 +67,21 @@ def main(input_csv: Path, output_txt: Path) -> None:
     inst = read_instance(str(input_csv))
     pairings = build_pairings(inst.legs)
     write_schedule(pairings, output_txt)
-    print(f"Wrote {len(pairings)} pairings covering {len(inst.legs)} legs → {output_txt.relative_to(ROOT)}")
 
-    # optional: show cost
+    print(
+        f"Wrote {len(pairings)} pairings covering {len(inst.legs)} legs → "
+        f"{output_txt.relative_to(ROOT)}"
+    )
+
+    # optional: cost via evaluator.py if present
     try:
-        from program.evaluator import evaluate  # available under program/
+        from evaluator import evaluate  # available in PROG
+
         cost = evaluate(str(input_csv), str(output_txt))
-        print(f"Total cost (incl. $10k positioning where applicable): ${int(round(cost)):,}")
+        print(
+            f"Total cost (incl. $10k positioning where applicable): $"
+            f"{int(round(cost)):,}"
+        )
     except Exception as e:  # pragma: no cover
         print(f"(Cost evaluation skipped: {e})")
 
