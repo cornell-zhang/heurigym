@@ -519,7 +519,17 @@ These are the test cases and results from the previous iteration:
                                     # Limit to first 50 lines if content is too large
                                     lines = content.split('\n')
                                     if len(lines) > 50:
-                                        content = '\n'.join(lines[:50]) + '\n... (truncated)'
+                                        lines = lines[:50]
+                                        lines.append('... (truncated)')
+                                    # Truncate long lines
+                                    MAX_LINE_LENGTH = 100
+                                    truncated_lines = []
+                                    for line in lines:
+                                        if len(line) > MAX_LINE_LENGTH:
+                                            truncated_lines.append(line[:MAX_LINE_LENGTH] + '... (truncated)')
+                                        else:
+                                            truncated_lines.append(line)
+                                    content = '\n'.join(truncated_lines)
                                 prompt += f"**Input File: {input_file.name}**\n```\n{content}\n```\n\n"
                             except Exception as e:
                                 prompt += f"**Input File: {input_file.name}** Error reading file: {str(e)}\n\n"

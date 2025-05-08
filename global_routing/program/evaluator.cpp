@@ -288,10 +288,10 @@ int main(int argc, char* argv[]) {
   NVR_DB rdb;
   if( !rdb.read_files(argc, argv)) {
     printf("input error\n");
-    return 0;
+    return 1;
   }
   //rdb.profile();
-  return 1;
+  return 0;
 }
 
 bool NVR_DB::read_files(int argc, char* argv[])
