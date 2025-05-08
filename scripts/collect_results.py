@@ -19,9 +19,6 @@ def find_iteration_dirs(base_dir):
 
 def classify_error(message):
     """Classify error message into operator scheduling specific categories."""
-    if not message:
-        return "Stage IV: No Error!!"
-    
     message = message.lower()
     
     # Define error categories specific to operator scheduling
@@ -56,7 +53,7 @@ def extract_errors(iteration_dir):
                             "validity": cost_data.get("validity", False),
                             "cost": cost_data.get("cost", None),
                             "message": cost_data.get("message", ""),
-                            "error_type": classify_error(cost_data.get("message", ""))
+                            "error_type": classify_error(cost_data.get("message", "")) if not cost_data.get("validity", False) else "Stage IV: No Error!!"
                         }
                 except Exception as e:
                     errors[test_case] = {
