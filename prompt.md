@@ -10,9 +10,9 @@ You are an optimization expert tasked with solving the following problem by writ
 1. A problem template is provided above. You only need to implement the `solve` function. Do NOT modify the function signature including the data types of the input arguments. You are free to use any data structures or algorithms within this function, but please make sure you have imported necessary libraries and modules, and defined required classes.
 2. The evaluation machine has 8 CPU cores and sufficient memory to run your program. The time limit for this question is {TIMEOUT} seconds. You are free to implement parallel algorithms.
 3. The Python version is 3.12. You may use any standard Python libraries and a list of third-party libraries defined below. Other external libraries are strictly prohibited.
-    - numpy
-    - networkx
-    - pandas
+    - numpy==2.2.5
+    - networkx==3.4.2
+    - pandas==2.2.3
 4. Your submission should consist of a single file named `solver.py` that contains the complete implementation of the `solve` function. Do NOT include any explanations, comments, additional text, or Markdown formatting.
 5. You will get execution feedback after submitting your solution.
 
