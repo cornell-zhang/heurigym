@@ -330,27 +330,33 @@ class LLMInterface:
         self.model_configs = {
             "gpt": {
                 "api_key": os.getenv('OPENAI_API_KEY'),
-                "base_url": "https://api.openai.com/v1"
+                "base_url": "https://api.openai.com/v1",
+                "max_tokens": 16384
             },
             "deepseek": {
                 "api_key": os.getenv('DEEPSEEK_API_KEY'),
-                "base_url": "https://api.deepseek.com/v1"
+                "base_url": "https://api.deepseek.com/v1",
+                "max_tokens": 8192
             },
             "claude": {
                 "api_key": os.getenv('ANTHROPIC_API_KEY'),
-                "base_url": "https://api.anthropic.com/v1"
+                "base_url": "https://api.anthropic.com/v1",
+                "max_tokens": 65536
             },
             "gemini": {
                 "api_key": os.getenv('GOOGLE_API_KEY'),
-                "base_url": "https://generativelanguage.googleapis.com/v1beta/openai"
+                "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
+                "max_tokens": 32768
             },
             "openrouter": {
                 "api_key": os.getenv('OPENROUTER_API_KEY'),
-                "base_url": "https://openrouter.ai/api/v1"
+                "base_url": "https://openrouter.ai/api/v1",
+                "max_tokens": 32768
             },
             "qwen": {
                 "api_key": os.getenv('DASHSCOPE_API_KEY'),
-                "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1"
+                "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+                "max_tokens": 32768
             }
         }
         
@@ -626,12 +632,13 @@ Your goal is to improve the solution for as many test cases as possible, with sp
         
         client = self.clients[provider]
         actual_model = self._get_actual_model_name(model)
+        max_tokens = self.model_configs[provider]["max_tokens"]
         
         try:
             # Make API call using unified OpenAI format
             response = client.chat.completions.create(
                 model=actual_model,
-                max_tokens=32768,
+                max_tokens=max_tokens,
                 temperature=self.temperature,
                 messages=self.conversation_history[model]
             )
