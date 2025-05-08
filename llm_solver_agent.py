@@ -328,6 +328,7 @@ class LLMInterface:
         self.anthropic_client = None
         self.gemini_client = None
         self.openrouter_client = None
+        self.qwen_client = None  # Add Qwen client
         
         # Check which models are being used and initialize appropriate clients
         openai_models = [m for m in models_to_use if m.startswith("gpt")]
@@ -335,6 +336,7 @@ class LLMInterface:
         anthropic_models = [m for m in models_to_use if m.startswith("claude")]
         gemini_models = [m for m in models_to_use if m.startswith("gemini")]
         openrouter_models = [m for m in models_to_use if m.startswith("openrouter/")]
+        qwen_models = [m for m in models_to_use if m.startswith("qwen")]  # Add Qwen models
         
         if openai_models:
             if not os.getenv('OPENAI_API_KEY'):
@@ -365,6 +367,14 @@ class LLMInterface:
             self.openrouter_client = OpenAI(
                 api_key=os.getenv('OPENROUTER_API_KEY'),
                 base_url="https://openrouter.ai/api/v1"
+            )
+
+        if qwen_models:
+            if not os.getenv('DASHSCOPE_API_KEY'):
+                raise ValueError("DASHSCOPE_API_KEY is required for Qwen models but not provided")
+            self.qwen_client = OpenAI(
+                api_key=os.getenv('DASHSCOPE_API_KEY'),
+                base_url="https://dashscope.aliyuncs.com/compatible-mode/v1"
             )
         
         # Load prompt template
@@ -729,6 +739,32 @@ Your goal is to improve the solution for as many test cases as possible, with sp
                 logger.error(error_msg)
                 sys.exit(1)
         
+        elif model.startswith("qwen"):
+            if not self.qwen_client:
+                raise ValueError("Qwen client not initialized. DASHSCOPE_API_KEY is required for Qwen models.")
+            try:
+                response = self.qwen_client.chat.completions.create(
+                    model=model,
+                    max_tokens=32768,
+                    temperature=self.temperature,
+                    messages=[
+                        {"role": "system", "content": "You are an expert optimization algorithm designer. You are given a problem and try to solve it. Please only output the code for the solver."},
+                        {"role": "user", "content": prompt}
+                    ],
+                    extra_body={"enable_thinking": False}  # Disable thinking process for Qwen models
+                )
+                if not response or not response.choices:
+                    error_msg = f"Error: Invalid response received from model {model}!!! Exiting..."
+                    logger.error(error_msg)
+                    sys.exit(1)
+                raw_response = response.choices[0].message.content
+                prompt_tokens = response.usage.prompt_tokens
+                completion_tokens = response.usage.completion_tokens
+            except Exception as e:
+                error_msg = f"Error: Failed to get response from model {model}: {str(e)}!!! Exiting..."
+                logger.error(error_msg)
+                sys.exit(1)
+        
         else:
             raise ValueError(f"Unsupported model: {model}")
             
@@ -876,7 +912,8 @@ def parse_arguments():
                             "gemini-2.5-pro-exp-03-25",
                             "openrouter/qwen/qwen3-235b-a22b:free",
                             "openrouter/meta-llama/llama-3.3-70b-instruct:free",
-                            "openrouter/meta-llama/llama-4-maverick:free"
+                            "openrouter/meta-llama/llama-4-maverick:free",
+                            "qwen3-235b-a22b"
                         ],
                         help='List of models to use (default: deepseek-chat, deepseek-reasoner)')
     
