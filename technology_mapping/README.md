@@ -21,7 +21,7 @@ A cone of a node $v$, $Cone(v)$, is a subgraph consisting of $v$ and some of its
 At a cone $Cone(v)$, the set of input edges iedge($Cone(v)$) is the set of edges with head in $Cone(v)$ and tail outside $Cone(v)$; and the set of output edges oedge($Cone(v)$) is the set of edges with $v$ as the tail. 
 With input and output edges so defined, a cone can be viewed as a node, and notions of "inode", "onode", "K-feasibility" can be extended to handle cones. 
 
-The set of distinct nodes that supplies input edges to $Cone(v)$ is referred to as inode($Cone(v)$), and the set of distinct nodes that receives output edges from $Cone(v)$ is referred to as onode($Cone(v)$). 
+The set of distinct nodes that supplies input edges to $Cone(v)$ is referred to as $inode(Cone(v))$, and the set of distinct nodes that receives output edges from $Cone(v)$ is referred to as $onode(Cone(v))$. 
 A cone $Cone(v)$ is K-feasible if $|inode(Cone(v))| \leq K$. 
 
 A K-input LUT (K-LUT) can implement any K-feasible cone. Thus, the technology mapping problem for LUTs is selecting a set of K-feasible cones to cover the graph in such a way that: 
