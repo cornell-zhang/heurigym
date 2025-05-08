@@ -706,11 +706,12 @@ Your goal is to improve the solution for as many test cases as possible, with sp
             f.write(f"Model: {model}\n")
             f.write(f"Max Iterations: {max_iterations}\n")
             f.write(f"Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
-            f.write("=" * 80 + "\n\n")
         
         for iteration in range(max_iterations):
             try:
                 logger.info(f"Getting program from {model} (iteration {iteration+1}/{max_iterations})")
+                with open(log_file, 'a') as f:
+                    f.write(f"\n{'=' * 40} ITERATION {iteration} {'=' * 40}\n\n")
                 
                 # Get program from LLM
                 raw_response = self.get_program(
@@ -730,7 +731,6 @@ Your goal is to improve the solution for as many test cases as possible, with sp
                 
                 # Append the program to the log file
                 with open(log_file, 'a') as f:
-                    f.write(f"\n{'=' * 40} ITERATION {iteration} {'=' * 40}\n\n")
                     f.write("RAW RESPONSE:\n")
                     f.write(raw_response if raw_response else "No program generated yet")
                     f.write("\n\n")
@@ -776,14 +776,13 @@ def parse_arguments():
     
     parser.add_argument('--models', type=str, nargs='+', 
                         default=[
-                            "openrouter/deepseek/deepseek-chat-v3-0324:free", # "deepseek-chat"
-                            "openrouter/deepseek/deepseek-r1:free", # "deepseek-reasoner"
+                            "deepseek-chat",
+                            "deepseek-reasoner",
+                            "qwen3-235b-a22b",
+                            "openrouter/meta-llama/llama-4-maverick:free",
                             "gemini-2.5-flash-preview-04-17",
                             "gemini-2.5-pro-exp-03-25",
-                            "openrouter/qwen/qwen3-235b-a22b:free",
                             "openrouter/meta-llama/llama-3.3-70b-instruct:free",
-                            "openrouter/meta-llama/llama-4-maverick:free",
-                            "qwen3-235b-a22b"
                         ],
                         help='List of models to use (default: deepseek-chat, deepseek-reasoner)')
     
