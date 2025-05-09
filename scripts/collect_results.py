@@ -256,7 +256,7 @@ def main():
     print("-" * 80)
     for stage in range(1, 4):
         passed = stage_pass_stats[stage]
-        print(f"solve_s{stage}@{len(best_results)}: {passed}/{total_cases} passed ({passed/total_cases*100:.1f}%)")
+        print(f"solve_s{stage}@{len(error_stats.keys())}: {passed}/{total_cases} passed ({passed/total_cases*100:.1f}%)")
     
     # Save all results to files
     results_output = os.path.join(base_dir, "best_results.json")
