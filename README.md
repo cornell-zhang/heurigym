@@ -12,11 +12,12 @@ We construct a new benchmark HeuriGen that has
 | Problem | Type |
 | :--: | :--: |
 | [Operator Scheduling](operator_scheduling) | Scheduling |
-| [E-Graph Extraction](e-graph-extraction) | Term rewriting |
+| [E-Graph Extraction](e-graph-extraction) | Covering |
 | [Pick-up and Delivery](pdptw) | TSP |
 | [Technology Mapping](technology_mapping) | Covering |
 | [Global Routing](global_routing) | Routing |
 | [Protein Sequence Design](protein_sequence_design) | Network Flow |
+| [Airline Crew Pairing](crew_pairing) | Covering |
 
 
 ## Problem Setup
