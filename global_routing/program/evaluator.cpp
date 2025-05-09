@@ -627,7 +627,8 @@ bool NVR_DB::read_gr_solution(const char *input)
           // layer_overflows +=  overflowLossFunc(1.5 * double(cell.demand()), overflow_slope);
           layer_overflows +=  overflowLossFunc(double(cell.demand())/2, overflow_slope);
         } else if (cell.capacity() < 0) {
-          printf("Capacity error (%d, %d, %d)\n", x, y, z);
+          fprintf(stderr, "Capacity error (%d, %d, %d)\n", x, y, z);
+          NVR_ASSERT(0);
         }
 
         if(gg.is_hor()) {
@@ -653,7 +654,15 @@ bool NVR_DB::read_gr_solution(const char *input)
 
   double total_cost = overflow_cost + via_cost + wl_cost;
   printf("Number of open nets : %lu\n", total_opens);
+  if (total_opens > 0) {
+    fprintf(stderr, "Error: Found open nets in solution. Number of open nets: %lu\n", total_opens);
+    NVR_ASSERT(0);
+  }
   printf("Number of incompleted nets : %lu\n", total_incompleted);
+  if (total_incompleted > 0) {
+    fprintf(stderr, "Error: Found incompleted nets in solution. Number of incompleted nets: %lu\n", total_incompleted);
+    NVR_ASSERT(0);
+  }
   printf("wirelength cost %.4lf\n", wl_cost);
   printf("via cost %.4lf\n", via_cost);
   printf("overflow cost %.4lf\n", overflow_cost);
