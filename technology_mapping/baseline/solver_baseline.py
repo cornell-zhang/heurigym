@@ -2,7 +2,7 @@ from typing import List, Tuple, Dict, Set, FrozenSet
 from structure import LogicNetwork, KLut
 import networkx as nx
 import itertools
-
+import time
 # DEBUG = True
 DEBUG = False
 
@@ -17,12 +17,16 @@ class Cut:
         return f"Cut({self.node}, inputs={list(self.inputs)}, level={self.level})"
 
 
-def enumerate_cuts(G: nx.DiGraph, node: str, k: int, cut_set: Dict[str, List[Cut]], visited: Set[str] = None) -> List[Cut]:
+def enumerate_cuts(G: nx.DiGraph, node: str, k: int, cut_set: Dict[str, List[Cut]], max_cuts_per_node: int = 20, max_recursion_depth: int = 10, current_depth: int = 0, visited: Set[str] = None) -> List[Cut]:
     """
     Enumerate all possible k-feasible cuts for a node using recursive approach
     """
     if visited is None:
         visited = set()
+    
+    # Add depth tracking
+    if current_depth > max_recursion_depth:
+        return [Cut(node, frozenset([node]), level=0)]  # Return only trivial cut
     
     # Return empty list if node has been visited (to avoid cycles)
     if node in visited:
@@ -55,29 +59,58 @@ def enumerate_cuts(G: nx.DiGraph, node: str, k: int, cut_set: Dict[str, List[Cut
         unique_inputs.add(frozenset(predecessors))
     
     # For more complex cases, recursively compute cuts for each input
-    # and merge them to form new cuts
+    # and merge them using pairwise merging instead of product
     if len(predecessors) > 1:
         # Compute cuts for each predecessor
         pred_cuts: Dict[str, List[Cut]] = {}
         for pred in predecessors:
             visited_new = visited.copy()
             visited_new.add(node)  # Mark current node as visited to avoid cycles
-            pred_cuts[pred] = enumerate_cuts(G, pred, k, cut_set, visited_new)
+            pred_cuts[pred] = enumerate_cuts(G, pred, k, cut_set, max_cuts_per_node, max_recursion_depth, current_depth+1, visited_new)
         
-        # Generate all combinations of predecessor cuts
-        for combo in itertools.product(*[pred_cuts[pred] for pred in predecessors]):
-            # The inputs of the new cut are the union of inputs of all predecessor cuts
-            inputs = frozenset().union(*[cut.inputs for cut in combo])
+        # Pairwise merging approach
+        # Start with cuts from first predecessor
+        merged_cuts = [Cut(node, cut.inputs, cut.level) for cut in pred_cuts[predecessors[0]]]
+        
+        # Iteratively merge with cuts from remaining predecessors
+        for i in range(1, len(predecessors)):
+            current_pred = predecessors[i]
+            new_merged_cuts = []
             
-            # Only consider k-feasible cuts that we haven't seen before
-            if len(inputs) <= k and inputs not in unique_inputs:
-                # Level is 1 + maximum level of input cuts
-                max_input_level = max(cut.level for cut in combo)
-                level = 1 + max_input_level
-                
-                new_cut = Cut(node, inputs, level=level)
-                all_cuts.append(new_cut)
-                unique_inputs.add(inputs)
+            # For each existing merged cut
+            for merged_cut in merged_cuts:
+                # For each cut of the current predecessor
+                for pred_cut in pred_cuts[current_pred]:
+                    # Calculate the union of inputs
+                    combined_inputs = merged_cut.inputs.union(pred_cut.inputs)
+                    
+                    # Skip if the combined cut exceeds k inputs
+                    if len(combined_inputs) > k:
+                        continue
+                    
+                    # Create a new merged cut if we haven't seen this input set before
+                    if combined_inputs not in unique_inputs:
+                        level = max(merged_cut.level, pred_cut.level) + 1
+                        new_cut = Cut(node, combined_inputs, level=level)
+                        new_merged_cuts.append(new_cut)
+                        unique_inputs.add(combined_inputs)
+            
+            # Keep only the best cuts if we exceed the limit
+            if len(new_merged_cuts) > max_cuts_per_node:
+                new_merged_cuts.sort(key=lambda cut: (len(cut.inputs), cut.level))
+                new_merged_cuts = new_merged_cuts[:max_cuts_per_node]
+            
+            # Update the merged cuts for the next iteration
+            merged_cuts = new_merged_cuts
+        
+        # Add the merged cuts to all_cuts
+        all_cuts.extend(merged_cuts)
+    
+    # After generating all cuts, sort and keep only the best ones
+    if len(all_cuts) > max_cuts_per_node:
+        # Sort by priority metrics (fewer inputs first, then lower level)
+        all_cuts.sort(key=lambda cut: (len(cut.inputs), cut.level))
+        all_cuts = all_cuts[:max_cuts_per_node]
     
     # Store the computed cuts for this node
     cut_set[node] = all_cuts
@@ -251,8 +284,9 @@ def solve(netlist: LogicNetwork, k: int, delay_budget: float = None, optimize_fo
     # Phase 1: Cut enumeration for all nodes
     all_cuts: Dict[str, List[Cut]] = {}
     
-    if DEBUG:
-        print("===== Phase 1: All cuts ======")
+    print("===== Phase 1: Enumerate All cuts ======")
+    # count time for phase 1
+    start_time = time.time()
 
     # Enumerate cuts in topological order
     for node in netlist.topological_order():
@@ -271,10 +305,12 @@ def solve(netlist: LogicNetwork, k: int, delay_budget: float = None, optimize_fo
             for cut in cuts:
                 print(cut)
 
-    # Phase 2: Dynamic programming to select the best cut for each node
-    if DEBUG:
-        print("===== Phase 2: Dynamic programming ======")
+    end_time = time.time()
+    print(f"Time for Phase 1: {end_time - start_time} seconds")
 
+    # Phase 2: Dynamic programming to select the best cut for each node
+    print("===== Phase 2: Dynamic programming ======")
+    start_time = time.time()
 
     best_cut: Dict[str, Cut] = {}
     best_lut_count: Dict[str, int] = {}  # Number of LUTs in the best implementation
@@ -391,7 +427,13 @@ def solve(netlist: LogicNetwork, k: int, delay_budget: float = None, optimize_fo
         for node, cut in best_cut.items():
             print(f"Node {node} has best cut {cut}")
 
+    end_time = time.time()
+    print(f"Time for Phase 2: {end_time - start_time} seconds") 
+
     # Phase 3: Generate mapping from the selected cuts
+    print("===== Phase 3: Generate mapping from the selected cuts ======")
+    start_time = time.time()
+
     nodes_ready_to_map = set(netlist.PO)  # start from POs
     visited_nodes = set()  # Track visited nodes to avoid duplicates
     
@@ -424,11 +466,13 @@ def solve(netlist: LogicNetwork, k: int, delay_budget: float = None, optimize_fo
             max_level = max(max_level, best_level[po])
     
     if DEBUG:
-        print("===== Phase 3: Mapping ======")
         for node, lut in mapping:
             print(f"Node {node} has LUT with inputs {lut.inputs}")
             if hasattr(lut, 'truth_table'):
                 print(f"  Truth table entries: {len(lut.truth_table)}")
+
+    end_time = time.time()
+    print(f"Time for Phase 3: {end_time - start_time} seconds")
 
     # Print statistics
     print(f"======== Mapping statistics ========")
