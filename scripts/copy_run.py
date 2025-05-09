@@ -4,10 +4,10 @@ from pathlib import Path
 
 def copy_run_to_iterations(llm_solutions_dir):
     # Get the current directory
-    current_dir = Path.cwd()
+    current_dir = Path(__file__).resolve().parent.parent
     
     # Path to the run.py file
-    run_file = current_dir / 'run.py'
+    run_file = current_dir / 'scripts' / 'run.py'
     
     # Convert llm_solutions_dir to Path object
     llm_solutions_dir = Path(llm_solutions_dir)
