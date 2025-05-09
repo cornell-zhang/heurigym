@@ -17,6 +17,20 @@ def find_iteration_dirs(base_dir):
             iteration_dirs.append(root)
     return iteration_dirs
 
+def get_stage_number(error_type):
+    """Get the stage number from error type."""
+    # order is important
+    if "Stage IV" in error_type:
+        return 4
+    if "Stage III" in error_type:
+        return 3
+    if "Stage II" in error_type:
+        return 2
+    if "Stage I" in error_type:
+        return 1
+    return 0
+
+
 def classify_error(message):
     """Classify error message into operator scheduling specific categories."""
     message = message.lower()
@@ -133,6 +147,9 @@ def main():
     error_stats = defaultdict(lambda: defaultdict(int))
     test_case_stats = defaultdict(lambda: defaultdict(int))
     
+    # Track best passed stage for each test case
+    best_passed_stages = defaultdict(int)
+    
     # Find all iteration directories and run files
     iteration_dirs = find_iteration_dirs(base_dir)
     run_files = find_run_files(base_dir)
@@ -178,12 +195,17 @@ def main():
         if errors:
             all_errors[iteration_name] = errors
             
-            # Update error statistics
+            # Update error statistics and track best passed stages
             for test_case, error_info in errors.items():
                 error_type = error_info.get("error_type", "Unknown Error")
                 error_stats[iteration_name][error_type] += 1
                 test_case_stats[test_case][error_type] += 1
-    
+                
+                # Update best passed stage for any stage that passes
+                stage_num = get_stage_number(error_type)
+                if stage_num > 0:  # If it's a valid stage
+                    best_passed_stages[test_case] = max(best_passed_stages[test_case], stage_num - 1)
+
     # Print error statistics
     print("\nError Statistics by Iteration:")
     print("=" * 100)
@@ -218,6 +240,23 @@ def main():
     
     for error_type, count in sorted(total_stats.items(), key=lambda x: x[1], reverse=True):
         print(f"{error_type}: {count}")
+
+    # Calculate stage pass statistics
+    total_cases = len(best_passed_stages)
+    stage_pass_stats = defaultdict(int)
+    for stage in best_passed_stages.values():
+        # If a test case passes stage N, it also passes all stages 0 to N-1
+        for s in range(stage + 1):
+            stage_pass_stats[s] += 1
+    
+    # Print stage pass statistics
+    print("\nsolve_s@i Statistics:")
+    print("=" * 80)
+    print(f"Total test cases: {total_cases}")
+    print("-" * 80)
+    for stage in range(1, 4):
+        passed = stage_pass_stats[stage]
+        print(f"solve_s{stage}@{len(best_results)}: {passed}/{total_cases} passed ({passed/total_cases*100:.1f}%)")
     
     # Save all results to files
     results_output = os.path.join(base_dir, "best_results.json")
@@ -236,7 +275,9 @@ def main():
             "detailed_errors": all_errors,
             "iteration_statistics": error_stats,
             "test_case_statistics": test_case_stats,
-            "total_statistics": total_stats
+            "total_statistics": total_stats,
+            "best_passed_stages": dict(best_passed_stages),
+            "stage_pass_statistics": dict(stage_pass_stats)
         }, f, indent=2)
     
     print(f"\nBest results saved to {results_output}")

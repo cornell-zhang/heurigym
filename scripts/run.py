@@ -54,8 +54,8 @@ def run_optimization(input_files, output_dir="output", timeout=10):
         output_file = os.path.join(output_dir, f"{base_name}.output")
         cost_file = os.path.join(output_dir, f"{base_name}.cost")
 
-        # Check if both output and cost files exist
-        if os.path.exists(output_file) and os.path.exists(cost_file):
+        # Check if cost files exist
+        if os.path.exists(cost_file):
             # Read the cost file to get the result
             with open(cost_file, "r") as f:
                 cost_data = json.load(f)
