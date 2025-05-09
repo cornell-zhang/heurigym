@@ -534,26 +534,30 @@ These are the test cases and results from the previous iteration:
                         
                         # Show all input files in this group
                         for input_file in sorted(group_files):
-                            try:
-                                with open(input_file, 'r') as f:
-                                    content = f.read()
-                                    # Limit to first 50 lines if content is too large
-                                    lines = content.split('\n')
-                                    if len(lines) > 50:
-                                        lines = lines[:50]
-                                        lines.append('... (truncated)')
-                                    # Truncate long lines
-                                    MAX_LINE_LENGTH = 100
-                                    truncated_lines = []
-                                    for line in lines:
-                                        if len(line) > MAX_LINE_LENGTH:
-                                            truncated_lines.append(line[:MAX_LINE_LENGTH] + '... (truncated)')
-                                        else:
-                                            truncated_lines.append(line)
-                                    content = '\n'.join(truncated_lines)
-                                prompt += f"**Input File: {input_file.name}**\n```\n{content}\n```\n\n"
-                            except Exception as e:
-                                prompt += f"**Input File: {input_file.name}** Error reading file: {str(e)}\n\n"
+                            # in a multi-round conversation setting, only show the input file content in the first round
+                            if iteration == 1:
+                                try:
+                                    with open(input_file, 'r') as f:
+                                        content = f.read()
+                                        # Limit to first 50 lines if content is too large
+                                        lines = content.split('\n')
+                                        if len(lines) > 50:
+                                            lines = lines[:50]
+                                            lines.append('... (truncated)')
+                                        # Truncate long lines
+                                        MAX_LINE_LENGTH = 100
+                                        truncated_lines = []
+                                        for line in lines:
+                                            if len(line) > MAX_LINE_LENGTH:
+                                                truncated_lines.append(line[:MAX_LINE_LENGTH] + '... (truncated)')
+                                            else:
+                                                truncated_lines.append(line)
+                                        content = '\n'.join(truncated_lines)
+                                    prompt += f"**Input File: {input_file.name}**\n```\n{content}\n```\n\n"
+                                except Exception as e:
+                                    prompt += f"**Input File: {input_file.name}** Error reading file: {str(e)}\n\n"
+                            else:
+                                prompt += f"**Input File: {input_file.name}** (Shown in the previous iteration)\n"
                         
                         # Show result for this group
                         cost_file = solution_dir / f"iteration{iteration - 1}" / "output" / f"{base_name}.cost"
@@ -863,7 +867,7 @@ def parse_arguments():
                             "openrouter/meta-llama/llama-4-maverick:free",
                             "gemini-2.5-flash-preview-04-17",
                             "gemini-2.5-pro-exp-03-25",
-                            "openrouter/meta-llama/llama-3.3-70b-instruct:free",
+                            "sambanova/Meta-Llama-3.3-70B-Instruct",
                         ],
                         help='List of models to use (default: deepseek-chat, deepseek-reasoner)')
     
