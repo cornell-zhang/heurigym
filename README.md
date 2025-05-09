@@ -115,6 +115,11 @@ Arguments:
 - `dataset_path`: Path to the dataset directory
 - `--timeout TIMEOUT`: (Optional) Timeout in seconds for each solution (default: 10)
 
+Example:
+```bash
+python3 collect_results.py ../llm_solutions/20250509_011437/operator_scheduling/gemini-2.5-flash-preview-04-17/ ../operator_scheduling/dataset --timeout 3
+```
+
 The script will:
 1. Run all optimizations:
    - Find all `run.py` files in iteration directories
