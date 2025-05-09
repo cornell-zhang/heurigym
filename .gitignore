@@ -87,3 +87,4 @@ run_baseline.sh
 .DS_Store
 run.sh
 collect_results.sh
+min_cut_runs.log
