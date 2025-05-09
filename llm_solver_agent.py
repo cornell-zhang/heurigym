@@ -326,10 +326,11 @@ class ProgramExecutor:
 class LLMInterface:
     """Interface for interacting with different LLM providers using unified OpenAI API format."""
     
-    def __init__(self, models_to_use: List[str], timeout: int = 10, temperature: float = 0.7):
+    def __init__(self, models_to_use: List[str], timeout: int = 10, temperature: float = 0.7, stream: bool = False):
         load_dotenv()
         self.timeout = timeout
         self.temperature = temperature
+        self.stream = stream
         self.conversation_history = {}  # Store conversation history for each model
         
         # Initialize clients for each provider
@@ -365,7 +366,7 @@ class LLMInterface:
             "alibaba": {
                 "api_key": os.getenv('DASHSCOPE_API_KEY'),
                 "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
-                "max_tokens": 32768
+                "max_tokens": 16384
             },
             "sambanova": {
                 "api_key": os.getenv('SAMBANOVA_API_KEY'),
@@ -689,30 +690,54 @@ Your goal is to improve the solution for as many test cases as possible, with sp
                 model=actual_model,
                 max_tokens=max_tokens,
                 temperature=self.temperature,
-                messages=self.conversation_history[model]
+                messages=self.conversation_history[model],
+                stream=self.stream
             )
             
-            if not response or not response.choices:
-                error_msg = f"Error: Invalid response received from model {model}!!! Exiting..."
+            if self.stream:
+                # Initialize variables for collecting streamed content and token usage
+                raw_response = ""
+                prompt_tokens = 0
+                completion_tokens = 0
+                
+                # Process the streaming response
+                for chunk in response:
+                    if chunk.choices:
+                        # Add the delta content to our response
+                        if hasattr(chunk.choices[0].delta, 'content'):
+                            content = chunk.choices[0].delta.content
+                            if content:
+                                raw_response += content
+                                # Log the streamed content if we have a log file
+                                if hasattr(self, 'current_log_file'):
+                                    with open(self.current_log_file, 'a') as f:
+                                        f.write(content)
+                    else:
+                        # This is the final chunk with usage information
+                        if hasattr(chunk, 'usage'):
+                            prompt_tokens = chunk.usage.prompt_tokens
+                            completion_tokens = chunk.usage.completion_tokens
+            else:
+                # Handle non-streaming response
+                if not response or not response.choices:
+                    error_msg = f"Error: Invalid response received from model {model}!!! Exiting..."
+                    logger.error(error_msg)
+                    sys.exit(1)
+                    
+                raw_response = response.choices[0].message.content
+                prompt_tokens = response.usage.prompt_tokens
+                completion_tokens = response.usage.completion_tokens
+            
+            if not raw_response or not raw_response.strip():
+                error_msg = f"Error: Empty response received from model {model}!!! Exiting..."
                 logger.error(error_msg)
                 sys.exit(1)
                 
-            raw_response = response.choices[0].message.content
             # Add assistant's response to conversation history
             self.conversation_history[model].append({"role": "assistant", "content": raw_response})
             
-            # Get token counts
-            prompt_tokens = response.usage.prompt_tokens
-            completion_tokens = response.usage.completion_tokens
-            
         except Exception as e:
             error_msg = f"Error: Failed to get response from model {model}: {str(e)}!!! Exiting..."
-            logger.error(error_msg)
-            sys.exit(1)
-            
-        # Check if raw_response is empty
-        if not raw_response or not raw_response.strip():
-            error_msg = f"Error: Empty response received from model {model}!!! Exiting..."
             logger.error(error_msg)
             sys.exit(1)
             
@@ -727,7 +752,7 @@ Your goal is to improve the solution for as many test cases as possible, with sp
         # Log API timing and cost information to the main log file
         if hasattr(self, 'current_log_file'):
             with open(self.current_log_file, 'a') as f:
-                f.write(f"API Call Time: {api_time:.2f} seconds\n")
+                f.write(f"\nAPI Call Time: {api_time:.2f} seconds\n")
                 f.write(f"Prompt Tokens: {prompt_tokens}\n")
                 f.write(f"Completion Tokens: {completion_tokens}\n")
                 f.write(f"Total Tokens: {prompt_tokens + completion_tokens}\n")
@@ -856,6 +881,9 @@ def parse_arguments():
                         # 0.0 for deterministic output
                         help='Temperature for LLM generation (default: 0.0)')
     
+    parser.add_argument('--stream', action='store_true',
+                        help='Enable streaming output from LLM (default: False)')
+    
     return parser.parse_args()
 
 def main():
@@ -866,7 +894,7 @@ def main():
     
     # Initialize components
     problem_reader = ProblemReader(workspace_root)
-    llm_interface = LLMInterface(args.models, args.timeout, args.temperature)
+    llm_interface = LLMInterface(args.models, args.timeout, args.temperature, args.stream)
     
     # Get problem folders
     problem_folders = problem_reader.get_problem_folders()
