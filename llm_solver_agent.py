@@ -477,7 +477,6 @@ class LLMInterface:
     def format_prompt(self, 
                      problem_desc: Dict[str, str], 
                      iteration: int = 0, 
-                     previous_program: str = None,
                      solution_dir: Path = None) -> str:
         """Formats the problem description into a prompt for the LLM."""
         prompt = ""
@@ -490,10 +489,8 @@ class LLMInterface:
             # Get the example program
             example_program = self._get_example_program(problem_desc)
             
-            # Replace placeholders in the template
-            prompt = self.prompt_template.replace("{PROBLEM}", problem_info)
-            prompt = prompt.replace("{EXAMPLE_PROGRAM}", example_program)
-            prompt = prompt.replace("{TIMEOUT}", str(self.timeout))
+            prompt = f"# Problem Information\n{problem_info}\n\n"
+            prompt += f"# Program Template\n{example_program}\n"
         else:
             # For later iterations, just include the feedback and improvement guidance
             prompt = f"""
@@ -624,16 +621,24 @@ Your goal is to improve the solution for as many test cases as possible, with sp
                     problem_desc: Dict[str, str], 
                     model: str = "gpt-4-turbo-preview",
                     iteration: int = 0,
-                    previous_program: str = None,
                     solution_dir: Path = None) -> str:
         """Gets a program from the specified LLM using unified OpenAI API format."""
-        prompt = self.format_prompt(problem_desc, iteration, previous_program, solution_dir)
+        prompt = self.format_prompt(problem_desc, iteration, solution_dir)
         
         # Initialize conversation history for this model if not exists
         if model not in self.conversation_history:
+            with open(Path(os.getcwd()) / "prompt.md", 'r') as f:
+                system_prompt = f.read().replace("{TIMEOUT}", str(self.timeout))
             self.conversation_history[model] = [
-                {"role": "system", "content": "You are an optimization expert tasked with solving the following problem by writing an efficient program. Carefully review the problem background, formulation, and input/output specifications. Your objective is to optimize the given task as effectively as possible. You may implement any algorithm you like. Please strictly follow the instructions below."}
+                {"role": "system", "content": system_prompt}
             ]
+            
+            # Log the system prompt if we have a log file
+            if hasattr(self, 'current_log_file'):
+                with open(self.current_log_file, 'a') as f:
+                    f.write("\nSYSTEM PROMPT:\n")
+                    f.write(system_prompt)
+                    f.write("\n\n")
         
         # Add the current prompt to conversation history
         self.conversation_history[model].append({"role": "user", "content": prompt})
@@ -757,8 +762,7 @@ Your goal is to improve the solution for as many test cases as possible, with sp
                 raw_response = self.get_program(
                     problem_desc, 
                     model, 
-                    iteration, 
-                    previous_program,
+                    iteration,
                     solution_dir
                 )
                 
