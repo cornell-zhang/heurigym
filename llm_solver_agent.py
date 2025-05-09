@@ -366,6 +366,11 @@ class LLMInterface:
                 "api_key": os.getenv('DASHSCOPE_API_KEY'),
                 "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
                 "max_tokens": 32768
+            },
+            "sambanova": {
+                "api_key": os.getenv('SAMBANOVA_API_KEY'),
+                "base_url": "https://api.sambanova.ai/v1",
+                "max_tokens": 32768
             }
         }
         
@@ -394,11 +399,14 @@ class LLMInterface:
             "gemini": "google",
             "openrouter": "openrouter",
             "qwen": "alibaba",
-            "llama": "meta"  # Meta's models through OpenRouter
+            "llama": "meta",
+            "sambanova": "sambanova"
         }
         
         if model.startswith("openrouter/"):
             return "openrouter"
+        if model.startswith("sambanova/"):
+            return "sambanova"
             
         for prefix, provider in model_to_provider.items():
             if model.startswith(prefix):
@@ -410,6 +418,8 @@ class LLMInterface:
         """Get the actual model name to use with the API."""
         if model.startswith("openrouter/"):
             return model.replace("openrouter/", "", 1)
+        if model.startswith("sambanova/"):
+            return model.replace("sambanova/", "", 1)
         return model
 
     def _get_base_model_name(self, model: str) -> str:
@@ -417,6 +427,8 @@ class LLMInterface:
         # Remove openrouter/ prefix if present
         if model.startswith("openrouter/"):
             model = model.replace("openrouter/", "", 1)
+        if model.startswith("sambanova/"):
+            model = model.replace("sambanova/", "", 1)
         
         # Remove provider prefix if present (e.g., deepseek/, anthropic/, etc.)
         parts = model.split("/")
