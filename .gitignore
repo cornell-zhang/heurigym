@@ -86,7 +86,7 @@ run_abc_minimize_area.sh
 run_abc_batch.sh
 run_llm_solver_agent.sh
 run_baseline.sh
-
+run_baseline_batch.sh
 
 run_pdptw.sh
 
