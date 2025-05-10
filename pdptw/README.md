@@ -10,14 +10,14 @@ Even within the PDPTW domain, there are many variations of the problem regarding
 
 **Input**:
 - A set of vehicles $V$ with a maximum capacity $Q \in \mathbb{R}_+$.
-- A depot $o$ where all vehicles are stationed.
+- A depot $o$ in the 2D Euclidean space, where all vehicles are stationed.
 - A set of pick-up locations $N_p$ and delivery locations $N_d$ in the 2D Euclidean space. Each pick-up loc $i \in N_p$ corresponds to a unique delivery loc $j \in N_d$, and vice versus.
 - Each pick-up $i \in N_p$ has a demand $d_i > 0$ consuming vehicle capacity, and its corresponding delivery $j \in N_d$ has a demand $d_j < 0$ releasing vehicle capacity.
 - Each location $i \in N_p \cup N_d$ has a visit time window $[e_i, l_i]$, where $e_i$ is the earliest visit time and $l_i$ is the latest visit time.
-- Each location $i \in N_p \cup N_d$ has a service time $\Delta_i \in \mathbb{R}_+$.
+- Each location $i \in N_p \cup N_d$ has a service time $\Delta_i \in \mathbb{R}_+$, forcing any vehicle to stay at the location for at least $\Delta_i$ time units if the vehicle visits the location.
 
 **Objective**:
-- Find a set of vehicle routes to minimize the total travel time, while satisfying the following constraints:
+- Find a set of vehicle routes $\{R_v\}_{v \in V}$, with each route defined as a sequence of locations, to minimize the total travel distance $\sum_{v \in V} L(R_v)$, where $L(R_v)$ is the total length of route $R_v$, such that the following constraints are satisfied:
   - All locations must be visited exactly once.
   - Each vehicle starts and ends at the depot.
   - Each pick-up location must be visited before its corresponding delivery location.
@@ -62,7 +62,6 @@ DEPOT_SECTION
 -1
 EOF
 ```
-
 
 ## Output Format
 The first line of the output should provide the instance name. From the second line onwards, each line should represent a vehicle's route starting and ending at the depot node (i.e., 1). The following output shows an optimal solution to instance `lc101`. 
