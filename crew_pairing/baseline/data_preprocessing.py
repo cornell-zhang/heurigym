@@ -18,17 +18,14 @@ from pathlib import Path
 import pandas as pd
 
 
-def build_merged_dataset() -> Path:
+def build_merged_dataset(df_flt, df_crew, out_path) -> Path:
     """Create DataA.csv by joining flight records with crew cost rates."""
-    df_flt = pd.read_csv("DataA_Flight.csv")
-    df_crew = pd.read_csv("DataA_Crew.csv")
+    df_flt = pd.read_csv(df_flt)
+    df_crew = pd.read_csv(df_crew)
 
     # One (Duty $/h, Pairing $/h) row per crew base
-    cost_map = (
-        df_crew[["Base", "DutyCostPerHour", "ParingCostPerHour"]]
-        .drop_duplicates(subset="Base")
-        .set_index("Base")
-    )
+    cost_map = (df_crew[["Base", "DutyCostPerHour", "ParingCostPerHour"
+                         ]].drop_duplicates(subset="Base").set_index("Base"))
 
     # Attach costs to each flight via the crew *base* (DptrStn)
     df = df_flt.merge(
@@ -38,7 +35,7 @@ def build_merged_dataset() -> Path:
         how="left",
     )
 
-    out_path = Path("DataA.csv")
+    out_path = Path(out_path)
     df.to_csv(out_path, index=False)
     print(f"✓ Saved merged data → {out_path.resolve()}  ({len(df):,} rows)")
     return out_path
@@ -52,11 +49,13 @@ def split_into_thirds(source_path: Path) -> None:
     df["DptrDate"] = pd.to_datetime(df["DptrDate"], format="%m/%d/%Y")
 
     unique_days = sorted(df["DptrDate"].dt.date.unique())
-    chunk_size = math.ceil(len(unique_days) / 3)
+    # chunk_size = math.ceil(len(unique_days) / 3)
+    chunk_size = 5
     day_chunks = [
-        unique_days[i : i + chunk_size]
+        unique_days[i:i + chunk_size]
         for i in range(0, len(unique_days), chunk_size)
     ]
+    print(len(unique_days))
 
     summary = []
     for idx, days in enumerate(day_chunks, start=1):
@@ -64,38 +63,39 @@ def split_into_thirds(source_path: Path) -> None:
 
         # --- force m/d/YYYY formatting (handles Unix & Windows) -------------
         try:
-            chunk_df["DptrDate"] = chunk_df["DptrDate"].dt.strftime("%-m/%-d/%Y")
+            chunk_df["DptrDate"] = chunk_df["DptrDate"].dt.strftime(
+                "%-m/%-d/%Y")
             date_fmt = "%-m/%-d/%Y"
         except ValueError:  # Windows has no %-m / %-d
             chunk_df["DptrDate"] = chunk_df["DptrDate"].apply(
-                lambda x: f"{x.month}/{x.day}/{x.year}"
-            )
+                lambda x: f"{x.month}/{x.day}/{x.year}")
             date_fmt = "%#m/%#d/%Y"
         # --------------------------------------------------------------------
 
-        out_file = Path(f"instance{idx}.csv")
+        out_file = Path(f"DataB_chunk{chunk_size}_id{idx}.csv")
         chunk_df.to_csv(out_file, index=False)
 
-        summary.append(
-            {
-                "File": out_file,
-                "Rows": len(chunk_df),
-                "From": days[0].strftime(date_fmt),
-                "To": days[-1].strftime(date_fmt),
-                "Unique Days": len(days),
-            }
-        )
+        summary.append({
+            "File": out_file,
+            "Rows": len(chunk_df),
+            "From": days[0].strftime(date_fmt),
+            "To": days[-1].strftime(date_fmt),
+            "Unique Days": len(days),
+        })
 
     print("\n=== Split summary ===")
     for item in summary:
-        print(
-            f"{item['File']}: {item['Rows']} rows, "
-            f"{item['Unique Days']} days  ({item['From']} → {item['To']})"
-        )
+        print(f"{item['File']}: {item['Rows']} rows, "
+              f"{item['Unique Days']} days  ({item['From']} → {item['To']})")
 
 
 def main() -> None:
-    merged = build_merged_dataset()
+    # merged = build_merged_dataset(df_flt='DataA_Flight.csv',
+    #                               df_crew='DataA_Crew.csv',
+    #                               out_path='DataA.csv')
+    merged = build_merged_dataset(df_flt='DataB_Flight.csv',
+                                  df_crew='DataB_Crew.csv',
+                                  out_path='DataB.csv')
     split_into_thirds(merged)
 
 
