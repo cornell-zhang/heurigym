@@ -7,9 +7,7 @@ Technology mapping is a critical stage in the FPGA design flow where a technolog
 
 Here we consider the structural mapping problem, which consider the circuit graph as a given and find a covering of the graph with K-input subgraphs corresponding to LUTs. 
 
-Traditional approaches include cut enumeration, where potential K-feasible cuts (subgraphs with at most K inputs) are identified and selected to form an optimal cover of the network. The mapping process must ensure that the resulting network correctly implements the original logic function while minimizing resource usage.
-
-Here our optimization target is to minimize the number of LUTs, which represents the area of the mapped logic network. This is an NP-hard problem. 
+Our optimization target is to minimize the number of LUTs, which represents the area of the mapped logic network. This is an NP-hard problem. 
 
 In this problem, we specify K = 6. 
 
@@ -34,6 +32,8 @@ Formally, a mapping solution $M$ is to select a set of cones $Cone(v_1), Cone(v_
 
 
 Here we specify K = 6 in our implementation. 
+
+Note that there could be exponential explosion in the search space of the mapping solution, so you might need to prune the search space to make it feasible on real graphs. 
 
 
 ## Input Format
@@ -87,6 +87,24 @@ The input logic network is specified using the Berkeley Logic Interchange Format
 .end
 ```
 
+```blif
+# Circuit 3. Lines starting with '#' are comments. 
+# If there are too many gates in ".inputs", ".outputs", or ".names", it can be separated into multiple lines with a backslash `\` at the end of each line. 
+.model c432
+.inputs 1 4 8 11 14 17 21 24 27 30 34 37 40 43 47 50 53 56 60 63 66 69 73 \
+ 76 79 82 86 89 92 95 99 102 105 108 112 115
+.outputs 223 329 370 421 430 431 432
+.names 1 new_118
+0 1
+.names 4 new_119
+0 1
+.names new_154 new_159 new_162 new_165 new_168 new_171 new_174 new_177 \
+ new_180 new_199
+111111111 1 
+.names new_381 new_422 new_425 new_429 432
+1111 0
+.end
+```
 
 In this format:
 - `.model` specifies the name of the circuit
@@ -98,6 +116,7 @@ In this format:
     <single-output-cover>
     ```
     where `<input-1>`, `<input-2>`, ..., `<input-N>` are the inputs to the logic function, and `<output>` is the output of the function. The `<single-output-cover>` is a truth table that specifies the output for each combination of inputs.
+- Note that if there are too many gates in `.inputs`, `.outputs`, or `.names`, it can be separated into multiple lines with a backslash `\` at the end of each line. 
 
 - The rows following a `.names` line define the truth table in a "single-output-cover" format:
   - The format uses {0, 1, -} in the n-bit wide "input plane" and {0, 1} in the 1-bit wide "output plane"
