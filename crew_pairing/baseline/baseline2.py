@@ -173,11 +173,23 @@ def solve_ilp(instance_csv: Path, legs: Dict[str, FlightLeg]) -> List[List[str]]
 
     # solve
     solver = pulp.PULP_CBC_CMD(msg=False, timeLimit=60)
-    result = prob.solve(solver)
-    if result != pulp.LpStatusOptimal and result != pulp.LpStatusNotSolved:
-        raise RuntimeError("ILP did not find optimal solution in time; fallback.")
+    #result = prob.solve(solver)
+    #if result != pulp.LpStatusOptimal and result != pulp.LpStatusNotSolved:
+    #    raise RuntimeError("ILP did not find optimal solution in time; fallback.")
 
-    chosen: List[List[str]] = [cand_pairings[i] for i in range(len(cand_pairings)) if x[i].value() == 1]
+    #chosen: List[List[str]] = [cand_pairings[i] for i in range(len(cand_pairings)) if x[i].value() == 1]
+    #return chosen
+    if pulp.LpStatus[result] != "Optimal":
+        raise RuntimeError("ILP did not finish – falling back to trivial roster.")
+
+    chosen = [cand_pairings[i] for i, var in x.items() if var.value() == 1]
+
+    # guarantee coverage
+    covered = {tok for pr in chosen for tok in pr}
+    for tok in legs:
+        if tok not in covered:
+            chosen.append([tok])
+
     return chosen
 
 # ---------------------------------------------------------------------------
