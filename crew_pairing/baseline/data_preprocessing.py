@@ -50,7 +50,7 @@ def split_into_thirds(source_path: Path) -> None:
 
     unique_days = sorted(df["DptrDate"].dt.date.unique())
     # chunk_size = math.ceil(len(unique_days) / 3)
-    chunk_size = 5
+    chunk_size = 15
     day_chunks = [
         unique_days[i:i + chunk_size]
         for i in range(0, len(unique_days), chunk_size)
