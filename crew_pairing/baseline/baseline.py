@@ -1,20 +1,20 @@
 """
-A *guaranteed‑feasible* reference solver for the relaxed Airline Crew‑Pairing
+A *guaranteed-feasible* reference solver for the relaxed Airline Crew-Pairing
 Problem where a tour may begin away from the domicile (NKX) but incurs a flat
-positioning cost of **$10 000** if it does.
+positioning cost of **$10 000** if it does.
 
 Strategy
 --------
 **Simplest thing that always works:** put **each flight leg in its own
-pairing**.  A single‑leg duty automatically satisfies
+pairing**.  A single-leg duty automatically satisfies
 
-* duty span ≤ 14 h (it equals block + brief/debrief, always < 14 h here),
-* block hours ≤ 10 h (data set’s longest block is ≪ 10 h),
-* legs per duty ≤ 6 (it’s 1),
+* duty span <= 14 h (it equals block + brief/debrief, always < 14 h here),
+* block hours <= 10 h (data set's longest block is <= 10 h),
+* legs per duty <= 6 (it's 1),
 * rest rules are vacuously true inside a single leg,
 * coverage is obviously complete & disjoint.
 
-The trade‑off is cost (lots of position fees + minimum duty pay) but the roster
+The trade-off is cost (lots of position fees + minimum duty pay) but the roster
 is *provably feasible for any data set*.
 """
 from __future__ import annotations
@@ -58,7 +58,7 @@ def write_schedule(pairings: List[List[str]], out_file: Path) -> None:
 # ---------------------------------------------------------------------------
 
 def build_pairings(legs: dict[str, FlightLeg]) -> List[List[str]]:
-    """Return a list of single‑leg pairings sorted by departure."""
+    """Return a list of single-leg pairings sorted by departure."""
     sorted_legs = sorted(legs.values(), key=lambda l: l.dep_dt)
     return [[leg.token] for leg in sorted_legs]
 
@@ -69,7 +69,7 @@ def main(input_csv: Path, output_txt: Path) -> None:
     write_schedule(pairings, output_txt)
 
     print(
-        f"Wrote {len(pairings)} pairings covering {len(inst.legs)} legs → "
+        f"Wrote {len(pairings)} pairings covering {len(inst.legs)} legs"
         f"{output_txt.relative_to(ROOT)}"
     )
 

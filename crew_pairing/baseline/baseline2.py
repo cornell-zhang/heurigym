@@ -1,22 +1,22 @@
 """
-An **ILP‑based baseline solver** for the relaxed Airline Crew‑Pairing Problem
-(CPP) with a flat $10 000 positioning fee when a tour starts away from NKX.
+An **ILP-based baseline solver** for the relaxed Airline Crew-Pairing Problem
+(CPP) with a flat $10 000 positioning fee when a tour starts away from NKX.
 
 The script:
 1. **Generates a modest set of candidate pairings**
-   * all single‑leg tours (always feasible), plus
-   * 2‑ and 3‑leg chains built greedily on‑station while respecting the
-     14 h duty, 10 h block, 6‑leg, and 9 h rest rules.
-2. **Solves a set‑partitioning ILP** over those candidates using *PuLP*’s CBC
+   * all single-leg tours (always feasible), plus
+   * 2- and 3-leg chains built greedily on-station while respecting the
+     14 h duty, 10 h block, 6-leg, and 9 h rest rules.
+2. **Solves a set-partitioning ILP** over those candidates using *PuLP*'s CBC
    solver (open source, bundled with PuLP). Each leg must appear in exactly one
    chosen pairing; objective = total duty/block pay + positioning fees.
-3. **Falls back** to the trivial one‑leg roster if CBC is unavailable or the
-   model proves infeasible within the 60‑second time limit.
+3. **Falls back** to the trivial one-leg roster if CBC is unavailable or the
+   model proves infeasible within the 60-second time limit.
 4. Writes `baseline_solution.txt` under `crew_pairing/dataset/demo/` and prints
    the cost (if `evaluator.py` is present).
 
-This is still a small baseline – it won’t enumerate the full pairing space –
-but it almost always beats the single‑leg cost while staying lightning‑fast.
+This is still a small baseline - it won't enumerate the full pairing space -
+but it almost always beats the single-leg cost while staying lightning-fast.
 """
 from __future__ import annotations
 import sys
@@ -39,7 +39,7 @@ try:
         HOURS,  # lambda td: td.total_seconds()/3600
     )  # type: ignore
 except ModuleNotFoundError as e:  # pragma: no cover
-    sys.exit(f"Cannot import utils.py – expected at {PROG}: {e}")
+    sys.exit(f"Cannot import utils.py - expected at {PROG}: {e}")
 
 # ---------------------------------------------------------------------------
 #  legality constants (duplicate of verifier.py for local checks)
@@ -73,7 +73,7 @@ def write_schedule(pairings: List[List[str]], out_file: Path) -> None:
 # ---------------------------------------------------------------------------
 
 def feasible_chain(chain: List[FlightLeg]) -> bool:
-    """Check duty/block/legs limits for a single‑duty chain of legs."""
+    """Check duty/block/legs limits for a single-duty chain of legs."""
     if len(chain) > MAX_LEGS_PER_DUTY:
         return False
     duty_span = HOURS(chain[-1].arr_dt - chain[0].dep_dt)
@@ -86,16 +86,16 @@ def feasible_chain(chain: List[FlightLeg]) -> bool:
 
 
 def build_candidate_pairings(legs: Dict[str, FlightLeg]) -> List[List[str]]:
-    """Return a modest list of candidate pairings (1‑3 legs)."""
+    """Return a modest list of candidate pairings (1-3 legs)."""
     leg_objs = sorted(legs.values(), key=lambda l: l.dep_dt)
     token_to_leg = {l.token: l for l in leg_objs}
     candidates: List[List[str]] = []
 
-    # --- single‑leg tours (always feasible) ------------------------------
+    # --- single-leg tours (always feasible) ------------------------------
     for l in leg_objs:
         candidates.append([l.token])
 
-    # --- greedy 2‑ & 3‑leg chains ---------------------------------------
+    # --- greedy 2- & 3-leg chains ---------------------------------------
     for leg1 in leg_objs:
         for leg2 in leg_objs:
             if leg2.dep_dt >= leg1.arr_dt and leg2.dep_stn == leg1.arr_stn:
@@ -122,14 +122,14 @@ def build_candidate_pairings(legs: Dict[str, FlightLeg]) -> List[List[str]]:
     return unique
 
 # ---------------------------------------------------------------------------
-#  ILP set‑partitioning solve with PuLP
+#  ILP set-partitioning solve with PuLP
 # ---------------------------------------------------------------------------
 
 def solve_ilp(instance_csv: Path, legs: Dict[str, FlightLeg]) -> List[List[str]]:
     try:
         import pulp  # type: ignore
     except ImportError:
-        print("PuLP not installed – falling back to trivial roster.")
+        print("PuLP not installed - falling back to trivial roster.")
         raise RuntimeError
 
     print("Generating candidate pairings (this may take a moment)...")
@@ -191,7 +191,7 @@ def build_pairings(instance_csv: Path) -> List[List[str]]:
         return pairings
     except Exception as e:
         print(f"ILP failed or unavailable → fallback: {e}")
-        # trivial fallback: one‑leg each
+        # trivial fallback: one-leg each
         return [[tok] for tok in inst.legs]
 
 
@@ -199,7 +199,7 @@ def main(input_csv: Path, output_txt: Path) -> None:
     pairings = build_pairings(input_csv)
     write_schedule(pairings, output_txt)
     print(
-        f"Wrote {len(pairings)} pairings covering {len(pairings)} legs → "
+        f"Wrote {len(pairings)} pairings covering {len(pairings)} legs"
         f"{output_txt.relative_to(ROOT)}"
     )
 
