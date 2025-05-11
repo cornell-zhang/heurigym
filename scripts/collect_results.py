@@ -133,29 +133,29 @@ def calculate_geomean(results, max_values):
     # Calculate geometric mean
     return math.exp(sum(math.log(x) for x in valid_values) / len(valid_values))
 
-def calculate_solve_at_i(error_stats, best_passed_stages, i):
+def calculate_solve_at_i(all_errors, i):
     """Calculate solve@i metrics for the first i iterations."""
     # Get the first i iterations
-    first_i_iterations = sorted(error_stats.keys())[:i]
+    first_i_iterations = sorted(all_errors.keys())[:i]
     
-    # Calculate stage pass statistics for first i iterations
+    # Track the best stage each test case passes in the first i iterations
+    test_case_best_stages = defaultdict(int)
+    
+    # For each test case, look at its performance across the first i iterations
+    for iteration in first_i_iterations:
+        iteration_errors = all_errors[iteration]
+        for test_case, error_info in iteration_errors.items():
+            error_type = error_info.get("error_type", "Unknown Error")
+            stage_num = get_stage_number(error_type)
+            if stage_num > 0:  # If it's a valid stage
+                test_case_best_stages[test_case] = max(test_case_best_stages[test_case], stage_num - 1)
+    
+    # Calculate stage pass statistics
     stage_pass_stats = defaultdict(int)
-    for test_case, stage in best_passed_stages.items():
-        # Check if this test case passed in any of the first i iterations
-        passed_in_first_i = False
-        for iteration in first_i_iterations:
-            if iteration in error_stats:
-                for error_type, count in error_stats[iteration].items():
-                    if "Stage IV" in error_type:  # Test case passed
-                        passed_in_first_i = True
-                        break
-                if passed_in_first_i:
-                    break
-        
-        if passed_in_first_i:
-            # If a test case passes stage N, it also passes all stages 0 to N-1
-            for s in range(stage + 1):
-                stage_pass_stats[s] += 1
+    for stage in test_case_best_stages.values():
+        # If a test case passes stage N, it also passes all stages 0 to N-1
+        for s in range(stage + 1):
+            stage_pass_stats[s] += 1
     
     return stage_pass_stats
 
@@ -191,7 +191,6 @@ def main():
     all_errors = defaultdict(dict)
     error_stats = defaultdict(lambda: defaultdict(int))
     test_case_stats = defaultdict(lambda: defaultdict(int))
-    best_passed_stages = defaultdict(int)
     
     # Find all iteration directories and run files
     iteration_dirs = find_iteration_dirs(base_dir)
@@ -276,11 +275,6 @@ def main():
                 error_type = error_info.get("error_type", "Unknown Error")
                 error_stats[iteration_name][error_type] += 1
                 test_case_stats[test_case][error_type] += 1
-                
-                # Update best passed stage for any stage that passes
-                stage_num = get_stage_number(error_type)
-                if stage_num > 0:  # If it's a valid stage
-                    best_passed_stages[test_case] = max(best_passed_stages[test_case], stage_num - 1)
 
     # Print error statistics
     print("\nError Statistics by Iteration:")
@@ -318,12 +312,8 @@ def main():
         print(f"{error_type}: {count}")
 
     # Calculate stage pass statistics
-    total_cases = len(best_passed_stages)
+    total_cases = len(test_case_stats)  # Use test_case_stats to get total number of test cases
     stage_pass_stats = defaultdict(int)
-    for stage in best_passed_stages.values():
-        # If a test case passes stage N, it also passes all stages 0 to N-1
-        for s in range(stage + 1):
-            stage_pass_stats[s] += 1
     
     # Calculate and print solve@i statistics for different values of i
     print("\nsolve@i Statistics:")
@@ -332,8 +322,8 @@ def main():
     print("-" * 80)
     
     for i in [10, 5, 3, 1]:
-        if i <= len(error_stats):
-            stage_pass_stats_i = calculate_solve_at_i(error_stats, best_passed_stages, i)
+        if i <= len(all_errors):
+            stage_pass_stats_i = calculate_solve_at_i(all_errors, i)
             print(f"\nsolve@{i} Statistics:")
             for stage in range(1, 4):
                 passed = stage_pass_stats_i[stage]
@@ -365,8 +355,8 @@ def main():
         
         # Write solve@i metrics
         for i in [10, 5, 3, 1]:
-            if i <= len(error_stats):
-                stage_pass_stats_i = calculate_solve_at_i(error_stats, best_passed_stages, i)
+            if i <= len(all_errors):
+                stage_pass_stats_i = calculate_solve_at_i(all_errors, i)
                 for stage in range(1, 4):
                     passed = stage_pass_stats_i[stage]
                     f.write(f"{passed}\n")
@@ -378,8 +368,6 @@ def main():
             "iteration_statistics": error_stats,
             "test_case_statistics": test_case_stats,
             "total_statistics": total_stats,
-            "best_passed_stages": dict(best_passed_stages),
-            "stage_pass_statistics": dict(stage_pass_stats),
             "iteration_geomeans": iteration_geomeans,
             "best_iteration": best_iteration,
             "stage_pass_statistics_i": stage_pass_stats_i,
