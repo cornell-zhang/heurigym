@@ -3,6 +3,7 @@ import sys
 import json
 import subprocess
 import re
+import math
 from collections import defaultdict
 
 def find_iteration_dirs(base_dir):
@@ -115,6 +116,49 @@ def run_optimization(run_file, dataset_path, timeout=10):
         print(f"Error running {run_file}: {e}")
         return None
 
+def calculate_geomean(results, max_values):
+    """Calculate geometric mean for an iteration's results."""
+    valid_values = []
+    for dataset, value in results.items():
+        # Skip datasets where all iterations failed
+        if dataset not in max_values:
+            continue
+        # Use max_value for "X" cases
+        cost = float(value) if value != "X" else max_values[dataset]
+        valid_values.append(cost)
+    
+    if not valid_values:
+        return float('inf')
+    
+    # Calculate geometric mean
+    return math.exp(sum(math.log(x) for x in valid_values) / len(valid_values))
+
+def calculate_solve_at_i(error_stats, best_passed_stages, i):
+    """Calculate solve@i metrics for the first i iterations."""
+    # Get the first i iterations
+    first_i_iterations = sorted(error_stats.keys())[:i]
+    
+    # Calculate stage pass statistics for first i iterations
+    stage_pass_stats = defaultdict(int)
+    for test_case, stage in best_passed_stages.items():
+        # Check if this test case passed in any of the first i iterations
+        passed_in_first_i = False
+        for iteration in first_i_iterations:
+            if iteration in error_stats:
+                for error_type, count in error_stats[iteration].items():
+                    if "Stage IV" in error_type:  # Test case passed
+                        passed_in_first_i = True
+                        break
+                if passed_in_first_i:
+                    break
+        
+        if passed_in_first_i:
+            # If a test case passes stage N, it also passes all stages 0 to N-1
+            for s in range(stage + 1):
+                stage_pass_stats[s] += 1
+    
+    return stage_pass_stats
+
 def main():
     if len(sys.argv) < 3:
         print("Usage: python3 collect_results.py <llm_solutions_dir> <dataset_path> [--timeout TIMEOUT]")
@@ -141,13 +185,12 @@ def main():
     print(f"Using dataset path: {dataset_path}")
     print(f"Using timeout: {timeout} seconds")
     
-    # Initialize data structures for both results and errors
-    best_results = defaultdict(lambda: {"cost": float("inf"), "source": None})
+    # Initialize data structures
+    iteration_results = {}  # Store results for each iteration
+    max_values = {}  # Store max value for each dataset
     all_errors = defaultdict(dict)
     error_stats = defaultdict(lambda: defaultdict(int))
     test_case_stats = defaultdict(lambda: defaultdict(int))
-    
-    # Track best passed stage for each test case
     best_passed_stages = defaultdict(int)
     
     # Find all iteration directories and run files
@@ -162,17 +205,50 @@ def main():
         results = run_optimization(run_file, dataset_path, timeout)
         
         if results:
-            # Update best results for each dataset
-            for dataset, data in results.items():
-                cost = float(data) if data != "X" else float("inf")
-                if cost < best_results[dataset]["cost"]:
-                    best_results[dataset] = {
-                        "cost": cost,
-                        "source": run_file
-                    }
+            # Store results for this iteration
+            iteration_name = os.path.basename(os.path.dirname(run_file))
+            iteration_results[iteration_name] = results
+            
+            # Update max values for each dataset
+            for dataset, value in results.items():
+                if value != "X":
+                    current_max = max_values.get(dataset, float('-inf'))
+                    max_values[dataset] = max(current_max, float(value))
+    
+    # Calculate geomean for each iteration and find the best one
+    best_geomean = float('inf')
+    best_iteration = None
+    iteration_geomeans = {}
+    
+    print("\nGeometric Mean Results:")
+    print("=" * 80)
+    print(f"{'Iteration':<30} | {'Geometric Mean':<15}")
+    print("-" * 80)
+    
+    for iteration, results in iteration_results.items():
+        geomean = calculate_geomean(results, max_values)
+        iteration_geomeans[iteration] = geomean
+        print(f"{iteration:<30} | {geomean:<15.4f}")
+        
+        if geomean < best_geomean:
+            best_geomean = geomean
+            best_iteration = iteration
+    
+    print("=" * 80)
+    print(f"Best iteration: {best_iteration} with geomean: {best_geomean:.4f}")
+    
+    # Use results from the best iteration
+    best_results = defaultdict(lambda: {"cost": float("inf"), "source": None})
+    if best_iteration:
+        for dataset, value in iteration_results[best_iteration].items():
+            cost = float(value) if value != "X" else max_values.get(dataset, float("inf"))
+            best_results[dataset] = {
+                "cost": cost,
+                "source": os.path.join(best_iteration, "run.py")
+            }
     
     # Print summary of best results
-    print("\nBest Results Summary:")
+    print("\nBest Results Summary (from best iteration):")
     print("=" * 80)
     print(f"{'Dataset':<40} | {'Best Cost':<10} | {'Source':<30}")
     print("-" * 80)
@@ -249,14 +325,19 @@ def main():
         for s in range(stage + 1):
             stage_pass_stats[s] += 1
     
-    # Print stage pass statistics
-    print("\nsolve_s@i Statistics:")
+    # Calculate and print solve@i statistics for different values of i
+    print("\nsolve@i Statistics:")
     print("=" * 80)
     print(f"Total test cases: {total_cases}")
     print("-" * 80)
-    for stage in range(1, 4):
-        passed = stage_pass_stats[stage]
-        print(f"solve_s{stage}@{len(error_stats.keys())}: {passed}/{total_cases} passed ({passed/total_cases*100:.1f}%)")
+    
+    for i in [10, 5, 3, 1]:
+        if i <= len(error_stats):
+            stage_pass_stats_i = calculate_solve_at_i(error_stats, best_passed_stages, i)
+            print(f"\nsolve@{i} Statistics:")
+            for stage in range(1, 4):
+                passed = stage_pass_stats_i[stage]
+                print(f"solve_s{stage}@{i}: {passed}/{total_cases} passed ({passed/total_cases*100:.1f}%)")
     
     # Save all results to files
     results_output = os.path.join(base_dir, "best_results.json")
@@ -277,7 +358,10 @@ def main():
             "test_case_statistics": test_case_stats,
             "total_statistics": total_stats,
             "best_passed_stages": dict(best_passed_stages),
-            "stage_pass_statistics": dict(stage_pass_stats)
+            "stage_pass_statistics": dict(stage_pass_stats),
+            "iteration_geomeans": iteration_geomeans,
+            "best_iteration": best_iteration,
+            "stage_pass_statistics_i": stage_pass_stats_i,
         }, f, indent=2)
     
     print(f"\nBest results saved to {results_output}")
