@@ -94,3 +94,5 @@ run_pdptw.sh
 run.sh
 collect_results.sh
 min_cut_runs.log
+/pedigree/baseline/pytoulbar2
+/pedigree/baseline/__pycache__

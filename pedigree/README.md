@@ -52,67 +52,28 @@ The input is a .pre file. Each line in the .pre file is just the pedigree‐geno
 A snippet of a typical input file looks like this:
 
 ```
-1 1 0 0 1 0 0
-1 2 0 0 2 0 0
-1 3 1 2 1 0 0
-1 4 0 0 2 0 0
-1 5 1 2 1 0 0
-1 6 0 0 2 5 1
-1 7 0 0 1 0 0
-1 8 1 2 2 0 0
-1 9 1 2 1 0 0
-1 10 0 0 2 8 4
-1 11 1 2 1 5 3
-1 12 0 0 2 8 5
-1 13 0 0 1 0 0
-1 14 3 4 2 4 3
-1 15 3 4 1 8 2
-1 16 0 0 2 7 3
-1 17 5 6 1 1 1
-1 18 0 0 2 3 4
-1 19 5 6 1 7 5
-1 20 0 0 2 4 1
-1 21 0 0 1 4 1
-1 22 5 6 2 1 5
-1 23 7 8 1 5 3
-1 24 0 0 2 8 1
-1 25 9 10 1 7 4
-1 26 0 0 2 1 1
-1 27 0 0 1 4 4
-1 28 9 10 2 3 8
-1 29 11 12 1 5 5
-1 30 13 14 1 3 3
-1 31 15 16 1 0 0
-1 32 0 0 1 0 0
-1 33 15 16 2 8 3
-1 34 17 18 1 1 4
-1 35 17 18 1 1 3
-1 36 19 20 1 5 4
-1 37 0 0 2 7 6
-1 38 19 20 1 5 1
-1 39 19 20 2 5 4
-1 40 21 22 2 1 5
-1 41 23 24 1 3 8
-1 42 25 26 1 7 1
-1 43 0 0 1 0 0
-1 44 27 28 2 4 8
-1 45 27 28 1 4 3
-1 46 27 28 2 4 8
-1 47 32 33 1 7 8
-1 48 36 37 2 5 7
-1 49 43 44 1 4 8
+1 1 0 0 1 3 4
+1 2 0 0 2 1 3
+1 3 1 2 2 0 0
+1 4 0 0 1 1 3
+1 5 3 4 1 2 3
 
 ```
 
 ## Output Format
 
-The first line `# cost = k` tells that there is a total cost of k to fix all Mendelian inconsistencies. The second line is just the list of chosen domain labels—one number per individual, in the same order as your input—indicating which allele‐pair (by its index) was assigned to each person.
+The output includes the list of chosen domain labels—one number per individual, in the same order as your input—indicating which allele‐pair (by its index) was assigned to each person. The allel-pair mapping is like this:
+```
+0 ↦ (1,1)
+1 ↦ (1,2)
+2 ↦ (1,3)
+...
+```
 
-An example output looks like this:
+An example output file looks like this:
 
 ```
-# cost = 1
-13 57 35 48 17 15 13 15 37 48 35 58 13 34 38 37 11 34 57 14 14 15 35 18 47 11 44 38 55 33 33 17 38 14 13 45 67 15 45 15 38 17 14 48 34 48 78 57 48
+8 1 5 2 5
 ```
 
 
