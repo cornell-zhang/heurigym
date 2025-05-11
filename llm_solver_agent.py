@@ -351,7 +351,7 @@ class LLMInterface:
             "anthropic": {
                 "api_key": os.getenv('ANTHROPIC_API_KEY'),
                 "base_url": "https://api.anthropic.com/v1",
-                "max_tokens": 65536
+                "max_tokens": 64000
             },
             "google": {
                 "api_key": os.getenv('GOOGLE_API_KEY'),
@@ -395,6 +395,9 @@ class LLMInterface:
         # Map model prefixes to their company providers
         model_to_provider = {
             "gpt": "openai",
+            "o1": "openai",
+            "o3": "openai",
+            "o4": "openai",
             "deepseek": "deepseek",
             "claude": "anthropic",
             "gemini": "google",
@@ -421,6 +424,11 @@ class LLMInterface:
             return model.replace("openrouter/", "", 1)
         if model.startswith("sambanova/"):
             return model.replace("sambanova/", "", 1)
+        
+        # Remove reasoning_effort suffix if present (e.g., :low, :medium, :high)
+        if ":" in model and any(model.startswith(prefix) for prefix in ["o1", "o3", "o4"]):
+            return model.split(":")[0]
+            
         return model
 
     def _get_base_model_name(self, model: str) -> str:
@@ -436,10 +444,22 @@ class LLMInterface:
         if len(parts) > 1:
             model = parts[-1]
         
-        # Remove any suffixes after : (e.g., :free, :latest, etc.)
+        # Remove any suffixes after : (e.g., :free, :latest, :low, :medium, :high, etc.)
         model = model.split(":")[0]
         
         return model
+
+    def _parse_reasoning_effort(self, model: str) -> str:
+        """Parse the reasoning_effort from the model name if specified."""
+        if ":" in model and any(model.startswith(prefix) for prefix in ["o1", "o3", "o4"]):
+            effort = model.split(":", 1)[1].lower()
+            # Validate that the effort is one of the allowed values
+            if effort in ["low", "medium", "high"]:
+                return effort
+            else:
+                raise ValueError(f"Invalid reasoning_effort '{effort}' for model {model}. Must be one of: 'low', 'medium', 'high'")
+        # Default to medium if not specified
+        return "medium"
 
     def _load_prompt_template(self) -> str:
         """Loads the prompt template from prompt.md."""
@@ -689,14 +709,27 @@ Your goal is to improve the solution for as many test cases as possible, with sp
         max_tokens = self.model_configs[provider]["max_tokens"]
         
         try:
+            # Prepare API call parameters
+            api_params = {
+                "model": actual_model,
+                "messages": self.conversation_history[model],
+                "stream": self.stream
+            }
+            
+            # Add model-specific parameters
+            if actual_model.startswith("o1") or actual_model.startswith("o3") or actual_model.startswith("o4"):
+                # O-series models use max_completion_tokens instead of max_tokens
+                api_params["max_completion_tokens"] = max_tokens
+                reasoning_effort = self._parse_reasoning_effort(model)
+                api_params["reasoning_effort"] = reasoning_effort
+                # O-series models only support temperature=1 (default), so we omit it
+            else:
+                # Non O-series models use max_tokens and custom temperature
+                api_params["max_tokens"] = max_tokens
+                api_params["temperature"] = self.temperature
+            
             # Make API call using unified OpenAI format
-            response = client.chat.completions.create(
-                model=actual_model,
-                max_tokens=max_tokens,
-                temperature=self.temperature,
-                messages=self.conversation_history[model],
-                stream=self.stream
-            )
+            response = client.chat.completions.create(**api_params)
             
             if self.stream:
                 # Initialize variables for collecting streamed content and token usage
@@ -837,8 +870,22 @@ Your goal is to improve the solution for as many test cases as possible, with sp
                     logger.error(f"Failed to run program: {output}")
                     continue
                 
-                # Add a delay to avoid rate limiting
-                time.sleep(2)
+                # Sleep between iterations to avoid hitting rate limits
+                if iteration < max_iterations - 1:  # Don't sleep after the last iteration
+                    # Different sleep times based on model provider
+                    provider = self._get_provider(model)
+                    
+                    if provider == "anthropic":  # Claude models have stricter rate limits
+                        sleep_time = 60  # 60 seconds for Claude models
+                        logger.info(f"Sleeping for {sleep_time} seconds to avoid exceeding Claude API rate limits...")
+                    else:
+                        sleep_time = 2  # Short delay for other models
+                        logger.info(f"Short delay of {sleep_time} seconds before next iteration...")
+                    
+                    with open(log_file, 'a') as f:
+                        f.write(f"Sleeping for {sleep_time} seconds before next iteration...\n\n")
+                    
+                    time.sleep(sleep_time)
                 
             except Exception as e:
                 logger.error(f"Error in iteration {iteration+1}: {str(e)}")
