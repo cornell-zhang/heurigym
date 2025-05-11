@@ -18,6 +18,7 @@ We construct a new benchmark HeuriGen that has
 | [Global Routing](global_routing) | Routing |
 | [Protein Sequence Design](protein_sequence_design) | Network Flow |
 | [Airline Crew Pairing](crew_pairing) | Covering |
+| [Pedigree](pedigree) | Maximum Likelihood |
 
 
 ## Problem Setup
