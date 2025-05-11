@@ -350,6 +350,27 @@ def main():
             for dataset, result in best_results.items()
         }, f, indent=2)
     
+    # Dump metrics to log file
+    log_output = os.path.join(base_dir, "metrics.log")
+    with open(log_output, "w") as f:
+        # Write costs for each dataset
+        for dataset, result in best_results.items():
+            f.write(f"{result['cost']:.4f}\n")
+
+        # Write best cost
+        f.write(f"{best_geomean:.4f}\n")
+
+        # Write an empty line
+        f.write("\n")
+        
+        # Write solve@i metrics
+        for i in [10, 5, 3, 1]:
+            if i <= len(error_stats):
+                stage_pass_stats_i = calculate_solve_at_i(error_stats, best_passed_stages, i)
+                for stage in range(1, 4):
+                    passed = stage_pass_stats_i[stage]
+                    f.write(f"{passed}\n")
+    
     errors_output = os.path.join(base_dir, "error_summary.json")
     with open(errors_output, "w") as f:
         json.dump({
@@ -366,6 +387,7 @@ def main():
     
     print(f"\nBest results saved to {results_output}")
     print(f"Error information saved to {errors_output}")
+    print(f"Metrics saved to {log_output}")
 
 if __name__ == "__main__":
     main() 
