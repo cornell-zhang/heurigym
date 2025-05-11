@@ -96,3 +96,4 @@ collect_results.sh
 min_cut_runs.log
 /pedigree/baseline/pytoulbar2
 /pedigree/baseline/__pycache__
+solve_pre.sh
