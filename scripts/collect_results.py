@@ -4,6 +4,7 @@ import json
 import subprocess
 import re
 import math
+import shutil
 from collections import defaultdict
 
 def find_iteration_dirs(base_dir):
@@ -159,24 +160,53 @@ def calculate_solve_at_i(all_errors, i):
     
     return stage_pass_stats
 
+def remove_output_folders(base_dir):
+    """Remove all output folders under iteration directories."""
+    iteration_dirs = find_iteration_dirs(base_dir)
+    removed_count = 0
+    
+    for iteration_dir in iteration_dirs:
+        output_dir = os.path.join(iteration_dir, "output")
+        if os.path.exists(output_dir):
+            try:
+                shutil.rmtree(output_dir)
+                removed_count += 1
+                print(f"Removed output folder: {output_dir}")
+            except Exception as e:
+                print(f"Error removing {output_dir}: {e}")
+    
+    return removed_count
+
 def main():
     if len(sys.argv) < 3:
-        print("Usage: python3 collect_results.py <llm_solutions_dir> <dataset_path> [--timeout TIMEOUT]")
+        print("Usage: python3 collect_results.py <llm_solutions_dir> <dataset_path> [--timeout TIMEOUT] [--clean]")
         sys.exit(1)
         
     base_dir = sys.argv[1]
     dataset_path = os.path.abspath(sys.argv[2])
     
-    # Parse timeout argument if provided
+    # Parse arguments
     timeout = 10  # default timeout
-    if len(sys.argv) > 3:
-        for i in range(3, len(sys.argv)):
-            if sys.argv[i] == "--timeout" and i + 1 < len(sys.argv):
-                try:
-                    timeout = int(sys.argv[i + 1])
-                except ValueError:
-                    print("Error: Timeout must be an integer")
-                    sys.exit(1)
+    clean_output = False
+    
+    i = 3
+    while i < len(sys.argv):
+        if sys.argv[i] == "--timeout" and i + 1 < len(sys.argv):
+            try:
+                timeout = int(sys.argv[i + 1])
+                i += 2
+            except ValueError:
+                print("Error: Timeout must be an integer")
+                sys.exit(1)
+        elif sys.argv[i] == "--clean":
+            clean_output = True
+            i += 1
+        else:
+            i += 1
+    
+    if clean_output:
+        removed_count = remove_output_folders(base_dir)
+        print(f"\nRemoved {removed_count} output folders")
     
     if not os.path.exists(dataset_path):
         print(f"Error: Dataset path '{dataset_path}' does not exist")
