@@ -174,7 +174,7 @@ def solve_ilp(instance_csv: Path, legs: Dict[str, FlightLeg]) -> List[List[str]]
 
     # solve
     solver = pulp.PULP_CBC_CMD(msg=False, timeLimit=60)
-    #result = prob.solve(solver)
+    result = prob.solve(solver)
     #if result != pulp.LpStatusOptimal and result != pulp.LpStatusNotSolved:
     #    raise RuntimeError("ILP did not find optimal solution in time; fallback.")
 
