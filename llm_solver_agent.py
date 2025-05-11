@@ -341,7 +341,7 @@ class LLMInterface:
             "openai": {
                 "api_key": os.getenv('OPENAI_API_KEY'),
                 "base_url": "https://api.openai.com/v1",
-                "max_tokens": 16384
+                "max_tokens": 65536 # 16384
             },
             "deepseek": {
                 "api_key": os.getenv('DEEPSEEK_API_KEY'),
