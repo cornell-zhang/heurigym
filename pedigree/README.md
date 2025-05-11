@@ -84,3 +84,5 @@ An example output file looks like this:
 3. O'Connell, Jeffrey R., and Daniel E. Weeks. "PedCheck: a program for identification of genotype incompatibilities in linkage analysis." The American Journal of Human Genetics 63.1 (1998): 259-266.
 4. Wijsman, Ellen M. "The role of large pedigrees in an era of high-throughput sequencing." Human genetics 131 (2012): 1555-1563.
 5. Stringham, Heather M., and Michael Boehnke. "Identifying marker typing incompatibilities in linkage analysis." American journal of human genetics 59.4 (1996): 946.
+6. Aceto, Luca, et al. "The complexity of checking consistency of pedigree information and related problems." Journal of Computer Science and Technology 19 (2004): 42-59.
+7. De Givry, Simon. "toulbar2, an exact cost function network solver." 24ème édition du congrès annuel de la Société Française de Recherche Opérationnelle et d'Aide à la Décision ROADEF 2023. 2023.
