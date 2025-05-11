@@ -913,7 +913,7 @@ def parse_arguments():
                             "qwen3-235b-a22b",
                             "openrouter/meta-llama/llama-4-maverick:free",
                             "gemini-2.5-flash-preview-04-17",
-                            "gemini-2.5-pro-exp-03-25",
+                            "gemini-2.5-pro-preview-05-06",
                             "sambanova/Meta-Llama-3.3-70B-Instruct",
                         ],
                         help='List of models to use (default: deepseek-chat, deepseek-reasoner)')
