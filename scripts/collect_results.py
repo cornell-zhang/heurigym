@@ -181,6 +181,11 @@ def main():
     if not os.path.exists(dataset_path):
         print(f"Error: Dataset path '{dataset_path}' does not exist")
         sys.exit(1)
+
+    preprocess_path = os.path.join(dataset_path, "data_preprocess.py")
+    if os.path.exists(preprocess_path):
+        subprocess.run(["python3", preprocess_path], check=True)
+        os.remove(preprocess_path)
         
     print(f"Using dataset path: {dataset_path}")
     print(f"Using timeout: {timeout} seconds")
