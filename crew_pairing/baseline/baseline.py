@@ -33,7 +33,7 @@ if str(PROG) not in sys.path:
 try:
     from utils import read_instance, FlightLeg  # type: ignore
 except ModuleNotFoundError as e:  # pragma: no cover
-    sys.exit(f"Cannot import utils.py – expected at {PROG}: {e}")
+    sys.exit(f"Cannot import utils.py - expected at {PROG}: {e}")
 
 # ---------------------------------------------------------------------------
 #  helpers
@@ -54,7 +54,7 @@ def write_schedule(pairings: List[List[str]], out_file: Path) -> None:
 
 
 # ---------------------------------------------------------------------------
-#  main routine – one leg per pairing
+#  main routine - one leg per pairing
 # ---------------------------------------------------------------------------
 
 def build_pairings(legs: dict[str, FlightLeg]) -> List[List[str]]:

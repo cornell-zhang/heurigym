@@ -356,7 +356,7 @@ class LLMInterface:
             "google": {
                 "api_key": os.getenv('GOOGLE_API_KEY'),
                 "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
-                "max_tokens": 32768
+                "max_tokens": 65536
             },
             "openrouter": {
                 "api_key": os.getenv('OPENROUTER_API_KEY'),
