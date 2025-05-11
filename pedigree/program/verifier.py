@@ -59,7 +59,7 @@ def verify(input_file: str, output_file: str) -> bool:
             if f_out.read().strip() == "":
                 return True, "Empty input, empty output is feasible" # Empty input, empty output is feasible (cost 0)
             else:
-                return Falsem "Output file not empty but pedigree file is" # Output file not empty but pedigree file is
+                return False, "Output file not empty but pedigree file is" # Output file not empty but pedigree file is
 
     max_0_idx_domain_id_from_assign = -1
     with open(output_file, 'r') as f_out:
