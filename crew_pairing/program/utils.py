@@ -1,10 +1,10 @@
-"""Utility helpers for the Airline Crew‑Pairing benchmark.
+"""Utility helpers for the Airline Crew-Pairing benchmark.
 
 Provides
 --------
 read_instance(file_path) -> Instance
     Parse a CSV instance file (e.g., DataA.csv) into an `Instance` object
-    containing all flight‑leg records and globally applicable pay rates.
+    containing all flight-leg records and globally applicable pay rates.
 
 HOURS(timedelta) -> float
     Quick helper converting a datetime.timedelta to fractional hours.
@@ -53,7 +53,7 @@ class Instance:
 
     legs: Dict[str, FlightLeg]  # mapping token → FlightLeg
     duty_cost_per_hour: float   # global duty pay rate for this fleet
-    paring_cost_per_hour: float  # global per‑diem rate
+    paring_cost_per_hour: float  # global per-diem rate
 
     # Convenience proxy to mimic attribute access used elsewhere
     @property
@@ -74,7 +74,7 @@ def read_instance(file_path: str | Path) -> Instance:
     """Read DataA.csv and return an :class:`Instance`.
 
     The CSV must contain at least the columns documented in the README.
-    Pay‑rate columns (`DutyCostPerHour`, `ParingCostPerHour`) are forward‑filled
+    Pay-rate columns (`DutyCostPerHour`, `ParingCostPerHour`) are forward-filled
     when blank because the rate is constant for the entire fleet/month.
     """
 

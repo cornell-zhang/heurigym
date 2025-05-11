@@ -33,6 +33,7 @@ if str(PROG) not in sys.path:
     sys.path.insert(0, str(PROG))
 
 try:
+    sys.path.insert(0, str(ROOT / "program"))
     from utils import (
         read_instance,
         FlightLeg,
@@ -202,7 +203,7 @@ def build_pairings(instance_csv: Path) -> List[List[str]]:
         pairings = solve_ilp(instance_csv, inst.legs)
         return pairings
     except Exception as e:
-        print(f"ILP failed or unavailable → fallback: {e}")
+        print(f"ILP failed or unavailable fallback: {e}")
         # trivial fallback: one-leg each
         return [[tok] for tok in inst.legs]
 
@@ -212,17 +213,17 @@ def main(input_csv: Path, output_txt: Path) -> None:
     write_schedule(pairings, output_txt)
     print(
         f"Wrote {len(pairings)} pairings covering {len(pairings)} legs"
-        f"{output_txt.relative_to(ROOT)}"
     )
 
     # cost via evaluator if present
     try:
+        sys.path.insert(0, str(ROOT / "program"))
         from evaluator import evaluate  # type: ignore
 
         cost = evaluate(str(input_csv), str(output_txt))
         print(
             f"Total cost (incl. $10k positioning where applicable): $"
-            f"{int(round(cost)):,}"
+            f"{cost}"
         )
     except Exception as e:
         print(f"(Cost evaluation skipped: {e})")
