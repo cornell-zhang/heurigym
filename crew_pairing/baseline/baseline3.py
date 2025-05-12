@@ -54,6 +54,7 @@ MIN_REST_HOURS = 9.0
 MAX_SIT_HOURS = 12.0
 BASE = "NKX"
 POS_FEE = 10_000.0
+MAX_LEGS_CANDIDATE = 30.0
 
 # ---------------------------------------------------------------------------
 #  helpers
@@ -78,7 +79,7 @@ def write_schedule(pairings: List[List[str]], out_file: Path) -> None:
 
 def feasible_chain(chain: List[FlightLeg]) -> bool:
     """Check duty/block/legs limits for a single-duty chain of legs."""
-    if len(chain) > MAX_LEGS_PER_DUTY:
+    if len(chain) > MAX_LEGS_CANDIDATE:
         return False
     duty_span = HOURS(chain[-1].arr_dt - chain[0].dep_dt)
     if duty_span > MAX_DUTY_HOURS:
@@ -89,7 +90,7 @@ def feasible_chain(chain: List[FlightLeg]) -> bool:
     return True
 
 def build_candidate_pairings(legs: Dict[str, FlightLeg]) -> List[List[str]]:
-    """Generate feasible chains up to MAX_LEGS_PER_DUTY legs (depth-first)."""
+    """Generate feasible chains up to MAX_LEGS_CANDIDATE legs (depth-first)."""
     leg_objs = sorted(legs.values(), key=lambda l: l.dep_dt)
 
     # index legs by departure station for quick look-ups
@@ -106,7 +107,7 @@ def build_candidate_pairings(legs: Dict[str, FlightLeg]) -> List[List[str]]:
         candidates.append([lg.token for lg in chain])
 
         # stop if we already hit the leg cap
-        if len(chain) == MAX_LEGS_PER_DUTY:
+        if len(chain) == MAX_LEGS_CANDIDATE:
             return
 
         tail = chain[-1]
