@@ -54,7 +54,7 @@ MIN_REST_HOURS = 9.0
 MAX_SIT_HOURS = 12.0
 BASE = "NKX"
 POS_FEE = 10_000.0
-MAX_LEGS_CANDIDATE = 30.0
+MAX_LEGS_CANDIDATE = 60.0
 
 # ---------------------------------------------------------------------------
 #  helpers
