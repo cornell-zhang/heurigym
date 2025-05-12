@@ -31,6 +31,9 @@ Broadly speaking, the structural characteristics of a benchmark's graph topology
 
  * Not necessarily; for a given pair of nodes `[pred, succ]`, there may be zero, one, or multiple edges that connect them.  For example, you'll find that in *Benchmark A*, there are two separate edges (#60 and #21438) that connect nodes #5 and #617.   The total cost between a pair of nodes would thus be the sum across all such edge costs.
 
+***How large are the input graphs?***
+ * Apart from few small benchmarks, some of the graphs are huge, with over 10,000 nodes and 10,000 edges, and the number of strategies will be even more. Therefore, the algorithm should be able to handle large graphs efficiently. It is very important to output the solution in the given time limit, otherwise the solution will be considered incorrect.
+
 
 ## Input Format
 The input is path to a JSON file encodes a graph-based optimization instance.
