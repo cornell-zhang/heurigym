@@ -176,10 +176,21 @@ def run_optimization(input_files, output_dir="output", timeout=10):
 def main():
     # Path to dataset directory
     dataset_dir = "../dataset/full"
+    timeout = 10  # Default timeout in seconds
 
-    # Allow dataset directory to be specified via command line
-    if len(sys.argv) > 1:
-        dataset_dir = sys.argv[1]
+    # Parse command line arguments
+    i = 1
+    while i < len(sys.argv):
+        if sys.argv[i] == "--timeout" and i + 1 < len(sys.argv):
+            try:
+                timeout = int(sys.argv[i + 1])
+                i += 2
+            except ValueError:
+                print("Error: Timeout must be an integer")
+                sys.exit(1)
+        else:
+            dataset_dir = sys.argv[i]
+            i += 1
 
     # Make sure datasets directory exists
     if not os.path.isdir(dataset_dir):
@@ -199,7 +210,7 @@ def main():
 
     # Run optimization on each group of files
     for base_name, input_files in file_groups.items():
-        success, cost = run_optimization(input_files)
+        success, cost = run_optimization(input_files, timeout=timeout)
 
         if success:
             results.append((base_name, str(cost)))
