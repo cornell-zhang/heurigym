@@ -25,6 +25,7 @@ import sys
 from pathlib import Path
 from typing import List, Dict
 from datetime import timedelta
+from collections import defaultdict
 
 # ---------------------------------------------------------------------------
 #  locate utils.py and evaluator.py without requiring an installed package
@@ -54,7 +55,7 @@ MIN_REST_HOURS = 9.0
 MAX_SIT_HOURS = 12.0
 BASE = "NKX"
 POS_FEE = 10_000.0
-MAX_LEGS_CANDIDATE = 60.0
+MAX_LEGS_CANDIDATE = 50.0
 
 # ---------------------------------------------------------------------------
 #  helpers
@@ -73,6 +74,39 @@ def write_schedule(pairings: List[List[str]], out_file: Path) -> None:
         for pr in pairings:
             f.write(" ".join(pr) + "\n")
 
+# --------------------------------------------------------------------
+# NEW helper  →  test whether adding nxt to chain keeps the *current
+# duty* legal; if rest ≥ MIN_REST_HOURS we automatically start a new
+# duty and reset the counters.
+# --------------------------------------------------------------------
+def ok_to_append(chain: list[FlightLeg], nxt: FlightLeg) -> bool:
+    tail = chain[-1]
+
+    # Decide whether we roll over to a new duty period
+    rest_gap = HOURS(nxt.dep_dt - tail.arr_dt)
+    new_duty = rest_gap >= MIN_REST_HOURS
+    if new_duty:
+        duty_legs     = 1
+        duty_block    = HOURS(nxt.arr_dt - nxt.dep_dt)
+        duty_span     = duty_block          # first leg in new duty
+    else:
+        duty_chain    = [lg for lg in chain[::-1]
+                         if HOURS(lg.dep_dt - tail.arr_dt) < MIN_REST_HOURS]
+        duty_legs     = len(duty_chain) + 1
+        duty_block    = (sum(HOURS(l.arr_dt-l.dep_dt) for l in duty_chain) +
+                         HOURS(nxt.arr_dt - nxt.dep_dt))
+        duty_span     = HOURS(nxt.arr_dt - duty_chain[-1].dep_dt)
+
+    # Hard FAA-style limits
+    if duty_legs  > MAX_LEGS_PER_DUTY:   return False
+    if duty_block > MAX_BLOCK_HOURS:     return False
+    if duty_span  > MAX_DUTY_HOURS:      return False
+    # ground-sit filter (unchanged)
+    if not (0 <= HOURS(nxt.dep_dt - tail.arr_dt) <= MAX_SIT_HOURS):
+        return False
+    return True
+
+
 # ---------------------------------------------------------------------------
 #  pairing generation
 # ---------------------------------------------------------------------------
@@ -89,52 +123,38 @@ def feasible_chain(chain: List[FlightLeg]) -> bool:
         return False
     return True
 
-def build_candidate_pairings(legs: Dict[str, FlightLeg]) -> List[List[str]]:
-    """Generate feasible chains up to MAX_LEGS_CANDIDATE legs (depth-first)."""
+def build_candidate_pairings(legs: dict[str, FlightLeg]) -> list[list[str]]:
     leg_objs = sorted(legs.values(), key=lambda l: l.dep_dt)
-
-    # index legs by departure station for quick look-ups
-    from collections import defaultdict
-    by_dep: Dict[str, List[FlightLeg]] = defaultdict(list)
+    by_dep: dict[str, list[FlightLeg]] = defaultdict(list)
     for lg in leg_objs:
         by_dep[lg.dep_stn].append(lg)
 
-    candidates: List[List[str]] = []
+    candidates: list[list[str]] = []
 
-    def dfs(chain: List[FlightLeg]) -> None:
-        """Recursively extend a partial chain while it remains legal."""
-        # current chain is feasible by construction
+    def dfs(chain: list[FlightLeg]) -> None:
         candidates.append([lg.token for lg in chain])
-
-        # stop if we already hit the leg cap
-        if len(chain) == MAX_LEGS_CANDIDATE:
+        if len(chain) >= MAX_LEGS_CANDIDATE:
             return
 
         tail = chain[-1]
         for nxt in by_dep[tail.arr_stn]:
-            # pre-filter on long ground waits
-            if not (0 <= HOURS(nxt.dep_dt - tail.arr_dt) <= MAX_SIT_HOURS):
-                continue                 # skip long ground waits
-            
-            if nxt.dep_dt < tail.arr_dt:          # departs before we arrive
+            if nxt.dep_dt < tail.arr_dt:                 # departs before arrival
                 continue
-            new_chain = chain + [nxt]
-            if feasible_chain(new_chain):        # duty/block still satisfied?
-                dfs(new_chain)                  # recurse further
+            if ok_to_append(chain, nxt):
+                dfs(chain + [nxt])
 
-    # seed DFS from every leg (single-leg tours are produced automatically)
-    for leg in leg_objs:
-        dfs([leg])
+    for lg in leg_objs:
+        dfs([lg])
 
-    # de-duplicate while preserving order
-    seen = set()
-    unique: List[List[str]] = []
+    # de-duplicate
+    seen, unique = set(), []
     for pr in candidates:
         tpl = tuple(pr)
         if tpl not in seen:
             seen.add(tpl)
             unique.append(pr)
     return unique
+
 
 
 # ---------------------------------------------------------------------------
