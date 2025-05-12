@@ -278,6 +278,13 @@ def main():
             best_iteration = iteration
 
     print("=" * 80)
+    
+    # If all iterations have infinite geometric means, use the last iteration
+    if best_geomean == float('inf'):
+        best_iteration = list(iteration_results.keys())[-1]
+        best_geomean = iteration_geomeans[best_iteration]
+        print(f"All iterations have infinite geometric means. Using last iteration: {best_iteration}")
+    
     print(f"Best iteration: {best_iteration} with geomean: {best_geomean:.4f}")
 
     # Use results from the best iteration
