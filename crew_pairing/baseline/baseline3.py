@@ -51,6 +51,7 @@ MAX_DUTY_HOURS = 14.0
 MAX_BLOCK_HOURS = 10.0
 MAX_LEGS_PER_DUTY = 6
 MIN_REST_HOURS = 9.0
+MAX_SIT_HOURS = 12.0
 BASE = "NKX"
 POS_FEE = 10_000.0
 
@@ -186,7 +187,7 @@ def solve_ilp(instance_csv: Path, legs: Dict[str, FlightLeg]) -> List[List[str]]
         prob += pulp.lpSum(x[i] for i in idx_list) == 1, f"cover_{tok}"
 
     # solve
-    solver = pulp.PULP_CBC_CMD(msg=False, timeLimit=300)
+    solver = pulp.GUROBI_CMD(msg=False, timeLimit=36000)
     result = prob.solve(solver)
     #if result != pulp.LpStatusOptimal and result != pulp.LpStatusNotSolved:
     #    raise RuntimeError("ILP did not find optimal solution in time; fallback.")
