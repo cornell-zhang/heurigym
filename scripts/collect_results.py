@@ -13,7 +13,7 @@ def find_iteration_dirs(base_dir):
     for root, dirs, files in os.walk(base_dir):
         # Skip hidden directories
         dirs[:] = [d for d in dirs if not d.startswith(".")]
-        
+
         # Look for iteration directories
         if "iteration" in root:
             iteration_dirs.append(root)
@@ -36,7 +36,7 @@ def get_stage_number(error_type):
 def classify_error(message):
     """Classify error message into operator scheduling specific categories."""
     message = message.lower()
-    
+
     # Define error categories specific to operator scheduling
     error_patterns = {
         "Stage I: Execution Error": r"execution error|runtime error",
@@ -44,17 +44,17 @@ def classify_error(message):
         "Stage III: Verification Error": r"verification failed|dependency constraint violated",
         "Other Error": r".*"  # Catch-all for other errors
     }
-    
+
     for category, pattern in error_patterns.items():
         if re.search(pattern, message):
             return category
-    
+
     return "Unknown Error"
 
 def extract_errors(iteration_dir):
     """Extract error information from .cost files in the iteration directory."""
     errors = {}
-    
+
     # Look for .cost files in the output directory
     output_dir = os.path.join(iteration_dir, "output")
     if os.path.exists(output_dir):
@@ -76,7 +76,7 @@ def extract_errors(iteration_dir):
                         "error": f"Error reading cost file: {str(e)}",
                         "error_type": "File Reading Error"
                     }
-    
+
     return errors
 
 def find_run_files(base_dir):
@@ -85,7 +85,7 @@ def find_run_files(base_dir):
     for root, dirs, files in os.walk(base_dir):
         # Skip hidden directories
         dirs[:] = [d for d in dirs if not d.startswith(".")]
-        
+
         # Look for iteration directories
         if "iteration" in root and "run.py" in files:
             run_files.append(os.path.join(root, "run.py"))
@@ -96,7 +96,7 @@ def run_optimization(run_file, dataset_path, timeout=10):
     try:
         # Get the directory containing run.py
         run_dir = os.path.dirname(run_file)
-        
+
         # Run the script with dataset path and timeout
         result = subprocess.run(
             ["python3", "run.py", dataset_path, "--timeout", str(timeout)],
@@ -105,10 +105,10 @@ def run_optimization(run_file, dataset_path, timeout=10):
             text=True,
             check=True
         )
-        
+
         # Look for results.json in the output directory
         results_file = os.path.join(run_dir, "results.json")
-        
+
         if os.path.exists(results_file):
             with open(results_file, "r") as f:
                 return json.load(f)
@@ -127,21 +127,30 @@ def calculate_geomean(results, max_values):
         # Use max_value for "X" cases
         cost = float(value) if value != "X" else max_values[dataset]
         valid_values.append(cost)
-    
+
     if not valid_values:
         return float('inf')
-    
+
+    mapped_values = []
+    for x in valid_values:
+        if x == 0:
+            mapped_values.append(1e-4)
+        elif x < 0:
+            mapped_values.append(-1/x)
+        else:
+            mapped_values.append(x)
+
     # Calculate geometric mean
-    return math.exp(sum(math.log(x) for x in valid_values) / len(valid_values))
+    return math.exp(sum(math.log(x) for x in mapped_values) / len(valid_values))
 
 def calculate_solve_at_i(all_errors, i):
     """Calculate solve@i metrics for the first i iterations."""
     # Get the first i iterations
     first_i_iterations = sorted(all_errors.keys())[:i]
-    
+
     # Track the best stage each test case passes in the first i iterations
     test_case_best_stages = defaultdict(int)
-    
+
     # For each test case, look at its performance across the first i iterations
     for iteration in first_i_iterations:
         iteration_errors = all_errors[iteration]
@@ -150,21 +159,21 @@ def calculate_solve_at_i(all_errors, i):
             stage_num = get_stage_number(error_type)
             if stage_num > 0:  # If it's a valid stage
                 test_case_best_stages[test_case] = max(test_case_best_stages[test_case], stage_num - 1)
-    
+
     # Calculate stage pass statistics
     stage_pass_stats = defaultdict(int)
     for stage in test_case_best_stages.values():
         # If a test case passes stage N, it also passes all stages 0 to N-1
         for s in range(stage + 1):
             stage_pass_stats[s] += 1
-    
+
     return stage_pass_stats
 
 def remove_output_folders(base_dir):
     """Remove all output folders under iteration directories."""
     iteration_dirs = find_iteration_dirs(base_dir)
     removed_count = 0
-    
+
     for iteration_dir in iteration_dirs:
         output_dir = os.path.join(iteration_dir, "output")
         if os.path.exists(output_dir):
@@ -174,21 +183,21 @@ def remove_output_folders(base_dir):
                 print(f"Removed output folder: {output_dir}")
             except Exception as e:
                 print(f"Error removing {output_dir}: {e}")
-    
+
     return removed_count
 
 def main():
     if len(sys.argv) < 3:
         print("Usage: python3 collect_results.py <llm_solutions_dir> <dataset_path> [--timeout TIMEOUT] [--clean]")
         sys.exit(1)
-        
+
     base_dir = sys.argv[1]
     dataset_path = os.path.abspath(sys.argv[2])
-    
+
     # Parse arguments
     timeout = 10  # default timeout
     clean_output = False
-    
+
     i = 3
     while i < len(sys.argv):
         if sys.argv[i] == "--timeout" and i + 1 < len(sys.argv):
@@ -203,11 +212,11 @@ def main():
             i += 1
         else:
             i += 1
-    
+
     if clean_output:
         removed_count = remove_output_folders(base_dir)
         print(f"\nRemoved {removed_count} output folders")
-    
+
     if not os.path.exists(dataset_path):
         print(f"Error: Dataset path '{dataset_path}' does not exist")
         sys.exit(1)
@@ -216,61 +225,61 @@ def main():
     if os.path.exists(preprocess_path):
         subprocess.run(["python3", preprocess_path], check=True)
         os.remove(preprocess_path)
-        
+
     print(f"Using dataset path: {dataset_path}")
     print(f"Using timeout: {timeout} seconds")
-    
+
     # Initialize data structures
     iteration_results = {}  # Store results for each iteration
     max_values = {}  # Store max value for each dataset
     all_errors = defaultdict(dict)
     error_stats = defaultdict(lambda: defaultdict(int))
     test_case_stats = defaultdict(lambda: defaultdict(int))
-    
+
     # Find all iteration directories and run files
     iteration_dirs = find_iteration_dirs(base_dir)
     run_files = find_run_files(base_dir)
     print(f"Found {len(iteration_dirs)} iteration directories and {len(run_files)} run.py files to process")
-    
+
     # First, process each run.py file for optimization results
     print("\nRunning optimizations...")
     for run_file in run_files:
         print(f"Processing optimization in {run_file}...")
         results = run_optimization(run_file, dataset_path, timeout)
-        
+
         if results:
             # Store results for this iteration
             iteration_name = os.path.basename(os.path.dirname(run_file))
             iteration_results[iteration_name] = results
-            
+
             # Update max values for each dataset
             for dataset, value in results.items():
                 if value != "X":
                     current_max = max_values.get(dataset, float('-inf'))
                     max_values[dataset] = max(current_max, float(value))
-    
+
     # Calculate geomean for each iteration and find the best one
     best_geomean = float('inf')
     best_iteration = None
     iteration_geomeans = {}
-    
+
     print("\nGeometric Mean Results:")
     print("=" * 80)
     print(f"{'Iteration':<30} | {'Geometric Mean':<15}")
     print("-" * 80)
-    
+
     for iteration, results in iteration_results.items():
         geomean = calculate_geomean(results, max_values)
         iteration_geomeans[iteration] = geomean
         print(f"{iteration:<30} | {geomean:<15.4f}")
-        
+
         if geomean < best_geomean:
             best_geomean = geomean
             best_iteration = iteration
-    
+
     print("=" * 80)
     print(f"Best iteration: {best_iteration} with geomean: {best_geomean:.4f}")
-    
+
     # Use results from the best iteration
     best_results = defaultdict(lambda: {"cost": float("inf"), "source": None})
     if best_iteration:
@@ -280,31 +289,31 @@ def main():
                 "cost": cost,
                 "source": os.path.join(best_iteration, "run.py")
             }
-    
+
     # Print summary of best results
     print("\nBest Results Summary (from best iteration):")
     print("=" * 80)
     print(f"{'Dataset':<40} | {'Best Cost':<10} | {'Source':<30}")
     print("-" * 80)
-    
+
     for dataset, result in best_results.items():
         if result["source"]:
             source = os.path.relpath(result["source"], base_dir)
             print(f"{dataset:<40} | {result['cost']:<10} | {source:<30}")
         else:
             print(f"{dataset:<40} | {result['cost']:<10} | \"None\"")
-    
+
     print("=" * 80)
-    
+
     # Then, process each iteration directory for errors
     print("\nCollecting error information...")
     for iteration_dir in iteration_dirs:
         iteration_name = os.path.basename(iteration_dir)
         errors = extract_errors(iteration_dir)
-        
+
         if errors:
             all_errors[iteration_name] = errors
-            
+
             # Update error statistics and track best passed stages
             for test_case, error_info in errors.items():
                 error_type = error_info.get("error_type", "Unknown Error")
@@ -314,19 +323,19 @@ def main():
     # Print error statistics
     print("\nError Statistics by Iteration:")
     print("=" * 100)
-    
+
     # Get all unique error types across all iterations
     all_error_types = set()
     for stats in error_stats.values():
         all_error_types.update(stats.keys())
-    
+
     # Print header
     header = "Iteration".ljust(15)
     for error_type in sorted(all_error_types):
         header += f" | {error_type.ljust(20)}"
     print(header)
     print("-" * len(header))
-    
+
     # Print statistics for each iteration
     for iteration in sorted(error_stats.keys()):
         line = iteration.ljust(15)
@@ -334,7 +343,7 @@ def main():
             count = error_stats[iteration].get(error_type, 0)
             line += f" | {str(count).ljust(20)}"
         print(line)
-    
+
     # Print overall error statistics
     print("\nOverall Error Statistics:")
     print("=" * 80)
@@ -342,20 +351,20 @@ def main():
     for stats in error_stats.values():
         for error_type, count in stats.items():
             total_stats[error_type] += count
-    
+
     for error_type, count in sorted(total_stats.items(), key=lambda x: x[1], reverse=True):
         print(f"{error_type}: {count}")
 
     # Calculate stage pass statistics
     total_cases = len(test_case_stats)  # Use test_case_stats to get total number of test cases
     stage_pass_stats = defaultdict(int)
-    
+
     # Calculate and print solve@i statistics for different values of i
     print("\nsolve@i Statistics:")
     print("=" * 80)
     print(f"Total test cases: {total_cases}")
     print("-" * 80)
-    
+
     for i in [10, 5, 3, 1]:
         if i <= len(all_errors):
             stage_pass_stats_i = calculate_solve_at_i(all_errors, i)
@@ -363,7 +372,7 @@ def main():
             for stage in range(1, 4):
                 passed = stage_pass_stats_i[stage]
                 print(f"solve_s{stage}@{i}: {passed}/{total_cases} passed ({passed/total_cases*100:.1f}%)")
-    
+
     # Save all results to files
     results_output = os.path.join(base_dir, "best_results.json")
     with open(results_output, "w") as f:
@@ -374,7 +383,7 @@ def main():
             }
             for dataset, result in best_results.items()
         }, f, indent=2)
-    
+
     # Dump metrics to log file
     log_output = os.path.join(base_dir, "metrics.log")
     with open(log_output, "w") as f:
@@ -387,7 +396,7 @@ def main():
 
         # Write an empty line
         f.write("\n")
-        
+
         # Write solve@i metrics
         for i in [10, 5, 3, 1]:
             if i <= len(all_errors):
@@ -395,7 +404,7 @@ def main():
                 for stage in range(1, 4):
                     passed = stage_pass_stats_i[stage]
                     f.write(f"{passed}\n")
-    
+
     errors_output = os.path.join(base_dir, "error_summary.json")
     with open(errors_output, "w") as f:
         json.dump({
@@ -407,10 +416,10 @@ def main():
             "best_iteration": best_iteration,
             "stage_pass_statistics_i": stage_pass_stats_i,
         }, f, indent=2)
-    
+
     print(f"\nBest results saved to {results_output}")
     print(f"Error information saved to {errors_output}")
     print(f"Metrics saved to {log_output}")
 
 if __name__ == "__main__":
-    main() 
+    main()
