@@ -27,7 +27,6 @@ Given the increasing volume of flights, operational planners then need to choose
     * $\text{dutyHours}(d) \le H^d_{max}$
     * $\text{blockHours}(d) \le H^b_{max}$
     * $|d| \le L_{max}$.
-    $\operatorname{arr}(f_i) \le \operatorname{dep}(f_{i+1})$  (chronological order);
 
 **Legal-rule parameters**:
 
