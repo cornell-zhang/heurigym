@@ -647,6 +647,7 @@ Your goal is to improve the solution for as many test cases as possible, with sp
             "completion_tokens": completion_tokens,
             "total_tokens": prompt_tokens + completion_tokens,
             "estimated_cost": round(total_cost, 4),
+            "temperature": self.temperature,
             "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         }
         
