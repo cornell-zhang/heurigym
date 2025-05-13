@@ -149,7 +149,7 @@ def build_candidate_pairings(legs: dict[str, FlightLeg]) -> list[list[str]]:
     # This avoids deep recursion and allows better control over pruning
     for chain_length in range(2, int(MAX_LEGS_CANDIDATE) + 1):
         # Early stopping if we already have too many candidates
-        if len(candidates) > 100000:  # arbitrary threshold to prevent explosion
+        if len(candidates) > 500000:  # arbitrary threshold to prevent explosion
             print(f"  Limiting candidates to {len(candidates)} to prevent memory issues")
             break
             
