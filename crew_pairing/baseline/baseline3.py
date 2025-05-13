@@ -124,35 +124,70 @@ def feasible_chain(chain: List[FlightLeg]) -> bool:
     return True
 
 def build_candidate_pairings(legs: dict[str, FlightLeg]) -> list[list[str]]:
+    """Build candidate pairings more efficiently with iterative approach and pruning.
+    
+    Uses a breadth-first approach with aggressive pruning to avoid memory explosion.
+    """
     leg_objs = sorted(legs.values(), key=lambda l: l.dep_dt)
     by_dep: dict[str, list[FlightLeg]] = defaultdict(list)
     for lg in leg_objs:
         by_dep[lg.dep_stn].append(lg)
 
-    candidates: list[list[str]] = []
-
-    def dfs(chain: list[FlightLeg]) -> None:
-        candidates.append([lg.token for lg in chain])
-        if len(chain) >= MAX_LEGS_CANDIDATE:
-            return
-
-        tail = chain[-1]
-        for nxt in by_dep[tail.arr_stn]:
-            if nxt.dep_dt < tail.arr_dt:                 # departs before arrival
-                continue
-            if ok_to_append(chain, nxt):
-                dfs(chain + [nxt])
-
+    # Pre-compute all possible next legs for each leg to avoid redundant checks
+    next_legs_map: dict[str, list[FlightLeg]] = {}
     for lg in leg_objs:
-        dfs([lg])
-
-    # de-duplicate
-    seen, unique = set(), []
+        next_legs = []
+        for nxt in by_dep[lg.arr_stn]:
+            if nxt.dep_dt > lg.arr_dt and HOURS(nxt.dep_dt - lg.arr_dt) <= MAX_SIT_HOURS:
+                next_legs.append(nxt)
+        next_legs_map[lg.token] = next_legs
+    
+    # Start with single-leg pairings
+    candidates: list[list[str]] = [[lg.token] for lg in leg_objs]
+    
+    # Use BFS instead of DFS to build up chains iteratively
+    # This avoids deep recursion and allows better control over pruning
+    for chain_length in range(2, int(MAX_LEGS_CANDIDATE) + 1):
+        # Early stopping if we already have too many candidates
+        if len(candidates) > 100000:  # arbitrary threshold to prevent explosion
+            print(f"  Limiting candidates to {len(candidates)} to prevent memory issues")
+            break
+            
+        new_candidates = []
+        # Only examine chains of length chain_length-1 for extension
+        prev_chains = [c for c in candidates if len(c) == chain_length - 1]
+        
+        for chain in prev_chains:
+            last_leg = legs[chain[-1]]
+            
+            # Get pre-computed next legs for the last leg in the chain
+            for nxt in next_legs_map[last_leg.token]:
+                # Check if adding this leg keeps the chain legal
+                if ok_to_append([legs[tok] for tok in chain], nxt):
+                    new_chain = chain + [nxt.token]
+                    new_candidates.append(new_chain)
+        
+        # Add the new chains to our candidate list
+        candidates.extend(new_candidates)
+        
+        # Print progress
+        if chain_length >= 3:  # Only print for longer chains
+            print(f"  Generated {len(new_candidates)} pairings of length {chain_length}")
+        
+        # Early stopping if we're not generating many new candidates
+        if len(new_candidates) < 10:
+            break
+    
+    # De-duplicate
+    seen = set()
+    unique = []
     for pr in candidates:
         tpl = tuple(pr)
         if tpl not in seen:
             seen.add(tpl)
             unique.append(pr)
+    
+    print(f"  Final unique candidates: {len(unique)}")
     return unique
 
 
