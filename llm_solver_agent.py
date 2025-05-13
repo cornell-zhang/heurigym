@@ -155,6 +155,7 @@ class ProgramExecutor:
                     file_groups[base_name] = []
                 file_groups[base_name].append(input_file)
             
+            all_outputs = []
             total_execution_time = 0
             total_evaluation_time = 0
             
@@ -162,14 +163,22 @@ class ProgramExecutor:
             iteration_dir = self.solution_folder / f"iteration{iteration}"
             output_dir = iteration_dir / "output"
             
-            # Run the main program
+            # copy the main.py script
             shutil.copy(
                 "scripts/main.py",
                 iteration_dir / "main.py"
             )
             
+            # copy the feedback.py script
+            shutil.copy(
+                "scripts/feedback.py",
+                iteration_dir / "feedback.py"
+            )
+
             if not file_groups:
-                return False, f"No test cases found in {dataset_folder}"
+                # Instead of returning error, return success with informative message
+                # This allows the program to continue to the next iteration
+                return True, f"No test case is provided. "
             
             for base_name, group_files in file_groups.items():
                 output_file = output_dir / f"{base_name}.output"
@@ -222,11 +231,6 @@ class ProgramExecutor:
                     all_outputs.append(f"Test case {base_name}:\nNo output file generated or output file is empty")
                     continue
                 
-                # Run the evaluator
-                shutil.copy(
-                    "scripts/feedback.py",
-                    iteration_dir / "feedback.py"
-                )
                 
                 # Prepare evaluator command with all input files
                 eval_cmd = ['python3', 'feedback.py']
