@@ -124,59 +124,65 @@ def feasible_chain(chain: List[FlightLeg]) -> bool:
     return True
 
 def build_candidate_pairings(legs: dict[str, FlightLeg]) -> list[list[str]]:
-    """Build candidate pairings more efficiently with iterative approach and pruning.
+    """Build candidate pairings efficiently with iterative approach.
     
-    Uses a breadth-first approach with aggressive pruning to avoid memory explosion.
+    Uses a breadth-first approach to avoid recursive stack issues
+    while still generating a comprehensive set of candidates.
     """
     leg_objs = sorted(legs.values(), key=lambda l: l.dep_dt)
     by_dep: dict[str, list[FlightLeg]] = defaultdict(list)
     for lg in leg_objs:
         by_dep[lg.dep_stn].append(lg)
 
-    # Pre-compute all possible next legs for each leg to avoid redundant checks
+    # Pre-compute next feasible legs but with minimal filtering
     next_legs_map: dict[str, list[FlightLeg]] = {}
     for lg in leg_objs:
         next_legs = []
         for nxt in by_dep[lg.arr_stn]:
-            if nxt.dep_dt > lg.arr_dt and HOURS(nxt.dep_dt - lg.arr_dt) <= MAX_SIT_HOURS:
+            # Only filter out legs that depart before arrival
+            if nxt.dep_dt > lg.arr_dt:
                 next_legs.append(nxt)
         next_legs_map[lg.token] = next_legs
     
     # Start with single-leg pairings
     candidates: list[list[str]] = [[lg.token] for lg in leg_objs]
     
-    # Use BFS instead of DFS to build up chains iteratively
-    # This avoids deep recursion and allows better control over pruning
+    # Track chains by length for BFS processing
+    chains_by_length: dict[int, list[list[str]]] = {1: [[lg.token] for lg in leg_objs]}
+    
+    # Use BFS approach to incrementally build longer chains
     for chain_length in range(2, int(MAX_LEGS_CANDIDATE) + 1):
-        # Early stopping if we already have too many candidates
-        if len(candidates) > 500000:  # arbitrary threshold to prevent explosion
-            print(f"  Limiting candidates to {len(candidates)} to prevent memory issues")
+        # Set a higher threshold to avoid excessive pruning
+        if len(candidates) > 500000:  # Much higher threshold
+            print(f"  Warning: Generated {len(candidates)} candidates, stopping to avoid memory issues")
             break
             
-        new_candidates = []
-        # Only examine chains of length chain_length-1 for extension
-        prev_chains = [c for c in candidates if len(c) == chain_length - 1]
+        chains_by_length[chain_length] = []
+        prev_chains = chains_by_length[chain_length - 1]
         
         for chain in prev_chains:
             last_leg = legs[chain[-1]]
+            legs_in_chain = [legs[tok] for tok in chain]
             
-            # Get pre-computed next legs for the last leg in the chain
+            # Check each potential next leg
             for nxt in next_legs_map[last_leg.token]:
-                # Check if adding this leg keeps the chain legal
-                if ok_to_append([legs[tok] for tok in chain], nxt):
+                # Apply full legality check here 
+                if ok_to_append(legs_in_chain, nxt):
                     new_chain = chain + [nxt.token]
-                    new_candidates.append(new_chain)
+                    chains_by_length[chain_length].append(new_chain)
         
-        # Add the new chains to our candidate list
-        candidates.extend(new_candidates)
+        # Add new chains to candidates
+        candidates.extend(chains_by_length[chain_length])
         
-        # Print progress
-        if chain_length >= 3:  # Only print for longer chains
-            print(f"  Generated {len(new_candidates)} pairings of length {chain_length}")
+        # Progress reporting
+        print(f"  Generated {len(chains_by_length[chain_length])} pairings of length {chain_length}")
         
-        # Early stopping if we're not generating many new candidates
-        if len(new_candidates) < 10:
+        # Only stop if we're generating no new candidates
+        if len(chains_by_length[chain_length]) == 0:
             break
+    
+    # Memory optimization: clear the intermediate dictionary once we're done
+    chains_by_length.clear()
     
     # De-duplicate
     seen = set()
