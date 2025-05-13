@@ -155,11 +155,6 @@ class ProgramExecutor:
                     file_groups[base_name] = []
                 file_groups[base_name].append(input_file)
             
-            if not file_groups:
-                return False, f"No test cases found in {dataset_folder}"
-            
-            # Run the program for each group of files
-            all_outputs = []
             total_execution_time = 0
             total_evaluation_time = 0
             
@@ -167,12 +162,16 @@ class ProgramExecutor:
             iteration_dir = self.solution_folder / f"iteration{iteration}"
             output_dir = iteration_dir / "output"
             
+            # Run the main program
+            shutil.copy(
+                "scripts/main.py",
+                iteration_dir / "main.py"
+            )
+            
+            if not file_groups:
+                return False, f"No test cases found in {dataset_folder}"
+            
             for base_name, group_files in file_groups.items():
-                # Run the main program
-                shutil.copy(
-                    "scripts/main.py",
-                    iteration_dir / "main.py"
-                )
                 output_file = output_dir / f"{base_name}.output"
                 cost_file = output_dir / f"{base_name}.cost"
                 
