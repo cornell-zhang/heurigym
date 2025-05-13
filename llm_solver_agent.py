@@ -919,6 +919,8 @@ def parse_arguments():
                             "gemini-2.5-flash-preview-04-17",
                             "gemini-2.5-pro-preview-05-06",
                             "sambanova/Meta-Llama-3.3-70B-Instruct",
+                            "o4-mini:high",
+                            "claude-3-7-sonnet-20250219"
                         ],
                         help='List of models to use (default: deepseek-chat, deepseek-reasoner)')
     
