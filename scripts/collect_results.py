@@ -303,7 +303,7 @@ def main():
     print(f"{'Dataset':<40} | {'Best Cost':<10} | {'Source':<30}")
     print("-" * 80)
 
-    for dataset, result in best_results.items():
+    for dataset, result in sorted(best_results.items()):
         if result["source"]:
             source = os.path.relpath(result["source"], base_dir)
             print(f"{dataset:<40} | {result['cost']:<10} | {source:<30}")
@@ -364,7 +364,6 @@ def main():
 
     # Calculate stage pass statistics
     total_cases = len(test_case_stats)  # Use test_case_stats to get total number of test cases
-    stage_pass_stats = defaultdict(int)
 
     # Calculate and print solve@i statistics for different values of i
     print("\nsolve@i Statistics:")
@@ -372,13 +371,21 @@ def main():
     print(f"Total test cases: {total_cases}")
     print("-" * 80)
 
+    # Store solve@i metrics
+    solve_at_i_metrics = {}
     for i in [10, 5, 3, 1]:
         if i <= len(all_errors):
             stage_pass_stats_i = calculate_solve_at_i(all_errors, i)
             print(f"\nsolve@{i} Statistics:")
+            solve_at_i_metrics[i] = {}
             for stage in range(1, 4):
                 passed = stage_pass_stats_i[stage]
                 print(f"solve_s{stage}@{i}: {passed}/{total_cases} passed ({passed/total_cases*100:.1f}%)")
+                solve_at_i_metrics[i][f"stage_{stage}"] = {
+                    "passed": passed,
+                    "total": total_cases,
+                    "percentage": passed/total_cases*100
+                }
 
     # Save all results to files
     results_output = os.path.join(base_dir, "best_results.json")
@@ -388,21 +395,21 @@ def main():
                 "cost": result["cost"],
                 "source": os.path.relpath(result["source"], base_dir) if result["source"] else None
             }
-            for dataset, result in best_results.items()
+            for dataset, result in sorted(best_results.items())
         }, f, indent=2)
 
     # Dump metrics to log file
     log_output = os.path.join(base_dir, "metrics.log")
     with open(log_output, "w") as f:
         # Write costs for each dataset
-        for dataset, result in best_results.items():
+        for dataset, result in sorted(best_results.items()):
             f.write(f"{result['cost']:.4f}\n")
 
         # Write best cost
         f.write(f"{best_geomean:.4f}\n")
 
-        # Write an empty line
-        f.write("\n")
+        # Write current solution directory (timestamp)
+        f.write(f"{sys.argv[1].split('/')[1]}\n")
 
         # Write solve@i metrics
         for i in [10, 5, 3, 1]:
@@ -421,7 +428,7 @@ def main():
             "total_statistics": total_stats,
             "iteration_geomeans": iteration_geomeans,
             "best_iteration": best_iteration,
-            "stage_pass_statistics_i": stage_pass_stats_i,
+            "solve_at_i_metrics": solve_at_i_metrics
         }, f, indent=2)
 
     print(f"\nBest results saved to {results_output}")

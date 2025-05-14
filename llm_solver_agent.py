@@ -925,6 +925,53 @@ Your goal is to improve the solution for as many test cases as possible, with sp
         
         return current_program, max_iterations - 1
 
+def generate_summary_table(results_data):
+    """Generate a formatted summary table comparing all models' performance."""
+    # Get all unique metrics
+    all_metrics = set()
+    for model_data in results_data.values():
+        all_metrics.update(model_data.keys())
+    
+    # Sort metrics to ensure consistent order
+    sorted_metrics = sorted(all_metrics)
+    
+    # Calculate column widths
+    model_width = max(len(model) for model in results_data.keys())
+    metric_width = max(len(metric) for metric in sorted_metrics)
+    
+    # Create header
+    header = f"{'Metric':<{metric_width}} | " + " | ".join(f"{model:<{model_width}}" for model in results_data.keys())
+    separator = "-" * len(header)
+    
+    # Create rows
+    rows = []
+    for metric in sorted_metrics:
+        row = f"{metric:<{metric_width}} | "
+        row += " | ".join(f"{results_data[model].get(metric, 'N/A'):<{model_width}}" for model in results_data.keys())
+        rows.append(row)
+    
+    # Combine all parts
+    table = [header, separator] + rows
+    
+    return "\n".join(table)
+
+def parse_best_results(json_file):
+    """Parse best_results.json file to extract performance metrics."""
+    metrics = {}
+    try:
+        with open(json_file, 'r') as f:
+            results = json.load(f)
+            
+        # Calculate average cost
+        costs = [float(data['cost']) for data in results.values() if data['cost'] != float('inf')]
+        if costs:
+            metrics['Avg Cost'] = f"{sum(costs)/len(costs):.4f}"
+            
+    except Exception as e:
+        logger.error(f"Error parsing best results {json_file}: {str(e)}")
+    
+    return metrics
+
 def parse_arguments():
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(description='LLM Solver Agent for optimization problems')
@@ -1009,6 +1056,9 @@ def main():
             # Create timestamp for this run
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             
+            # Dictionary to store results for each model
+            all_model_results = {}
+            
             # Get solutions from each model
             for model in args.models:
                 # Get base model name for directory
@@ -1031,10 +1081,10 @@ def main():
                     solution_dir,
                     args.iterations
                 )
-
+                
                 # After each model finishes, run collect_results.py for that model
                 logger.info(f"Model {model} finished. Running collect_results.py...")
-                llm_solutions_dir = workspace_root / "llm_solutions" / timestamp / problem_desc['name']
+                llm_solutions_dir = workspace_root / "llm_solutions" / timestamp / problem_desc['name'] / base_model_name
                 dataset_path = workspace_root / "_datasets" / args.problem
                 
                 # Run collect_results.py with the appropriate arguments
@@ -1049,9 +1099,32 @@ def main():
                 
                 try:
                     subprocess.run(collect_cmd, check=True)
-                    logger.info(f"Successfully ran collect_results.py for model {model}")
+                    logger.info(f"Successfully ran collect_results.py for {model}")
+                    
+                    # Parse results from best_results.json
+                    results_file = llm_solutions_dir / "best_results.json"
+                    if results_file.exists():
+                        all_model_results[model] = parse_best_results(results_file)
+                    
                 except subprocess.CalledProcessError as e:
-                    logger.error(f"Error running collect_results.py for model {model}: {str(e)}")
+                    logger.error(f"Error running collect_results.py for {model}: {str(e)}")
+            
+            # After all models finish, display the summary table
+            if all_model_results:
+                logger.info("\nFinal Performance Summary:")
+                logger.info("=" * 100)
+                summary_table = generate_summary_table(all_model_results)
+                logger.info(summary_table)
+                logger.info("=" * 100)
+                
+                # Save summary to a file
+                summary_file = workspace_root / "llm_solutions" / timestamp / problem_desc['name'] / "performance_summary.txt"
+                with open(summary_file, 'w') as f:
+                    f.write(f"Performance Summary for {problem_desc['name']}\n")
+                    f.write("=" * 100 + "\n")
+                    f.write(summary_table)
+                    f.write("\n" + "=" * 100 + "\n")
+                logger.info(f"Summary saved to {summary_file}")
                 
         except Exception as e:
             logger.error(f"Error processing {problem_folder}: {str(e)}")
