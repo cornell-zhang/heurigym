@@ -110,4 +110,4 @@ def read_instance(file_path: str) -> Instance:
 
 
 def calculate_distance(x1: float, y1: float, x2: float, y2: float) -> float:
-    return round(((x2 - x1) ** 2 + (y1 - y2) ** 2) ** 0.5, 0)
+    return round(((x2 - x1) ** 2 + (y1 - y2) ** 2) ** 0.5, 2)

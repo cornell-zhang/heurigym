@@ -24,6 +24,12 @@ def verify(input_file: str, solution_file: str) -> Tuple[bool, str]:
     with open(solution_file, "r") as file:
         lines = file.readlines()
 
+    # Check if we're using more vehicles than available
+    num_vehicles_used = len(lines) - 1  # Subtract 1 for the first line
+    if num_vehicles_used > instance.vehicles:
+        error_message = f"Solution uses {num_vehicles_used} vehicles, but only {instance.vehicles} are available."
+        return False, error_message
+
     # Skip the first line
     for line_num, line in enumerate(lines[1:], start=1):
         route = list(map(int, line.strip().split()))
