@@ -336,12 +336,13 @@ class ProgramExecutor:
 class LLMInterface:
     """Interface for interacting with different LLM providers using unified OpenAI API format."""
     
-    def __init__(self, models_to_use: List[str], dataset: Dict, timeout: int = 10, temperature: float = 0.7, stream: bool = False):
+    def __init__(self, models_to_use: List[str], dataset: Dict, timeout: int = 10, temperature: float = 0.7, stream: bool = False, history_rounds: int = None):
         self.timeout = timeout
         self.temperature = temperature
         self.stream = stream
         self.conversation_history = {}  # Store conversation history for each model
         self.dataset = dataset
+        self.history_rounds = history_rounds  # Number of previous rounds to keep in history
         
         # Initialize clients for each provider
         self.clients = {}
@@ -688,6 +689,20 @@ Your goal is to improve the solution for as many test cases as possible, with sp
         # Add the current prompt to conversation history
         self.conversation_history[model].append({"role": "user", "content": prompt})
         
+        # If history_rounds is set, trim the conversation history to keep only the specified number of rounds
+        if self.history_rounds is not None and iteration > 0:
+            # Keep system prompt, first iteration user prompt, and the last history_rounds * 2 messages
+            # First iteration user prompt is at index 1 (after system prompt)
+            first_iteration_prompt = self.conversation_history[model][1]
+            messages_to_keep = 1 + (self.history_rounds * 2)  # 1 for system prompt, 2 for each round
+            if len(self.conversation_history[model]) > messages_to_keep:
+                # Keep system prompt, first iteration prompt, and the most recent messages
+                self.conversation_history[model] = (
+                    [self.conversation_history[model][0]] +  # Keep system prompt
+                    [first_iteration_prompt] +  # Keep first iteration prompt
+                    self.conversation_history[model][-messages_to_keep+2:]  # Keep most recent messages
+                )
+        
         # Save the prompt to a separate file for this iteration
         if hasattr(self, 'current_log_file'):
             prompt_dir = self.current_log_file.parent / "prompt"
@@ -945,6 +960,9 @@ def parse_arguments():
     parser.add_argument('--stream', action='store_true',
                         help='Enable streaming output from LLM (default: False)')
     
+    parser.add_argument('--history_rounds', type=int, default=None,
+                        help='Number of previous rounds to keep in conversation history (default: None, keep all history)')
+    
     return parser.parse_args()
 
 def main():
@@ -968,8 +986,8 @@ def main():
     dataset = load_dataset(HF_REPO_ID, name=args.problem, data_dir="_datasets", token=token, trust_remote_code=True)  # ignore cached old copy
     print(f"Loaded dataset from HuggingFace: {HF_REPO_ID}/{args.problem}")
     
-    # Initialize LLM interface with dataset
-    llm_interface = LLMInterface(args.models, dataset, args.timeout, args.temperature, args.stream)
+    # Initialize LLM interface with dataset and history_rounds
+    llm_interface = LLMInterface(args.models, dataset, args.timeout, args.temperature, args.stream, args.history_rounds)
     
     # Get problem folders
     problem_folders = problem_reader.get_problem_folders()
