@@ -1,7 +1,7 @@
 import math
 from utils import get_allele_maps_0_indexed, get_n_alleles_from_sources
 
-def verify(input_file: str, output_file: str) -> bool:
+def verify(input_file: str, output_file: str) -> Tuple[bool, str]:
     individuals_data = {}
     present_ind_ids = []
     max_allele_val_from_obs = 0
