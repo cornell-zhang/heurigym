@@ -100,23 +100,42 @@ class ProgramExecutor:
         
     def save_program(self, program: str, iteration: int = 0) -> Tuple[Path, str]:
         """Saves the LLM's program to solver.py in the solution folder and copies all necessary Python files."""
-        # Find the first code block enclosed with ``` in the generated text
-        program = program.strip()
-        
-        # Look for the first code block
+        # Look for the longest code block
         start_marker = "```"
         end_marker = "```"
         
-        start_idx = program.find(start_marker)
-        if start_idx != -1:
+        longest_code = ""
+        current_pos = 0
+        
+        while True:
+            # Find the next code block start
+            start_idx = program.find(start_marker, current_pos)
+            if start_idx == -1:
+                break
+                
             # Find the end of the language identifier (if any)
             first_newline = program.find("\n", start_idx)
-            if first_newline != -1:
-                # Find the closing ```
-                end_idx = program.find(end_marker, first_newline)
-                if end_idx != -1:
-                    # Extract just the code between the markers
-                    program = program[first_newline + 1:end_idx].strip()
+            if first_newline == -1:
+                break
+                
+            # Find the closing ```
+            end_idx = program.find(end_marker, first_newline)
+            if end_idx == -1:
+                break
+                
+            # Extract the code between the markers
+            current_code = program[first_newline + 1:end_idx].strip()
+            
+            # Update longest code if current block is longer
+            if len(current_code) > len(longest_code):
+                longest_code = current_code
+                
+            # Move position past this code block
+            current_pos = end_idx + len(end_marker)
+        
+        # Use the longest code block found
+        if longest_code:
+            program = longest_code
         
         # Create iteration-specific folders
         iteration_dir = self.solution_folder / f"iteration{iteration}"
