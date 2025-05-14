@@ -747,11 +747,16 @@ Your goal is to improve the solution for as many test cases as possible, with sp
             
             # Add model-specific parameters
             if actual_model.startswith("o1") or actual_model.startswith("o3") or actual_model.startswith("o4"):
+                # https://platform.openai.com/docs/guides/reasoning
                 # O-series models use max_completion_tokens instead of max_tokens
                 api_params["max_completion_tokens"] = max_tokens
                 reasoning_effort = self._parse_reasoning_effort(model)
                 api_params["reasoning_effort"] = reasoning_effort
                 # O-series models only support temperature=1 (default), so we omit it
+                if self.temperature != 1.0:
+                    error_msg = f"Error: O-series models (o1, o3, o4) only support temperature=1.0, but got {self.temperature}!!! Exiting..."
+                    logger.error(error_msg)
+                    sys.exit(1)
             else:
                 # Non O-series models use max_tokens and custom temperature
                 api_params["max_tokens"] = max_tokens
