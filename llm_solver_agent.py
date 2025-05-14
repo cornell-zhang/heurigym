@@ -90,12 +90,13 @@ class ProblemReader:
 class ProgramExecutor:
     """Handles program execution and result extraction."""
     
-    def __init__(self, problem_folder: Path, solution_folder: Path, dataset: Dict, timeout: int = 10):
+    def __init__(self, problem_folder: Path, solution_folder: Path, dataset: Dict, timeout: int = 10, num_cores: int = 8):
         self.problem_folder = problem_folder
         self.program_folder = problem_folder / "program"
         self.solution_folder = solution_folder
         self.dataset = dataset
         self.timeout = timeout
+        self.num_cores = num_cores
         
     def save_program(self, program: str, iteration: int = 0) -> Tuple[Path, str]:
         """Saves the LLM's program to solver.py in the solution folder and copies all necessary Python files."""
@@ -197,6 +198,10 @@ class ProgramExecutor:
                     cmd.extend(sorted(group_files))  # Add all input files
                     cmd.append(str(output_file))  # Add output file
                     
+                    # Set environment variables to limit CPU cores
+                    env = os.environ.copy()
+                    env["OMP_NUM_THREADS"] = str(self.num_cores)
+                    
                     # Measure execution time
                     exec_start_time = time.time()
                     run_result = subprocess.run(
@@ -204,7 +209,8 @@ class ProgramExecutor:
                         cwd=str(iteration_dir),
                         capture_output=True,
                         text=True,
-                        timeout=self.timeout  # Use the timeout from constructor
+                        timeout=self.timeout,  # Use the timeout from constructor
+                        env=env
                     )
                     exec_time = time.time() - exec_start_time
                     total_execution_time += exec_time
@@ -1009,6 +1015,9 @@ def parse_arguments():
     
     parser.add_argument('--history_rounds', type=int, default=None,
                         help='Number of previous rounds to keep in conversation history (default: None, keep all history)')
+
+    parser.add_argument('--num_cores', type=int, default=8,
+                        help='Number of CPU cores to use for program execution (default: 8)')
     
     return parser.parse_args()
 
@@ -1070,7 +1079,7 @@ def main():
                 solution_dir.mkdir(parents=True, exist_ok=True)
                 
                 # Initialize program executor with the solution directory
-                executor = ProgramExecutor(workspace_root / problem_desc['name'], solution_dir, dataset, args.timeout)
+                executor = ProgramExecutor(workspace_root / problem_desc['name'], solution_dir, dataset, args.timeout, args.num_cores)
                 
                 # Get iterative program
                 logger.info(f"Getting iterative program from {model}")
@@ -1094,7 +1103,9 @@ def main():
                     str(llm_solutions_dir),
                     str(dataset_path),
                     "--timeout",
-                    str(args.timeout)
+                    str(args.timeout),
+                    "--num_cores",
+                    str(args.num_cores)
                 ]
                 
                 try:

@@ -5,6 +5,7 @@ import subprocess
 import re
 import math
 import shutil
+import argparse
 from collections import defaultdict
 
 def find_iteration_dirs(base_dir):
@@ -91,7 +92,7 @@ def find_run_files(base_dir):
             run_files.append(os.path.join(root, "run.py"))
     return run_files
 
-def run_optimization(run_file, dataset_path, timeout=10):
+def run_optimization(run_file, dataset_path, timeout=10, num_cores=8):
     """Run the optimization script and return the results."""
     try:
         # Get the directory containing run.py
@@ -99,7 +100,7 @@ def run_optimization(run_file, dataset_path, timeout=10):
 
         # Run the script with dataset path and timeout
         result = subprocess.run(
-            ["python3", "run.py", dataset_path, "--timeout", str(timeout)],
+            ["python3", "run.py", dataset_path, "--timeout", str(timeout), "--num_cores", str(num_cores)],
             cwd=run_dir,
             capture_output=True,
             text=True,
@@ -187,33 +188,23 @@ def remove_output_folders(base_dir):
     return removed_count
 
 def main():
-    if len(sys.argv) < 3:
-        print("Usage: python3 collect_results.py <llm_solutions_dir> <dataset_path> [--timeout TIMEOUT] [--clean]")
-        sys.exit(1)
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(description='Collect and analyze optimization results')
+    parser.add_argument('llm_solutions_dir', help='Path to LLM solutions directory')
+    parser.add_argument('dataset_path', help='Path to dataset directory')
+    parser.add_argument('--timeout', type=int, default=10,
+                        help='Timeout in seconds for program execution (default: 10)')
+    parser.add_argument('--num_cores', type=int, default=8,
+                        help='Number of CPU cores to use for program execution (default: 8)')
+    parser.add_argument('--clean', action='store_true',
+                        help='Clean output folders before processing')
+    
+    args = parser.parse_args()
 
-    base_dir = sys.argv[1]
-    dataset_path = os.path.abspath(sys.argv[2])
+    base_dir = args.llm_solutions_dir
+    dataset_path = os.path.abspath(args.dataset_path)
 
-    # Parse arguments
-    timeout = 10  # default timeout
-    clean_output = False
-
-    i = 3
-    while i < len(sys.argv):
-        if sys.argv[i] == "--timeout" and i + 1 < len(sys.argv):
-            try:
-                timeout = int(sys.argv[i + 1])
-                i += 2
-            except ValueError:
-                print("Error: Timeout must be an integer")
-                sys.exit(1)
-        elif sys.argv[i] == "--clean":
-            clean_output = True
-            i += 1
-        else:
-            i += 1
-
-    if clean_output:
+    if args.clean:
         removed_count = remove_output_folders(base_dir)
         print(f"\nRemoved {removed_count} output folders")
 
@@ -227,7 +218,8 @@ def main():
         os.remove(preprocess_path)
 
     print(f"Using dataset path: {dataset_path}")
-    print(f"Using timeout: {timeout} seconds")
+    print(f"Using timeout: {args.timeout} seconds")
+    print(f"Using CPU cores: {args.num_cores}")
 
     # Initialize data structures
     iteration_results = {}  # Store results for each iteration
@@ -245,7 +237,7 @@ def main():
     print("\nRunning optimizations...")
     for run_file in run_files:
         print(f"Processing optimization in {run_file}...")
-        results = run_optimization(run_file, dataset_path, timeout)
+        results = run_optimization(run_file, dataset_path, args.timeout, args.num_cores)
 
         if results:
             # Store results for this iteration

@@ -1,7 +1,7 @@
 import os
 import subprocess
-import sys
 import json
+import argparse
 
 
 def find_all_datasets(base_dir):
@@ -31,7 +31,7 @@ def find_all_datasets(base_dir):
     return file_groups
 
 
-def run_optimization(input_files, output_dir="output", timeout=10):
+def run_optimization(input_files, output_dir="output", timeout=10, num_cores=8):
     """
     Run the optimization program on the given dataset and return the result.
 
@@ -39,6 +39,7 @@ def run_optimization(input_files, output_dir="output", timeout=10):
         input_files (list): List of paths to input files
         output_dir (str): Directory to store output files
         timeout (int): Timeout in seconds for program execution (default: 10)
+        num_cores (int): Number of CPU cores to use (default: 8)
 
     Returns:
         tuple: (success, cost) where success is a boolean and cost is an integer or None
@@ -72,12 +73,17 @@ def run_optimization(input_files, output_dir="output", timeout=10):
             cmd.extend(sorted(input_files))  # Add all input files
             cmd.append(output_file)  # Add output file
             
+            # Set environment variables to limit CPU cores
+            env = os.environ.copy()
+            env["OMP_NUM_THREADS"] = str(num_cores)
+            
             main_result = subprocess.run(
                 cmd,
                 capture_output=True,
                 text=True,
                 check=False,
-                timeout=timeout
+                timeout=timeout,
+                env=env
             )
         except subprocess.TimeoutExpired:
             error_data = {
@@ -174,35 +180,28 @@ def run_optimization(input_files, output_dir="output", timeout=10):
 
 
 def main():
-    # Path to dataset directory
-    dataset_dir = "../dataset/full"
-    timeout = 10  # Default timeout in seconds
-
     # Parse command line arguments
-    i = 1
-    while i < len(sys.argv):
-        if sys.argv[i] == "--timeout" and i + 1 < len(sys.argv):
-            try:
-                timeout = int(sys.argv[i + 1])
-                i += 2
-            except ValueError:
-                print("Error: Timeout must be an integer")
-                sys.exit(1)
-        else:
-            dataset_dir = sys.argv[i]
-            i += 1
+    parser = argparse.ArgumentParser(description='Run optimization on datasets')
+    parser.add_argument('--timeout', type=int, default=10,
+                        help='Timeout in seconds for program execution (default: 10)')
+    parser.add_argument('--num_cores', type=int, default=8,
+                        help='Number of CPU cores to use for program execution (default: 8)')
+    parser.add_argument('dataset_dir', nargs='?', default="../dataset/full",
+                        help='Path to dataset directory (default: ../dataset/full)')
+    
+    args = parser.parse_args()
 
     # Make sure datasets directory exists
-    if not os.path.isdir(dataset_dir):
-        print(f"Error: Dataset directory '{dataset_dir}' not found.")
+    if not os.path.isdir(args.dataset_dir):
+        print(f"Error: Dataset directory '{args.dataset_dir}' not found.")
         return
 
     # Get all potential datasets grouped by base name
-    file_groups = find_all_datasets(dataset_dir)
+    file_groups = find_all_datasets(args.dataset_dir)
 
     # If no datasets found
     if not file_groups:
-        print(f"Warning: No datasets found under '{dataset_dir}'.")
+        print(f"Warning: No datasets found under '{args.dataset_dir}'.")
         return
 
     # Results will be stored as (dataset_name, cost) tuples
@@ -210,7 +209,7 @@ def main():
 
     # Run optimization on each group of files
     for base_name, input_files in file_groups.items():
-        success, cost = run_optimization(input_files, timeout=timeout)
+        success, cost = run_optimization(input_files, timeout=args.timeout, num_cores=args.num_cores)
 
         if success:
             results.append((base_name, str(cost)))
