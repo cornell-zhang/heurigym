@@ -92,6 +92,7 @@ run_pdptw.sh
 
 .DS_Store
 run.sh
+run_.sh
 collect_results.sh
 min_cut_runs.log
 /pedigree/baseline/pytoulbar2
