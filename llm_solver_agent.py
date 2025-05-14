@@ -1031,27 +1031,27 @@ def main():
                     solution_dir,
                     args.iterations
                 )
-            
-            # After all models finish, run collect_results.py
-            logger.info("All models finished. Running collect_results.py...")
-            llm_solutions_dir = workspace_root / "llm_solutions" / timestamp / problem_desc['name']
-            dataset_path = workspace_root / "_datasets" / args.problem
-            
-            # Run collect_results.py with the appropriate arguments
-            collect_cmd = [
-                "python3",
-                "scripts/collect_results.py",
-                str(llm_solutions_dir),
-                str(dataset_path),
-                "--timeout",
-                str(args.timeout)
-            ]
-            
-            try:
-                subprocess.run(collect_cmd, check=True)
-                logger.info("Successfully ran collect_results.py")
-            except subprocess.CalledProcessError as e:
-                logger.error(f"Error running collect_results.py: {str(e)}")
+
+                # After each model finishes, run collect_results.py for that model
+                logger.info(f"Model {model} finished. Running collect_results.py...")
+                llm_solutions_dir = workspace_root / "llm_solutions" / timestamp / problem_desc['name']
+                dataset_path = workspace_root / "_datasets" / args.problem
+                
+                # Run collect_results.py with the appropriate arguments
+                collect_cmd = [
+                    "python3",
+                    "scripts/collect_results.py",
+                    str(llm_solutions_dir),
+                    str(dataset_path),
+                    "--timeout",
+                    str(args.timeout)
+                ]
+                
+                try:
+                    subprocess.run(collect_cmd, check=True)
+                    logger.info(f"Successfully ran collect_results.py for model {model}")
+                except subprocess.CalledProcessError as e:
+                    logger.error(f"Error running collect_results.py for model {model}: {str(e)}")
                 
         except Exception as e:
             logger.error(f"Error processing {problem_folder}: {str(e)}")
