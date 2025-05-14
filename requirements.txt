@@ -11,3 +11,4 @@ pandas==2.2.3
 matplotlib
 datasets
 huggingface_hub
+biopython
