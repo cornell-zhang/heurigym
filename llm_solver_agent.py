@@ -13,6 +13,10 @@ from dotenv import load_dotenv
 from openai import OpenAI
 from datetime import datetime
 from config import calculate_cost
+from datasets import load_dataset
+from huggingface_hub import login
+
+HF_REPO_ID = "heurigen/heurigen-data"
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -86,10 +90,11 @@ class ProblemReader:
 class ProgramExecutor:
     """Handles program execution and result extraction."""
     
-    def __init__(self, problem_folder: Path, solution_folder: Path, timeout: int = 10):
+    def __init__(self, problem_folder: Path, solution_folder: Path, dataset: Dict, timeout: int = 10):
         self.problem_folder = problem_folder
         self.program_folder = problem_folder / "program"
         self.solution_folder = solution_folder
+        self.dataset = dataset
         self.timeout = timeout
         
     def save_program(self, program: str, iteration: int = 0) -> Tuple[Path, str]:
@@ -141,19 +146,21 @@ class ProgramExecutor:
     def execute_program(self, iteration: int = 0) -> Tuple[bool, str]:
         """Runs the Python program and returns success status and output."""
         try:
-            # Get all test cases from the problem's dataset folder
-            dataset_folder = self.problem_folder / "dataset" / "demo"
-            if not dataset_folder.exists():
-                return False, f"Dataset folder not found: {dataset_folder}"
+            # Get file paths from the dataset
+            if not self.dataset or "train" not in self.dataset:
+                return False, f"Dataset not found or invalid format for {self.problem_folder.name}"
             
-            # Find all files in the dataset folder and group them by base name
-            input_files = [f for f in dataset_folder.iterdir() if f.is_file()]
+            file_paths = self.dataset["train"]["file_path"]
+            if not file_paths:
+                return False, f"No test cases found in the dataset for {self.problem_folder.name}"
+            
+            # Group files by base name
             file_groups = {}
-            for input_file in input_files:
-                base_name = input_file.stem
+            for file_path in file_paths:
+                base_name = Path(file_path).stem
                 if base_name not in file_groups:
                     file_groups[base_name] = []
-                file_groups[base_name].append(input_file)
+                file_groups[base_name].append(file_path)
             
             all_outputs = []
             total_execution_time = 0
@@ -187,7 +194,7 @@ class ProgramExecutor:
                 try:
                     # Prepare the command with all input files in the group
                     cmd = ['python3', 'main.py']
-                    cmd.extend(sorted([str(f) for f in group_files]))  # Add all input files
+                    cmd.extend(sorted(group_files))  # Add all input files
                     cmd.append(str(output_file))  # Add output file
                     
                     # Measure execution time
@@ -234,7 +241,7 @@ class ProgramExecutor:
                 
                 # Prepare evaluator command with all input files
                 eval_cmd = ['python3', 'feedback.py']
-                eval_cmd.extend(sorted([str(f) for f in group_files]))  # Add all input files
+                eval_cmd.extend(sorted(group_files))  # Add all input files
                 eval_cmd.append(str(output_file))  # Add output file
                 
                 # Measure evaluation time
@@ -329,12 +336,12 @@ class ProgramExecutor:
 class LLMInterface:
     """Interface for interacting with different LLM providers using unified OpenAI API format."""
     
-    def __init__(self, models_to_use: List[str], timeout: int = 10, temperature: float = 0.7, stream: bool = False):
-        load_dotenv()
+    def __init__(self, models_to_use: List[str], dataset: Dict, timeout: int = 10, temperature: float = 0.7, stream: bool = False):
         self.timeout = timeout
         self.temperature = temperature
         self.stream = stream
         self.conversation_history = {}  # Store conversation history for each model
+        self.dataset = dataset
         
         # Initialize clients for each provider
         self.clients = {}
@@ -534,23 +541,22 @@ class LLMInterface:
 These are the test cases and results from the previous iteration:
 """
 
-            # Get the absolute path to the demo folder
-            workspace_root = Path(os.getcwd())
-            problem_folder = workspace_root / problem_desc['name']
-            demo_folder = problem_folder / "dataset" / "demo"
-            if demo_folder.exists():
-                # Find all files in the demo folder and group them by base name
-                input_files = [f for f in demo_folder.iterdir() if f.is_file()]
-                file_groups = {}
-                for input_file in input_files:
-                    base_name = input_file.stem
-                    if base_name not in file_groups:
-                        file_groups[base_name] = []
-                    file_groups[base_name].append(input_file)
-                
-                if not file_groups:
-                    prompt += f"\nNo test cases found in the demo dataset folder: {demo_folder}\n\n"
+            # Get file paths from the dataset
+            if not self.dataset or "train" not in self.dataset:
+                prompt += f"\nNo test cases found in the dataset for {problem_desc['name']}\n\n"
+            else:
+                file_paths = self.dataset["train"]["file_path"]
+                if not file_paths:
+                    prompt += f"\nNo test cases found in the dataset for {problem_desc['name']}\n\n"
                 else:
+                    # Group files by base name
+                    file_groups = {}
+                    for file_path in file_paths:
+                        base_name = Path(file_path).stem
+                        if base_name not in file_groups:
+                            file_groups[base_name] = []
+                        file_groups[base_name].append(file_path)
+                    
                     # For each group of files, show them together
                     for base_name, group_files in file_groups.items():
                         prompt += f"\n## Test Case: {base_name}\n\n"
@@ -576,11 +582,11 @@ These are the test cases and results from the previous iteration:
                                             else:
                                                 truncated_lines.append(line)
                                         content = '\n'.join(truncated_lines)
-                                    prompt += f"**Input File: {input_file.name}**\n```\n{content}\n```\n\n"
+                                    prompt += f"**Input File: {Path(input_file).name}**\n```\n{content}\n```\n\n"
                                 except Exception as e:
-                                    prompt += f"**Input File: {input_file.name}** Error reading file: {str(e)}\n\n"
+                                    prompt += f"**Input File: {Path(input_file).name}** Error reading file: {str(e)}\n\n"
                             else:
-                                prompt += f"**Input File: {input_file.name}** (Shown in the previous iteration)\n"
+                                prompt += f"**Input File: {Path(input_file).name}** (Shown in the previous iteration)\n"
                         
                         # Show result for this group
                         cost_file = solution_dir / f"iteration{iteration - 1}" / "output" / f"{base_name}.cost"
@@ -598,8 +604,6 @@ These are the test cases and results from the previous iteration:
                                     prompt += f"**Error:** {cost_data['message']}\n\n"
                         else:
                             prompt += "**Result:** No output generated\n\n"
-            else:
-                prompt += f"\nNo test cases found in the demo dataset folder: {demo_folder}\n\n"
 
             # Add improvement guidance
             any_failed = any(
@@ -946,12 +950,26 @@ def parse_arguments():
 def main():
     # Parse command line arguments
     args = parse_arguments()
+
+    load_dotenv()
+    # Get token from environment variable
+    token = os.getenv("HUGGINGFACE_TOKEN")
+    if not token:
+        raise ValueError("HUGGINGFACE_TOKEN not found in .env file")
     
+    # Log in with your HF access token
+    login(token=token)
     workspace_root = os.getcwd()
     
     # Initialize components
     problem_reader = ProblemReader(workspace_root)
-    llm_interface = LLMInterface(args.models, args.timeout, args.temperature, args.stream)
+    
+    # Load dataset first
+    dataset = load_dataset(HF_REPO_ID, name=args.problem, data_dir="_datasets", token=token, trust_remote_code=True)  # ignore cached old copy
+    print(f"Loaded dataset from HuggingFace: {HF_REPO_ID}/{args.problem}")
+    
+    # Initialize LLM interface with dataset
+    llm_interface = LLMInterface(args.models, dataset, args.timeout, args.temperature, args.stream)
     
     # Get problem folders
     problem_folders = problem_reader.get_problem_folders()
@@ -984,7 +1002,7 @@ def main():
                 solution_dir.mkdir(parents=True, exist_ok=True)
                 
                 # Initialize program executor with the solution directory
-                executor = ProgramExecutor(workspace_root / problem_desc['name'], solution_dir, args.timeout)
+                executor = ProgramExecutor(workspace_root / problem_desc['name'], solution_dir, dataset, args.timeout)
                 
                 # Get iterative program
                 logger.info(f"Getting iterative program from {model}")

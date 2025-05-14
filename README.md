@@ -56,6 +56,11 @@ ANTHROPIC_API_KEY=your_anthropic_key_here
 DEEPSEEK_API_KEY=your_deepseek_key_here
 ```
 
+Also, you need to have a HuggingFace token to download the dataset.
+```
+HUGGINGFACE_TOKEN=your_huggingface_key_here
+```
+
 3. (Optional) Customize the prompt template in `prompt.md`
 
 ### Usage
