@@ -1035,7 +1035,7 @@ def parse_arguments():
                         help='Temperature for LLM generation (default: 0.0)')
     
     parser.add_argument('--stream', action='store_true',
-                        help='Enable streaming output from LLM (default: False)')
+                        help='Enable streaming output from LLM (default: False, but True for Qwen models)')
     
     parser.add_argument('--history_rounds', type=int, default=None,
                         help='Number of previous rounds to keep in conversation history (default: None, keep all history)')
@@ -1043,7 +1043,14 @@ def parse_arguments():
     parser.add_argument('--num_cores', type=int, default=8,
                         help='Number of CPU cores to use for program execution (default: 8)')
     
-    return parser.parse_args()
+    args = parser.parse_args()
+    
+    # Set stream to True by default if any Qwen model is in the list
+    if not args.stream and any(model.startswith('qwen') for model in args.models):
+        args.stream = True
+        logger.info("Streaming enabled by default for Qwen models")
+    
+    return args
 
 def main():
     # Parse command line arguments
