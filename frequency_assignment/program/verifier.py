@@ -1,5 +1,5 @@
 from typing import Dict, List
-
+from typing import Tuple
 
 def verify(input_file: str, output_file: str) -> Tuple[bool, str]:
     """
