@@ -1,7 +1,7 @@
 from typing import Union, List, Dict
 
 
-def evaluate(input_file: str, solution_file: str) -> Union[int, float]:
+def evaluate(input_file: str, output_file: str) -> Union[int, float]:
     """
     Cost calculation function: calculates the total number of violations
     (mandatory + CEM) for a given solution.
@@ -17,7 +17,7 @@ def evaluate(input_file: str, solution_file: str) -> Union[int, float]:
     # --- parse the solution file (AL lines) ---
     # trajets[path] = {'freq': f, 'pol': p, 'dom_freq': None, 'dom_pol': None}
     trajets: Dict[int, Dict[str, int]] = {}
-    with open(solution_file, 'r') as f:
+    with open(output_file, 'r') as f:
         for line in f:
             parts = line.strip().split()
             if not parts or parts[0] != 'AL':

@@ -1,7 +1,7 @@
 from typing import Dict, List
 
 
-def verify(input_file: str, solution_file: str) -> Tuple[bool, str]:
+def verify(input_file: str, output_file: str) -> Tuple[bool, str]:
     """
     Verifier function: checks whether a proposed solution is feasible.
     It ensures:
@@ -17,7 +17,7 @@ def verify(input_file: str, solution_file: str) -> Tuple[bool, str]:
     """
     # --- parse solution: AL <path_id> <freq> <pol> ---
     trajets: Dict[int, Dict[str, int]] = {}
-    with open(solution_file) as f:
+    with open(output_file) as f:
         for line in f:
             parts = line.strip().split()
             if len(parts) != 4 or parts[0] != "AL":
