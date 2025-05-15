@@ -26,6 +26,7 @@ def copy_run_to_iterations(llm_solutions_dir):
     for iteration_dir in llm_solutions_dir.iterdir():
         if iteration_dir.is_dir() and iteration_dir.name.startswith('iteration'):
             shutil.copy2(run_file, iteration_dir)
+            print(f"Copied run.py to {iteration_dir}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Copy run.py to operator_scheduling directories')

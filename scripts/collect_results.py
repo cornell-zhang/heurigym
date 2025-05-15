@@ -238,10 +238,10 @@ def main():
     for run_file in run_files:
         print(f"Processing optimization in {run_file}...")
         results = run_optimization(run_file, dataset_path, args.timeout, args.num_cores)
+        iteration_name = os.path.basename(os.path.dirname(run_file))
 
         if results:
             # Store results for this iteration
-            iteration_name = os.path.basename(os.path.dirname(run_file))
             iteration_results[iteration_name] = results
 
             # Update max values for each dataset
@@ -249,6 +249,8 @@ def main():
                 if value != "X":
                     current_max = max_values.get(dataset, float('-inf'))
                     max_values[dataset] = max(current_max, float(value))
+        else:
+            iteration_results[iteration_name] = {}
 
     # Calculate geomean for each iteration and find the best one
     best_geomean = float('inf')
