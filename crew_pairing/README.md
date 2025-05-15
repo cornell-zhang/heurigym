@@ -38,32 +38,32 @@ Given the increasing volume of flights, operational planners then need to choose
 * Positioning fee $C_{\text{pos}} = \$10000$
 
 **Decision variables**:
-$$
+$
 x_p = \begin{cases}
 1 & \text{if pairing } p \text{ is selected} \\
 0 & \text{otherwise}
 \end{cases}
 \qquad \text{for all } p \in \mathcal{P}
-$$
+$
 
 **Cost of a pairing**:
 
 Let $D_p$ be the set of duty segments inside pairing $p$ and let $F_p$ be its flight legs.  
 
-$$
+$
 \delta_p \;=\; \begin{cases}
 1 & \text{if } \operatorname{depStn}(f_1) \ne \text{Base},\\
 0 & \text{otherwise.}\
 \end{cases}
-$$
+$
 
 Then,
 
-$$
+$
 c_p = \underbrace{\sum_{d\in D_p} H^{\text{duty}}_d}_{\text{duty hours}}\,\texttt{DutyCostPerHour}
 \; +\; \underbrace{\sum_{f\in F_p} H^{\text{block}}_f}_{\text{block hours}}\,\texttt{ParingCostPerHour}
 \; +\; \delta_p\,C_{\text{pos}}.
-$$
+$
 
 where
 * $H^{duty}_d$ = clock-time length of duty $d$ (report to release).
@@ -73,13 +73,13 @@ where
 
 The objective is to minimize the total cost of the selected pairings:
 
-$$
+$
 \begin{aligned}
 \min_{x}\; & \sum_{p\in\mathcal P} c_p\,x_p \\
 \text{s.t.}\; & \sum_{p:\,f\in p} x_p = 1 \quad &\forall f\in \mathcal F\;\; (\text{each leg covered once}) \\
 & x_p \in \{0,1\} &\forall p\in\mathcal P
 \end{aligned}
-$$
+$
 
 The legality rules above are *baked into* the definition of $\mathcal P$; hence no additional constraints are needed in the objective of problem.
 
