@@ -2,7 +2,7 @@ import os
 import subprocess
 import json
 import argparse
-
+import signal
 
 def find_all_datasets(base_dir):
     """
@@ -87,9 +87,13 @@ def run_optimization(input_files, output_dir="output", timeout=10, num_cores=8):
                 text=True,
                 check=False,
                 timeout=timeout,
-                env=env
+                env=env,
+                preexec_fn=os.setsid  # Create a new process group
             )
-        except subprocess.TimeoutExpired:
+        except subprocess.TimeoutExpired as e:
+            # Kill the whole process group
+            print(f"Timeout expired: killing process group for {cmd}")
+            os.killpg(e.pid, signal.SIGTERM)  # You can also use SIGKILL
             error_data = {
                 "message": f"Program execution timed out after {timeout} seconds",
                 "validity": False,

@@ -3,6 +3,7 @@ import re
 import json
 import logging
 import time
+import signal
 import argparse
 import subprocess
 import shutil
@@ -232,16 +233,18 @@ class ProgramExecutor:
                         cwd=str(iteration_dir),
                         capture_output=True,
                         text=True,
-                        timeout=self.timeout,  # Use the timeout from constructor
-                        env=env
+                        timeout=self.timeout,
+                        env=env,
+                        preexec_fn=os.setsid  # Create a new process group
                     )
                     exec_time = time.time() - exec_start_time
                     total_execution_time += exec_time
                     
-                except subprocess.TimeoutExpired:
+                except subprocess.TimeoutExpired as e:
                     error_data = {
                         "message": f"Program execution timed out after {self.timeout} seconds"
                     }
+                    os.killpg(e.pid, signal.SIGTERM)  # You can also use SIGKILL
                     with open(cost_file, 'w') as f:
                         json.dump(error_data, f, indent=2)
                     all_outputs.append(f"Test case {base_name}:\nProgram execution timed out after {self.timeout} seconds")
