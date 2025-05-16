@@ -69,13 +69,17 @@ def run_optimization(input_files, output_dir="output", timeout=10, num_cores=8):
 
         # Run the main program to generate output
         try:
-            cmd = ["python3", "main.py"]
+            cmd = ["taskset", "-c", "0-" + str(num_cores - 1), "python3", "main.py"]
             cmd.extend(sorted(input_files))  # Add all input files
             cmd.append(output_file)  # Add output file
             
             # Set environment variables to limit CPU cores
             env = os.environ.copy()
             env["OMP_NUM_THREADS"] = str(num_cores)
+            env["OPENBLAS_NUM_THREADS"] = str(num_cores)
+            env["MKL_NUM_THREADS"] = str(num_cores)
+            env["VECLIB_MAXIMUM_THREADS"] = str(num_cores)
+            env["NUMEXPR_NUM_THREADS"] = str(num_cores)
             
             main_result = subprocess.run(
                 cmd,

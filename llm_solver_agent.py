@@ -213,13 +213,17 @@ class ProgramExecutor:
                 
                 try:
                     # Prepare the command with all input files in the group
-                    cmd = ['python3', 'main.py']
+                    cmd = ['taskset', '-c', '0-' + str(self.num_cores - 1), 'python3', 'main.py']
                     cmd.extend(sorted(group_files))  # Add all input files
                     cmd.append(str(output_file))  # Add output file
                     
                     # Set environment variables to limit CPU cores
                     env = os.environ.copy()
                     env["OMP_NUM_THREADS"] = str(self.num_cores)
+                    env["OPENBLAS_NUM_THREADS"] = str(self.num_cores)
+                    env["MKL_NUM_THREADS"] = str(self.num_cores)
+                    env["VECLIB_MAXIMUM_THREADS"] = str(self.num_cores)
+                    env["NUMEXPR_NUM_THREADS"] = str(self.num_cores)
                     
                     # Measure execution time
                     exec_start_time = time.time()
