@@ -162,20 +162,39 @@ def calculate_geomean(results, max_values):
 
 def calculate_solve_at_i(all_errors, i):
     """Calculate solve@i metrics for the first i iterations."""
-    # Get the first i iterations
-    first_i_iterations = sorted(all_errors.keys())[:i]
+    # Get the first i iterations (grouped by iteration number, ignoring samples)
+    iteration_groups = defaultdict(list)
+    for key in sorted(all_errors.keys()):
+        # Extract iteration number from key (e.g., "iteration0/sample0" -> "iteration0")
+        iteration_num = key.split('/')[0]
+        iteration_groups[iteration_num].append(key)
+    
+    # Get the first i iteration groups
+    first_i_iterations = sorted(iteration_groups.keys())[:i]
 
     # Track the best stage each test case passes in the first i iterations
     test_case_best_stages = defaultdict(int)
 
-    # For each test case, look at its performance across the first i iterations
+    # For each iteration group, look at all its samples
     for iteration in first_i_iterations:
-        iteration_errors = all_errors[iteration]
-        for test_case, error_info in iteration_errors.items():
-            error_type = error_info.get("error_type", "Unknown Error")
-            stage_num = get_stage_number(error_type)
-            if stage_num > 0:  # If it's a valid stage
-                test_case_best_stages[test_case] = max(test_case_best_stages[test_case], stage_num - 1)
+        # Get all samples for this iteration
+        samples = iteration_groups[iteration]
+        
+        # For each test case, check if any sample passes each stage
+        test_case_stages = defaultdict(int)
+        
+        # First, find the best stage achieved by any sample for each test case
+        for sample in samples:
+            iteration_errors = all_errors[sample]
+            for test_case, error_info in iteration_errors.items():
+                error_type = error_info.get("error_type", "Unknown Error")
+                stage_num = get_stage_number(error_type)
+                if stage_num > 0:  # If it's a valid stage
+                    test_case_stages[test_case] = max(test_case_stages[test_case], stage_num - 1)
+        
+        # Update the overall best stages with this iteration's results
+        for test_case, stage in test_case_stages.items():
+            test_case_best_stages[test_case] = max(test_case_best_stages[test_case], stage)
 
     # Calculate stage pass statistics
     stage_pass_stats = defaultdict(int)
