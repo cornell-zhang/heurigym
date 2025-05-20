@@ -243,15 +243,27 @@ class ProgramExecutor:
                     
                     # Measure execution time
                     exec_start_time = time.time()
-                    run_result = subprocess.run(
+                    # Use Popen to get the process ID
+                    process = subprocess.Popen(
                         cmd,
                         cwd=str(iteration_dir),
-                        capture_output=True,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
                         text=True,
-                        timeout=self.timeout,
                         env=env,
                         preexec_fn=os.setsid  # Create a new process group
                     )
+                    
+                    try:
+                        stdout, stderr = process.communicate(timeout=self.timeout)
+                        run_result = subprocess.CompletedProcess(
+                            process.args, process.returncode, stdout, stderr
+                        )
+                    except subprocess.TimeoutExpired:
+                        process.kill()  # Kill the process
+                        os.killpg(os.getpgid(process.pid), signal.SIGTERM)  # Kill the process group
+                        raise
+                        
                     exec_time = time.time() - exec_start_time
                     total_execution_time += exec_time
                     
@@ -259,7 +271,6 @@ class ProgramExecutor:
                     error_data = {
                         "message": f"Program execution timed out after {self.timeout} seconds"
                     }
-                    os.killpg(e.pid, signal.SIGTERM)  # You can also use SIGKILL
                     with open(cost_file, 'w') as f:
                         json.dump(error_data, f, indent=2)
                     all_outputs.append(f"Test case {base_name}:\nProgram execution timed out after {self.timeout} seconds")

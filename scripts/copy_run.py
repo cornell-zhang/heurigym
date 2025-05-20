@@ -25,11 +25,22 @@ def copy_run_to_iterations(llm_solutions_dir):
     # Iterate through all iteration folders
     for iteration_dir in llm_solutions_dir.iterdir():
         if iteration_dir.is_dir() and iteration_dir.name.startswith('iteration'):
-            shutil.copy2(run_file, iteration_dir)
-            print(f"Copied run.py to {iteration_dir}")
+            # Check if this is a multi-sample structure (has sample subfolders)
+            has_samples = any(p.is_dir() and p.name.startswith('sample') for p in iteration_dir.iterdir())
+            
+            if has_samples:
+                # Copy to each sample subfolder
+                for sample_dir in iteration_dir.iterdir():
+                    if sample_dir.is_dir() and sample_dir.name.startswith('sample'):
+                        shutil.copy2(run_file, sample_dir)
+                        print(f"Copied run.py to {sample_dir}")
+            else:
+                # Copy directly to iteration folder
+                shutil.copy2(run_file, iteration_dir)
+                print(f"Copied run.py to {iteration_dir}")
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Copy run.py to operator_scheduling directories')
+    parser = argparse.ArgumentParser(description='Copy run.py to iteration directories')
     parser.add_argument('llm_solutions_dir', help='Path to the llm_solutions directory')
     args = parser.parse_args()
     

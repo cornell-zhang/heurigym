@@ -24,9 +24,14 @@ def find_all_datasets(base_dir):
         for file in files:
             if not file.startswith(".") and not file.endswith(".py"):  # Skip hidden files and .py files
                 base_name = os.path.splitext(file)[0]  # Get base name without extension
+                file_path = os.path.join(root, file)
+                
                 if base_name not in file_groups:
                     file_groups[base_name] = []
-                file_groups[base_name].append(os.path.join(root, file))
+                
+                # Only add the file if it's not already in the list
+                if file_path not in file_groups[base_name]:
+                    file_groups[base_name].append(file_path)
 
     return file_groups
 
@@ -72,6 +77,7 @@ def run_optimization(input_files, output_dir="output", timeout=10, num_cores=8):
             cmd = ["taskset", "-c", "0-" + str(num_cores - 1), "python3", "main.py"]
             cmd.extend(sorted(input_files))  # Add all input files
             cmd.append(output_file)  # Add output file
+            print(cmd)
             
             # Set environment variables to limit CPU cores
             env = os.environ.copy()
@@ -81,27 +87,43 @@ def run_optimization(input_files, output_dir="output", timeout=10, num_cores=8):
             env["VECLIB_MAXIMUM_THREADS"] = str(num_cores)
             env["NUMEXPR_NUM_THREADS"] = str(num_cores)
             
-            main_result = subprocess.run(
+            # Use Popen to get the process ID
+            process = subprocess.Popen(
                 cmd,
-                capture_output=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
                 text=True,
-                check=False,
-                timeout=timeout,
                 env=env,
                 preexec_fn=os.setsid  # Create a new process group
             )
-        except subprocess.TimeoutExpired as e:
-            # Kill the whole process group
-            print(f"Timeout expired: killing process group for {cmd}")
-            os.killpg(e.pid, signal.SIGTERM)  # You can also use SIGKILL
+            
+            try:
+                stdout, stderr = process.communicate(timeout=timeout)
+                main_result = subprocess.CompletedProcess(
+                    process.args, process.returncode, stdout, stderr
+                )
+            except subprocess.TimeoutExpired:
+                process.kill()  # Kill the process
+                os.killpg(os.getpgid(process.pid), signal.SIGTERM)  # Kill the process group
+                error_data = {
+                    "message": f"Program execution timed out after {timeout} seconds",
+                    "validity": False,
+                    "cost": None
+                }
+                with open(cost_file, 'w') as f:
+                    json.dump(error_data, f, indent=2)
+                print(f"Error: Program execution timed out after {timeout} seconds")
+                return False, None
+
+        except Exception as e:
             error_data = {
-                "message": f"Program execution timed out after {timeout} seconds",
+                "message": f"Unexpected error during process execution: {str(e)}",
                 "validity": False,
                 "cost": None
             }
             with open(cost_file, 'w') as f:
                 json.dump(error_data, f, indent=2)
-            print(f"Error: Program execution timed out after {timeout} seconds")
+            print(f"Error: {str(e)}")
             return False, None
 
         # Check if main.py executed successfully
@@ -194,8 +216,8 @@ def main():
                         help='Timeout in seconds for program execution (default: 10)')
     parser.add_argument('--num_cores', type=int, default=8,
                         help='Number of CPU cores to use for program execution (default: 8)')
-    parser.add_argument('dataset_dir', nargs='?', default="../dataset/full",
-                        help='Path to dataset directory (default: ../dataset/full)')
+    parser.add_argument('dataset_dir', nargs='?', default="../_dataset/eval",
+                        help='Path to dataset directory (default: ../_dataset/eval)')
     
     args = parser.parse_args()
 
