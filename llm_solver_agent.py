@@ -8,6 +8,7 @@ import argparse
 import subprocess
 import shutil
 import sys
+import traceback
 from pathlib import Path
 from typing import Dict, List, Tuple
 from dotenv import load_dotenv
@@ -31,7 +32,11 @@ def get_git_commit_id() -> str:
                               text=True, 
                               check=True)
         return result.stdout.strip()
-    except subprocess.CalledProcessError:
+    except subprocess.CalledProcessError as e:
+        error_msg = f"Error getting git commit ID: {str(e)}\n"
+        error_msg += f"Error occurred at line {e.__traceback__.tb_lineno}\n"
+        error_msg += "Traceback:\n" + "".join(traceback.format_tb(e.__traceback__))
+        logger.error(error_msg)
         return "Unknown (not a git repository or git command failed)"
 
 class ProblemReader:
@@ -99,7 +104,7 @@ class ProgramExecutor:
         self.timeout = timeout
         self.num_cores = num_cores
         
-    def save_program(self, program: str, iteration: int = 0) -> Tuple[Path, str]:
+    def save_program(self, program: str, iteration: int = 0, sample: int = 0, total_samples: int = 1) -> Tuple[Path, str]:
         """Saves the LLM's program to solver.py in the solution folder and copies all necessary Python files."""
         # Look for the longest code block
         start_marker = "```"
@@ -139,7 +144,12 @@ class ProgramExecutor:
             program = longest_code
         
         # Create iteration-specific folders
-        iteration_dir = self.solution_folder / f"iteration{iteration}"
+        # Only create sample subfolders if there are multiple samples
+        if total_samples > 1:
+            iteration_dir = self.solution_folder / f"iteration{iteration}" / f"sample{sample}"
+        else:
+            iteration_dir = self.solution_folder / f"iteration{iteration}"
+
         output_dir = iteration_dir / "output"
         os.makedirs(iteration_dir, exist_ok=True)
         os.makedirs(output_dir, exist_ok=True)
@@ -164,7 +174,7 @@ class ProgramExecutor:
         logger.info(f"Saved program to {target_file}")
         return target_file, program
         
-    def execute_program(self, iteration: int = 0) -> Tuple[bool, str]:
+    def execute_program(self, iteration: int = 0, sample: int = 0, total_samples: int = 1) -> Tuple[bool, str]:
         """Runs the Python program and returns success status and output."""
         try:
             # Get file paths from the dataset
@@ -188,9 +198,14 @@ class ProgramExecutor:
             total_evaluation_time = 0
             
             # Get the iteration-specific folders
-            iteration_dir = self.solution_folder / f"iteration{iteration}"
-            output_dir = iteration_dir / "output"
+            # Only use sample subfolders if there are multiple samples
+            if total_samples > 1:
+                iteration_dir = self.solution_folder / f"iteration{iteration}" / f"sample{sample}"
+            else:
+                iteration_dir = self.solution_folder / f"iteration{iteration}"
             
+            output_dir = iteration_dir / "output"
+
             # copy the main.py script
             shutil.copy(
                 "scripts/main.py",
@@ -330,7 +345,11 @@ class ProgramExecutor:
             return True, combined_output
             
         except Exception as e:
-            return False, f"Error: {str(e)}"
+            error_msg = f"Error in execute_program: {str(e)}\n"
+            error_msg += f"Error occurred at line {e.__traceback__.tb_lineno}\n"
+            error_msg += "Traceback:\n" + "".join(traceback.format_tb(e.__traceback__))
+            logger.error(error_msg)
+            return False, error_msg
             
     def extract_results(self, output: str) -> Dict:
         """Extracts and parses the results from program output."""
@@ -361,7 +380,10 @@ class ProgramExecutor:
                 
             return results
         except Exception as e:
-            logger.error(f"Error extracting results: {str(e)}")
+            error_msg = f"Error extracting results: {str(e)}\n"
+            error_msg += f"Error occurred at line {e.__traceback__.tb_lineno}\n"
+            error_msg += "Traceback:\n" + "".join(traceback.format_tb(e.__traceback__))
+            logger.error(error_msg)
             return {'Cost': float('inf')}
             
 
@@ -553,7 +575,8 @@ class LLMInterface:
     def format_prompt(self, 
                      problem_desc: Dict[str, str], 
                      iteration: int = 0, 
-                     solution_dir: Path = None) -> str:
+                     solution_dir: Path = None,
+                     samples_per_iteration: int = 1) -> str:
         """Formats the problem description into a prompt for the LLM."""
         prompt = ""
         
@@ -571,9 +594,23 @@ class LLMInterface:
             # For later iterations, just include the feedback and improvement guidance
             prompt = f"""
 # Feedback from Previous Iteration (Iteration {iteration-1})
-These are the test cases and results from the previous iteration:
+These are the {samples_per_iteration} programs you generated in the previous iteration:
 """
+            
+            for sample in range(samples_per_iteration):
+                # Include the program for this sample
+                if samples_per_iteration > 1:
+                    program_file = solution_dir / f"iteration{iteration - 1}" / f"sample{sample}" / "solver.py"
+                else:
+                    program_file = solution_dir / f"iteration{iteration - 1}" / "solver.py"
+                if program_file.exists():
+                    with open(program_file, 'r') as f:
+                        program_content = f.read()
+                        prompt += f"**Program for Sample {sample+1}:**\n```python\n{program_content}\n```\n\n"
 
+            prompt += """
+The following are the test cases and results from the previous iteration:
+"""
             # Get file paths from the dataset
             if not self.dataset or "train" not in self.dataset:
                 prompt += f"\nNo test cases found in the dataset for {problem_desc['name']}\n\n"
@@ -621,52 +658,47 @@ These are the test cases and results from the previous iteration:
                             else:
                                 prompt += f"**Input File: {Path(input_file).name}** (Shown in the previous iteration)\n"
                         
-                        # Show result for this group
-                        cost_file = solution_dir / f"iteration{iteration - 1}" / "output" / f"{base_name}.cost"
-                        if cost_file.exists():
-                            with open(cost_file, 'r') as f:
-                                cost_data = json.load(f)
-                                if 'validity' in cost_data and 'cost' in cost_data:
-                                    if cost_data['validity']:
-                                        prompt += f"**Result:** Valid solution with cost {cost_data['cost']}\n\n"
+                        # Show results for all samples
+                        for sample in range(samples_per_iteration):
+                            prompt += f"\n### Sample {sample+1} Results:\n"
+                            if samples_per_iteration > 1:
+                                cost_file = solution_dir / f"iteration{iteration - 1}" / f"sample{sample}" / "output" / f"{base_name}.cost"
+                            else:
+                                cost_file = solution_dir / f"iteration{iteration - 1}" / "output" / f"{base_name}.cost"
+                            if cost_file.exists():
+                                with open(cost_file, 'r') as f:
+                                    cost_data = json.load(f)
+                                    if 'validity' in cost_data and 'cost' in cost_data:
+                                        if cost_data['validity']:
+                                            prompt += f"**Result:** Valid solution with cost {cost_data['cost']}\n\n"
+                                        else:
+                                            prompt += f"**Result:** Invalid solution with cost {cost_data['cost']}\n"
+                                            prompt += f"**Error:** {cost_data['message']}\n\n"
                                     else:
-                                        prompt += f"**Result:** Invalid solution with cost {cost_data['cost']}\n"
+                                        prompt += f"**Result:** Error occurred\n"
                                         prompt += f"**Error:** {cost_data['message']}\n\n"
-                                else:
-                                    prompt += f"**Result:** Error occurred\n"
-                                    prompt += f"**Error:** {cost_data['message']}\n\n"
-                        else:
-                            prompt += "**Result:** No output generated\n\n"
+                            else:
+                                # directly error out if no results are found
+                                error_msg = f"Error: No results found for {cost_file}!!! Exiting..."
+                                logger.error(error_msg)
+                                sys.exit(1)
 
-            # Add improvement guidance
-            any_failed = any(
-                not json.load(open(f))['validity'] if 'validity' in json.load(open(f)) else True 
-                for f in (solution_dir / f"iteration{iteration - 1}" / "output").glob("*.cost")
-            )
-            
-            if any_failed:
-                prompt += """
+            prompt += """
 # Improvement Guidance
-The program failed to produce valid solutions for some test cases. Please fix the following issues:
-1. Check for compilation errors or runtime exceptions
-2. Ensure the program handles all edge cases and meets the problem constraints correctly
-3. Verify that the input and output format matches the expected format
-4. Make sure all required functions are implemented correctly, and no external forbidden libraries are used
-5. If the program is not able to produce valid solutions for any test case, please try to find the root cause and fix it.
-6. If the program is able to produce valid solutions for some test cases, please try to improve the solution."""
-            else:
-                prompt += """
-# Improvement Guidance
-Please carefully observe the problem structure and improve upon this program by:
-1. Addressing any weaknesses in the previous approach
-2. Introducing more advanced or efficient algorithms
-3. Focusing on improving performance for test cases
+Please carefully observe the problem structure and improve upon the program by:
+1. Combine the benefits of the sampled programs and try to avoid the limitations
+2. Check for compilation errors or runtime exceptions
+3. Ensure the program handles all edge cases and meets the problem constraints correctly
+4. Verify that the input and output format matches the expected format
+5. Make sure all required functions are implemented correctly, and no external forbidden libraries are used
+6. If the program is not able to produce valid solutions for any test case, try to find the root cause and fix it.
+7. If the program is able to produce valid solutions for some test cases, try to improve the solution.
 
 Your goal is to improve the solution for as many test cases as possible, with special attention to those where the previous solution performed poorly."""
         
         return prompt
     
-    def _save_api_info_to_json(self, model: str, iteration: int, api_time: float, prompt_tokens: int, completion_tokens: int, total_cost: float) -> None:
+    def _save_api_info_to_json(self, model: str, iteration: int, api_time: float, prompt_tokens: int, completion_tokens: int, total_cost: float, samples_per_iteration: int = 1) -> None:
         """Saves API information to a JSON file."""
         if not hasattr(self, 'current_log_file'):
             return
@@ -688,6 +720,7 @@ Your goal is to improve the solution for as many test cases as possible, with sp
             "total_tokens": prompt_tokens + completion_tokens,
             "estimated_cost": round(total_cost, 4),
             "temperature": self.temperature,
+            "samples_per_iteration": samples_per_iteration,
             "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         }
         
@@ -699,9 +732,16 @@ Your goal is to improve the solution for as many test cases as possible, with sp
                     problem_desc: Dict[str, str], 
                     model: str = "gpt-4-turbo-preview",
                     iteration: int = 0,
-                    solution_dir: Path = None) -> str:
-        """Gets a program from the specified LLM using unified OpenAI API format."""
-        prompt = self.format_prompt(problem_desc, iteration, solution_dir)
+                    solution_dir: Path = None,
+                    n: int = 1) -> List[str]:
+        """Gets n programs from the specified LLM using unified OpenAI API format."""
+        # Check if temperature is 0 when requesting multiple samples
+        if n > 1 and self.temperature == 0:
+            error_msg = f"Error: Cannot request {n} samples with temperature=0 as it will generate identical samples!!! Exiting..."
+            logger.error(error_msg)
+            sys.exit(1)
+
+        prompt = self.format_prompt(problem_desc, iteration, solution_dir, n)
         
         # Initialize conversation history for this model if not exists
         if model not in self.conversation_history:
@@ -768,7 +808,8 @@ Your goal is to improve the solution for as many test cases as possible, with sp
             api_params = {
                 "model": actual_model,
                 "messages": self.conversation_history[model],
-                "stream": self.stream
+                "stream": self.stream,
+                "n": n  # Request n completions
             }
             
             # Add model-specific parameters
@@ -791,11 +832,13 @@ Your goal is to improve the solution for as many test cases as possible, with sp
             # Make API call using unified OpenAI format
             response = client.chat.completions.create(**api_params)
             
+            raw_responses = []
+            prompt_tokens = 0
+            completion_tokens = 0
+            
             if self.stream:
                 # Initialize variables for collecting streamed content and token usage
-                raw_response = ""
-                prompt_tokens = 0
-                completion_tokens = 0
+                current_response = ""
                 
                 # Process the streaming response
                 for chunk in response:
@@ -804,7 +847,7 @@ Your goal is to improve the solution for as many test cases as possible, with sp
                         if hasattr(chunk.choices[0].delta, 'content'):
                             content = chunk.choices[0].delta.content
                             if content:
-                                raw_response += content
+                                current_response += content
                                 # Log the streamed content if we have a log file
                                 if hasattr(self, 'current_log_file'):
                                     with open(self.current_log_file, 'a') as f:
@@ -814,27 +857,42 @@ Your goal is to improve the solution for as many test cases as possible, with sp
                         if hasattr(chunk, 'usage'):
                             prompt_tokens = chunk.usage.prompt_tokens
                             completion_tokens = chunk.usage.completion_tokens
+                            if current_response:
+                                raw_responses.append(current_response)
+                                current_response = ""
             else:
                 # Handle non-streaming response
                 if not response or not response.choices:
                     error_msg = f"Error: Invalid response received from model {model}!!! Exiting..."
                     logger.error(error_msg)
                     sys.exit(1)
-                    
-                raw_response = response.choices[0].message.content
+                
+                # Collect all responses
+                for choice in response.choices:
+                    if choice.message.content:
+                        raw_responses.append(choice.message.content)
+                
                 prompt_tokens = response.usage.prompt_tokens
                 completion_tokens = response.usage.completion_tokens
             
-            if not raw_response or not raw_response.strip():
+            if not raw_responses:
                 error_msg = f"Error: Empty response received from model {model}!!! Exiting..."
                 logger.error(error_msg)
                 sys.exit(1)
+            
+            # Check if we got the requested number of responses
+            if len(raw_responses) < n:
+                error_msg = f"Error: Requested {n} completions but only received {len(raw_responses)} from model {model}!!! Exiting..."
+                logger.error(error_msg)
+                sys.exit(1)
                 
-            # Add assistant's response to conversation history
-            self.conversation_history[model].append({"role": "assistant", "content": raw_response})
+            # Add assistant's response to conversation history (use the first response for history)
+            # self.conversation_history[model].append({"role": "assistant", "content": raw_responses[0]})
             
         except Exception as e:
-            error_msg = f"Error: Failed to get response from model {model}: {str(e)}!!! Exiting..."
+            error_msg = f"Error: Failed to get response from model {model}: {str(e)}\n"
+            error_msg += f"Error occurred at line {e.__traceback__.tb_lineno}\n"
+            error_msg += "Traceback:\n" + "".join(traceback.format_tb(e.__traceback__))
             logger.error(error_msg)
             sys.exit(1)
             
@@ -844,7 +902,7 @@ Your goal is to improve the solution for as many test cases as possible, with sp
         total_cost = calculate_cost(model, prompt_tokens, completion_tokens)
         
         # Save API info to JSON file
-        self._save_api_info_to_json(model, iteration, api_time, prompt_tokens, completion_tokens, total_cost)
+        self._save_api_info_to_json(model, iteration, api_time, prompt_tokens, completion_tokens, total_cost, n)
         
         # Log API timing and cost information to the main log file
         if hasattr(self, 'current_log_file'):
@@ -853,20 +911,19 @@ Your goal is to improve the solution for as many test cases as possible, with sp
                 f.write(f"Prompt Tokens: {prompt_tokens}\n")
                 f.write(f"Completion Tokens: {completion_tokens}\n")
                 f.write(f"Total Tokens: {prompt_tokens + completion_tokens}\n")
-                f.write(f"Estimated Cost: ${total_cost:.4f}\n\n")
+                f.write(f"Estimated Cost: ${total_cost:.4f}\n")
+                f.write(f"Samples per Iteration: {n}\n\n")
         
-        return raw_response
+        return raw_responses
     
     def get_iterative_program(self,
                               problem_desc: Dict[str, str],
                               model: str,
                               executor: ProgramExecutor,
                               solution_dir: Path,
-                              max_iterations: int = 3) -> Tuple[str, int]:
+                              max_iterations: int = 3,
+                              samples_per_iteration: int = 2) -> Tuple[str, int]:
         """Gets an iteratively improved program from the specified LLM."""
-        current_program = None
-        previous_program = None
-        
         # Create log directory for this run
         log_dir = solution_dir / "logs"
         log_dir.mkdir(parents=True, exist_ok=True)
@@ -892,39 +949,42 @@ Your goal is to improve the solution for as many test cases as possible, with sp
                 with open(log_file, 'a') as f:
                     f.write(f"\n{'=' * 40} ITERATION {iteration} {'=' * 40}\n\n")
                 
-                # Get program from LLM
-                raw_response = self.get_program(
+                # Get program from LLM with multiple samples
+                raw_responses = self.get_program(
                     problem_desc, 
                     model, 
                     iteration,
-                    solution_dir
+                    solution_dir,
+                    n=samples_per_iteration
                 )
                 
-                # Save the program to a separate file
-                response_dir = log_dir / "responses"
-                response_dir.mkdir(exist_ok=True)
-                program_file = response_dir / f"response{iteration}.txt"
-                with open(program_file, 'w') as f:
-                    f.write(raw_response)
-                
-                # Append the program to the log file
-                with open(log_file, 'a') as f:
-                    f.write("RAW RESPONSE:\n")
-                    f.write(raw_response if raw_response else "No program generated yet")
-                    f.write("\n\n")
-                
-                # Save and execute the program
-                program_file, current_program = executor.save_program(raw_response, iteration)
-                success, output = executor.execute_program(iteration)
-                
-                # Store the program for the next iteration
-                previous_program = current_program
-                
-                # Append the execution output to the log file
-                with open(log_file, 'a') as f:
-                    f.write("EXECUTION OUTPUT:\n")
-                    f.write(output)
-                    f.write("\n\n")
+                for sample in range(samples_per_iteration):
+                    logger.info(f"Processing sample {sample+1}/{samples_per_iteration} for iteration {iteration+1}")
+                    with open(log_file, 'a') as f:
+                        f.write(f"\n--- Sample {sample+1}/{samples_per_iteration} ---\n\n")
+                    
+                    # Save the program to a separate file
+                    response_dir = log_dir / "responses"
+                    response_dir.mkdir(exist_ok=True)
+                    program_file = response_dir / f"response{iteration}_sample{sample}.txt"
+                    with open(program_file, 'w') as f:
+                        f.write(raw_responses[sample])
+                    
+                    # Append the program to the log file
+                    with open(log_file, 'a') as f:
+                        f.write("RAW RESPONSE:\n")
+                        f.write(raw_responses[sample] if raw_responses[sample] else "No program generated yet")
+                        f.write("\n\n")
+                    
+                    # Save and execute the program
+                    executor.save_program(raw_responses[sample], iteration, sample, samples_per_iteration)
+                    success, output = executor.execute_program(iteration, sample, samples_per_iteration)
+                    
+                    # Append the execution output to the log file
+                    with open(log_file, 'a') as f:
+                        f.write("EXECUTION OUTPUT:\n")
+                        f.write(output)
+                        f.write("\n\n")
                 
                 if not success:
                     logger.error(f"Failed to run program: {output}")
@@ -948,10 +1008,13 @@ Your goal is to improve the solution for as many test cases as possible, with sp
                     time.sleep(sleep_time)
                 
             except Exception as e:
-                logger.error(f"Error in iteration {iteration+1}: {str(e)}")
+                error_msg = f"Error in iteration {iteration+1}: {str(e)}\n"
+                error_msg += f"Error occurred at line {e.__traceback__.tb_lineno}\n"
+                error_msg += "Traceback:\n" + "".join(traceback.format_tb(e.__traceback__))
+                logger.error(error_msg)
                 # Log the error to the log file
                 with open(log_file, 'a') as f:
-                    f.write(f"ERROR IN ITERATION {iteration+1}: {str(e)}\n")
+                    f.write(f"ERROR IN ITERATION {iteration+1}:\n{error_msg}\n")
                     f.write("=" * 80 + "\n\n")
                 raise
         
@@ -959,8 +1022,7 @@ Your goal is to improve the solution for as many test cases as possible, with sp
         with open(log_file, 'a') as f:
             f.write(f"\n{'=' * 40} FINAL SUMMARY {'=' * 40}\n\n")
             f.write("=" * 80 + "\n")
-        
-        return current_program, max_iterations - 1
+
 
 def generate_summary_table(results_data):
     """Generate a formatted summary table comparing all models' performance."""
@@ -1026,6 +1088,9 @@ def parse_arguments():
                             "claude-3-7-sonnet-20250219"
                         ],
                         help='List of models to use (default: deepseek-chat, deepseek-reasoner)')
+    
+    parser.add_argument('--samples_per_iteration', type=int, default=1,
+                        help='Number of samples to generate per iteration (default: 1)')
     
     parser.add_argument('--iterations', type=int, default=3,
                         help='Maximum number of iterations for each model (default: 3)')
@@ -1121,12 +1186,13 @@ def main():
                 
                 # Get iterative program
                 logger.info(f"Getting iterative program from {model}")
-                program, final_iteration = llm_interface.get_iterative_program(
+                llm_interface.get_iterative_program(
                     problem_desc, 
                     model,
                     executor,
                     solution_dir,
-                    args.iterations
+                    args.iterations,
+                    args.samples_per_iteration
                 )
                 
                 # After each model finishes, run collect_results.py for that model
