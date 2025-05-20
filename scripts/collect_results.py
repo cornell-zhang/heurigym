@@ -142,7 +142,7 @@ def calculate_geomean(results, max_values):
         if dataset not in max_values:
             continue
         # Use max_value for "X" cases
-        cost = float(value) if value != "X" else max_values[dataset]
+        cost = float(value) if value != "X" else 10 * max_values[dataset]
         valid_values.append(cost)
 
     if not valid_values:
