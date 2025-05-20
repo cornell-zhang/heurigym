@@ -9,16 +9,27 @@ import argparse
 from collections import defaultdict
 
 def find_iteration_dirs(base_dir):
-    """Find all iteration directories."""
-    iteration_dirs = []
+    """Find all iteration directories and their sample subdirectories."""
+    iteration_dirs = set()  # Use set to prevent duplications
+    
+    # First, find all iteration directories
     for root, dirs, files in os.walk(base_dir):
-        # Skip hidden directories
-        dirs[:] = [d for d in dirs if not d.startswith(".")]
-
+        # Skip hidden directories and unnecessary subdirectories
+        dirs[:] = [d for d in dirs if not d.startswith(".") and d not in ["__pycache__", "output"]]
+        
         # Look for iteration directories
         if "iteration" in root:
-            iteration_dirs.append(root)
-    return iteration_dirs
+            # If this is a main iteration directory, check for sample subdirectories
+            if not any("sample" in d for d in dirs):
+                iteration_dirs.add(root)
+            # If it has sample subdirectories, add those instead
+            else:
+                for dir_name in dirs:
+                    if dir_name.startswith("sample"):
+                        sample_dir = os.path.join(root, dir_name)
+                        iteration_dirs.add(sample_dir)
+
+    return sorted(list(iteration_dirs))  # Convert set to sorted list for consistent order
 
 def get_stage_number(error_type):
     """Get the stage number from error type."""
@@ -81,7 +92,7 @@ def extract_errors(iteration_dir):
     return errors
 
 def find_run_files(base_dir):
-    """Find all run.py files in iteration directories."""
+    """Find all run.py files in iteration directories and their sample subdirectories."""
     run_files = []
     for root, dirs, files in os.walk(base_dir):
         # Skip hidden directories
@@ -89,7 +100,12 @@ def find_run_files(base_dir):
 
         # Look for iteration directories
         if "iteration" in root and "run.py" in files:
-            run_files.append(os.path.join(root, "run.py"))
+            # Check if this is a sample subdirectory
+            if "sample" in root:
+                run_files.append(os.path.join(root, "run.py"))
+            # If this is a main iteration directory without samples, add it
+            elif not any("sample" in d for d in dirs):
+                run_files.append(os.path.join(root, "run.py"))
     return run_files
 
 def run_optimization(run_file, dataset_path, timeout=10, num_cores=8):
@@ -222,7 +238,7 @@ def main():
     print(f"Using CPU cores: {args.num_cores}")
 
     # Initialize data structures
-    iteration_results = {}  # Store results for each iteration
+    iteration_results = {}  # Store results for each iteration and sample
     max_values = {}  # Store max value for each dataset
     all_errors = defaultdict(dict)
     error_stats = defaultdict(lambda: defaultdict(int))
@@ -238,11 +254,23 @@ def main():
     for run_file in run_files:
         print(f"Processing optimization in {run_file}...")
         results = run_optimization(run_file, dataset_path, args.timeout, args.num_cores)
-        iteration_name = os.path.basename(os.path.dirname(run_file))
+        
+        # Get iteration name and sample number from path
+        path_parts = run_file.split(os.sep)
+        # Find the iteration directory index
+        iteration_idx = next(i for i, p in enumerate(path_parts) if p.startswith("iteration"))
+        iteration_name = path_parts[iteration_idx]
+        
+        # Check if this is a sample run by looking at the next directory
+        if iteration_idx + 1 < len(path_parts) and path_parts[iteration_idx + 1].startswith("sample"):
+            sample_name = path_parts[iteration_idx + 1]
+            iteration_key = f"{iteration_name}/{sample_name}"
+        else:
+            iteration_key = iteration_name
 
         if results:
             # Store results for this iteration
-            iteration_results[iteration_name] = results
+            iteration_results[iteration_key] = results
 
             # Update max values for each dataset
             for dataset, value in results.items():
@@ -250,7 +278,7 @@ def main():
                     current_max = max_values.get(dataset, float('-inf'))
                     max_values[dataset] = max(current_max, float(value))
         else:
-            iteration_results[iteration_name] = {}
+            iteration_results[iteration_key] = {}
 
     # Calculate geomean for each iteration and find the best one
     best_geomean = float('inf')
@@ -286,9 +314,15 @@ def main():
     if best_iteration:
         for dataset, value in iteration_results[best_iteration].items():
             cost = float(value) if value != "X" else max_values.get(dataset, float("inf"))
+            # Get the full path to the run.py file
+            if "/" in best_iteration:  # This is a sample directory
+                iteration_name, sample_name = best_iteration.split("/")
+                source_path = os.path.join(iteration_name, sample_name, "run.py")
+            else:
+                source_path = os.path.join(best_iteration, "run.py")
             best_results[dataset] = {
                 "cost": cost,
-                "source": os.path.join(best_iteration, "run.py")
+                "source": source_path
             }
 
     # Print summary of best results
@@ -309,16 +343,28 @@ def main():
     # Then, process each iteration directory for errors
     print("\nCollecting error information...")
     for iteration_dir in iteration_dirs:
-        iteration_name = os.path.basename(iteration_dir)
+        # Get iteration name and sample number from path
+        path_parts = iteration_dir.split(os.sep)
+        # Find the iteration directory index
+        iteration_idx = next(i for i, p in enumerate(path_parts) if p.startswith("iteration"))
+        iteration_name = path_parts[iteration_idx]
+        
+        # Check if this is a sample directory by looking at the next directory
+        if iteration_idx + 1 < len(path_parts) and path_parts[iteration_idx + 1].startswith("sample"):
+            sample_name = path_parts[iteration_idx + 1]
+            iteration_key = f"{iteration_name}/{sample_name}"
+        else:
+            iteration_key = iteration_name
+
         errors = extract_errors(iteration_dir)
 
         if errors:
-            all_errors[iteration_name] = errors
+            all_errors[iteration_key] = errors
 
             # Update error statistics and track best passed stages
             for test_case, error_info in errors.items():
                 error_type = error_info.get("error_type", "Unknown Error")
-                error_stats[iteration_name][error_type] += 1
+                error_stats[iteration_key][error_type] += 1
                 test_case_stats[test_case][error_type] += 1
 
     # Print error statistics
@@ -331,7 +377,7 @@ def main():
         all_error_types.update(stats.keys())
 
     # Print header
-    header = "Iteration".ljust(15)
+    header = "Iteration".ljust(30)
     for error_type in sorted(all_error_types):
         header += f" | {error_type.ljust(20)}"
     print(header)
@@ -339,7 +385,7 @@ def main():
 
     # Print statistics for each iteration
     for iteration in sorted(error_stats.keys()):
-        line = iteration.ljust(15)
+        line = iteration.ljust(30)
         for error_type in sorted(all_error_types):
             count = error_stats[iteration].get(error_type, 0)
             line += f" | {str(count).ljust(20)}"
@@ -387,7 +433,8 @@ def main():
         json.dump({
             dataset: {
                 "cost": result["cost"],
-                "source": os.path.relpath(result["source"], base_dir) if result["source"] else None
+                "source": os.path.relpath(result["source"], base_dir) if result["source"] else None,
+                "iteration": best_iteration  # Add iteration information
             }
             for dataset, result in sorted(best_results.items())
         }, f, indent=2)
@@ -422,7 +469,15 @@ def main():
             "total_statistics": total_stats,
             "iteration_geomeans": iteration_geomeans,
             "best_iteration": best_iteration,
-            "solve_at_i_metrics": solve_at_i_metrics
+            "solve_at_i_metrics": solve_at_i_metrics,
+            "best_results": {
+                dataset: {
+                    "cost": result["cost"],
+                    "source": os.path.relpath(result["source"], base_dir) if result["source"] else None,
+                    "iteration": best_iteration
+                }
+                for dataset, result in sorted(best_results.items())
+            }
         }, f, indent=2)
 
     print(f"\nBest results saved to {results_output}")
