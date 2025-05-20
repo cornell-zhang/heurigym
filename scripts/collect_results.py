@@ -332,7 +332,7 @@ def main():
     best_results = defaultdict(lambda: {"cost": float("inf"), "source": None})
     if best_iteration:
         for dataset, value in iteration_results[best_iteration].items():
-            cost = float(value) if value != "X" else max_values.get(dataset, float("inf"))
+            cost = float(value) if value != "X" else float("inf")
             # Get the full path to the run.py file
             if "/" in best_iteration:  # This is a sample directory
                 iteration_name, sample_name = best_iteration.split("/")
