@@ -5,6 +5,7 @@ baseline that derive near-optimal solution, which improves on greedy solution by
 import argparse
 import random
 import time
+import json
 from datetime import timedelta
 from pathlib import Path
 
@@ -257,7 +258,8 @@ def convert_pairings_to_leg_objects(pairings, df):
 
 # ENHANCED GA WITH 5 ISLANDS
 def enhanced_ga_search(legs, greedy_perm, gens=500, pop_size=200, cx_pb=0.9, mut_pb=0.5, 
-                      elite=5, tournament_size=5, seed=42, time_limit=None, num_islands=5):
+                      elite=5, tournament_size=5, seed=42, time_limit=None, num_islands=5,
+                      base_name="default"):
     """
     Enhanced genetic algorithm with 5 islands
     """
@@ -271,6 +273,20 @@ def enhanced_ga_search(legs, greedy_perm, gens=500, pop_size=200, cx_pb=0.9, mut
     
     # Start time for potential time-based termination
     start_time = time.time()
+    
+    # Create directory for saving iteration results with base name
+    iteration_dir = Path(f"crew_pairing/baseline/iterations_{base_name}")
+    iteration_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Initialize iteration history
+    iteration_history = {
+        'generation': [],
+        'best_cost': [],
+        'avg_cost': [],
+        'std_cost': [],
+        'improvement': [],
+        'best_permutation': []
+    }
     
     # --- INITIALIZATION STRATEGIES ----------------------------------------------
     def new_random_ind():
@@ -665,14 +681,15 @@ def enhanced_ga_search(legs, greedy_perm, gens=500, pop_size=200, cx_pb=0.9, mut
     best_perm = greedy_perm.copy()
     no_improvement_count = 0  # Track generations without improvement
     
-    # For detailed reporting
-    gen_history = {
-        'generation': [],
-        'best_cost': [],
-        'avg_cost': [],
-        'std_cost': [],
-        'improvement': []
+    # Save initial greedy solution
+    initial_solution = {
+        'generation': 0,
+        'cost': greedy_cost,
+        'permutation': greedy_perm,
+        'improvement': 0.0
     }
+    with open(iteration_dir / 'initial_solution.json', 'w') as f:
+        json.dump(initial_solution, f)
     
     # --- Main GA loop with island model --------------------------------------
     header = f"{'Gen':>4} | {'Best Cost':>12} | {'Avg Cost':>12} | {'Improvement':>10} | {'New Best':>8} | {'Island Bests'}"
@@ -705,6 +722,16 @@ def enhanced_ga_search(legs, greedy_perm, gens=500, pop_size=200, cx_pb=0.9, mut
                 best_perm = island[costs.index(min_cost)].copy()
                 generation_improved = True
                 no_improvement_count = 0
+                
+                # Save new best solution
+                solution = {
+                    'generation': g,
+                    'cost': best_cost,
+                    'permutation': best_perm,
+                    'improvement': (greedy_cost - best_cost) / greedy_cost * 100
+                }
+                with open(iteration_dir / f'best_solution_gen_{g:04d}.json', 'w') as f:
+                    json.dump(solution, f)
             
             # Selection (tournament)
             def tournament_select():
@@ -747,11 +774,16 @@ def enhanced_ga_search(legs, greedy_perm, gens=500, pop_size=200, cx_pb=0.9, mut
         improvement = (greedy_cost - best_cost) / greedy_cost * 100
         
         # Store history
-        gen_history['generation'].append(g)
-        gen_history['best_cost'].append(best_cost)
-        gen_history['avg_cost'].append(avg_cost)
-        gen_history['std_cost'].append(std_cost)
-        gen_history['improvement'].append(improvement)
+        iteration_history['generation'].append(g)
+        iteration_history['best_cost'].append(best_cost)
+        iteration_history['avg_cost'].append(avg_cost)
+        iteration_history['std_cost'].append(std_cost)
+        iteration_history['improvement'].append(improvement)
+        iteration_history['best_permutation'].append(best_perm)
+        
+        # Save iteration history
+        with open(iteration_dir / 'iteration_history.json', 'w') as f:
+            json.dump(iteration_history, f)
         
         # Print detailed report for each generation
         island_bests_str = ", ".join(f"{cost:,.0f}" for cost in island_best_costs)
@@ -816,6 +848,18 @@ def enhanced_ga_search(legs, greedy_perm, gens=500, pop_size=200, cx_pb=0.9, mut
     print(f"Number of pairings:  {len(final_pairings)} (from original: {len(greedy_pairings)})")
     print("=" * 50)
     
+    # Save final solution
+    final_solution = {
+        'generation': g,
+        'cost': best_cost,
+        'permutation': best_perm,
+        'improvement': (greedy_cost - best_cost) / greedy_cost * 100,
+        'total_generations': g,
+        'total_time': time.time() - start_time
+    }
+    with open(iteration_dir / 'final_solution.json', 'w') as f:
+        json.dump(final_solution, f)
+    
     return best_perm, best_cost
 
 def write_solution(file_path: Path, legs, perm):
@@ -851,6 +895,9 @@ def main():
 
     input_file = args.input_csv
     
+    # Extract base name from input file (remove extension and path)
+    base_name = Path(input_file).stem
+    
     # Step 1: Generate the exact same greedy solution as the original code
     print("Generating original greedy solution...")
     greedy_pairings, greedy_perm = original_greedy_solution(input_file, "greedy_solution.txt")
@@ -876,6 +923,7 @@ def main():
     print(f"  Tournament size:  5")
     print(f"  Number of islands: {args.islands}")
     print(f"  Time limit:       {args.time if args.time else 'None'}")
+    print(f"  Base name:        {base_name}")
     print("\n" + "=" * 50)
     
     best_perm, best_cost = enhanced_ga_search(
@@ -888,7 +936,8 @@ def main():
         tournament_size=5,
         time_limit=args.time,
         seed=42,
-        num_islands=args.islands
+        num_islands=args.islands,
+        base_name=base_name
     )
     
     print("\nWriting final solution...")
