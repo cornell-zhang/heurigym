@@ -6,7 +6,24 @@ import re
 import math
 import shutil
 import argparse
+import importlib.util
 from collections import defaultdict
+
+def load_metric_module(metric_path):
+    """Dynamically load metric module from the given path or fall back to scripts directory."""
+    if os.path.exists(metric_path):
+        # Load from problem-specific path
+        spec = importlib.util.spec_from_file_location("metric", metric_path)
+        metric_module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(metric_module)
+        return metric_module
+    else:
+        # Fall back to scripts directory
+        scripts_metric_path = os.path.join(os.path.dirname(__file__), "metric.py")
+        spec = importlib.util.spec_from_file_location("metric", scripts_metric_path)
+        metric_module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(metric_module)
+        return metric_module
 
 def find_iteration_dirs(base_dir):
     """Find all iteration directories and their sample subdirectories."""
@@ -134,31 +151,54 @@ def run_optimization(run_file, dataset_path, timeout=10, num_cores=8):
         print(f"Error running {run_file}: {e}")
         return None
 
-def calculate_geomean(results, max_values):
-    """Calculate geometric mean for an iteration's results."""
+def read_baseline_values(baseline_path):
+    """Read baseline values from baseline.json in the problem folder."""
+    if not os.path.exists(baseline_path):
+        print(f"Warning: Baseline file not found at {baseline_path}")
+        return {}
+    
+    try:
+        with open(baseline_path, 'r') as f:
+            baseline_data = json.load(f)
+            return baseline_data
+    except Exception as e:
+        print(f"Error reading baseline file: {e}")
+        return {}
+
+def calculate_geomean(results, baseline_values, normalize_score):
+    """Calculate geometric mean, coverage, and QCI for an iteration's results using baseline values."""
     valid_values = []
+    total_datasets = len(results)
+    valid_datasets = 0
+
     for dataset, value in results.items():
-        # Skip datasets where all iterations failed
-        if dataset not in max_values:
+        # Skip if no baseline value available
+        if dataset not in baseline_values:
+            raise ValueError(f"Baseline value not found for dataset: {dataset}")
+        # Skip "X" cases
+        if value == "X":
             continue
-        # Use max_value for "X" cases
-        cost = float(value) if value != "X" else 10 * max_values[dataset]
-        valid_values.append(cost)
+        # Normalize the score using the baseline value
+        normalized_score = normalize_score(float(value), baseline_values[dataset])
+        valid_values.append(normalized_score)
+        valid_datasets += 1
 
     if not valid_values:
-        return float('inf')
+        return float('inf'), 0.0, 0.0
 
-    mapped_values = []
-    for x in valid_values:
-        if x == 0:
-            mapped_values.append(1e-4)
-        elif x < 0:
-            mapped_values.append(-1/x)
-        else:
-            mapped_values.append(x)
+    # Calculate geometric mean of normalized scores (quality)
+    quality = math.exp(sum(math.log(x) for x in valid_values) / len(valid_values))
+    
+    # Calculate coverage (pass rate)
+    coverage = valid_datasets / total_datasets
+    
+    # Calculate QCI (Quality-Coverage Index) using F1-like formula
+    if quality + coverage == 0:
+        qci = 0.0
+    else:
+        qci = 2 * quality * coverage / (quality + coverage)
 
-    # Calculate geometric mean
-    return math.exp(sum(math.log(x) for x in mapped_values) / len(valid_values))
+    return quality, coverage, qci
 
 def calculate_solve_at_i(all_errors, i):
     """Calculate solve@i metrics for the first i iterations."""
@@ -239,6 +279,20 @@ def main():
     base_dir = args.llm_solutions_dir
     dataset_path = os.path.abspath(args.dataset_path)
 
+    # Read baseline values
+    problem_name = os.path.basename(dataset_path)
+    metric_path = os.path.join(problem_name, "program", "metric.py")
+    baseline_path = os.path.join(problem_name, "baseline", "baseline.json")
+    
+    # Load metric module
+    metric_module = load_metric_module(metric_path)
+    normalize_score = metric_module.normalize_score
+    
+    baseline_values = read_baseline_values(baseline_path)
+    if not baseline_values:
+        print("Error: No baseline values found. Exiting.")
+        sys.exit(1)
+
     if args.clean:
         removed_count = remove_output_folders(base_dir)
         print(f"\nRemoved {removed_count} output folders")
@@ -258,7 +312,6 @@ def main():
 
     # Initialize data structures
     iteration_results = {}  # Store results for each iteration and sample
-    max_values = {}  # Store max value for each dataset
     all_errors = defaultdict(dict)
     error_stats = defaultdict(lambda: defaultdict(int))
     test_case_stats = defaultdict(lambda: defaultdict(int))
@@ -290,43 +343,41 @@ def main():
         if results:
             # Store results for this iteration
             iteration_results[iteration_key] = results
-
-            # Update max values for each dataset
-            for dataset, value in results.items():
-                if value != "X":
-                    current_max = max_values.get(dataset, float('-inf'))
-                    max_values[dataset] = max(current_max, float(value))
         else:
             iteration_results[iteration_key] = {}
 
     # Calculate geomean for each iteration and find the best one
-    best_geomean = float('inf')
+    best_qci = 0.0
     best_iteration = None
-    iteration_geomeans = {}
+    iteration_metrics = {}  # Changed from iteration_geomeans to iteration_metrics
 
-    print("\nGeometric Mean Results:")
-    print("=" * 80)
-    print(f"{'Iteration':<30} | {'Geometric Mean':<15}")
-    print("-" * 80)
+    print("\nResults Summary:")
+    print("=" * 100)
+    print(f"{'Iteration':<30} | {'Quality':<10} | {'Coverage':<10} | {'QCI':<10}")
+    print("-" * 100)
 
     for iteration, results in iteration_results.items():
-        geomean = calculate_geomean(results, max_values)
-        iteration_geomeans[iteration] = geomean
-        print(f"{iteration:<30} | {geomean:<15.4f}")
+        quality, coverage, qci = calculate_geomean(results, baseline_values, normalize_score)
+        iteration_metrics[iteration] = {
+            'quality': quality,
+            'coverage': coverage,
+            'qci': qci
+        }
+        print(f"{iteration:<30} | {quality:<10.4f} | {coverage:<10.4f} | {qci:<10.4f}")
 
-        if geomean < best_geomean:
-            best_geomean = geomean
+        if qci >= best_qci: # take the last best iteration
+            best_qci = qci
             best_iteration = iteration
 
-    print("=" * 80)
+    print("=" * 100)
     
-    # If all iterations have infinite geometric means, use the last iteration
-    if best_geomean == float('inf'):
+    # If all iterations have zero QCI, use the last iteration
+    if best_qci == 0.0:  # Changed condition to check for zero QCI
         best_iteration = list(iteration_results.keys())[-1]
-        best_geomean = iteration_geomeans[best_iteration]
-        print(f"All iterations have infinite geometric means. Using last iteration: {best_iteration}")
+        best_qci = iteration_metrics[best_iteration]['qci']
+        print(f"All iterations have zero QCI. Using last iteration: {best_iteration}")
     
-    print(f"Best iteration: {best_iteration} with geomean: {best_geomean:.4f}")
+    print(f"Best iteration: {best_iteration} with QCI: {best_qci:.4f}")
 
     # Use results from the best iteration
     best_results = defaultdict(lambda: {"cost": float("inf"), "source": None})
@@ -453,7 +504,8 @@ def main():
             dataset: {
                 "cost": result["cost"],
                 "source": os.path.relpath(result["source"], base_dir) if result["source"] else None,
-                "iteration": best_iteration  # Add iteration information
+                "iteration": best_iteration,
+                "metrics": iteration_metrics[best_iteration]  # Add metrics to the output
             }
             for dataset, result in sorted(best_results.items())
         }, f, indent=2)
@@ -465,8 +517,8 @@ def main():
         for dataset, result in sorted(best_results.items()):
             f.write(f"{result['cost']:.4f}\n")
 
-        # Write best cost
-        f.write(f"{best_geomean:.4f}\n")
+        # Write best QCI
+        f.write(f"{best_qci:.4f}\n")
 
         # Write current solution directory (timestamp)
         f.write(f"{sys.argv[1].split('/')[1]}\n")
@@ -486,14 +538,15 @@ def main():
             "iteration_statistics": error_stats,
             "test_case_statistics": test_case_stats,
             "total_statistics": total_stats,
-            "iteration_geomeans": iteration_geomeans,
+            "iteration_metrics": iteration_metrics,  # Changed from iteration_geomeans
             "best_iteration": best_iteration,
             "solve_at_i_metrics": solve_at_i_metrics,
             "best_results": {
                 dataset: {
                     "cost": result["cost"],
                     "source": os.path.relpath(result["source"], base_dir) if result["source"] else None,
-                    "iteration": best_iteration
+                    "iteration": best_iteration,
+                    "metrics": iteration_metrics[best_iteration]  # Add metrics to the output
                 }
                 for dataset, result in sorted(best_results.items())
             }
