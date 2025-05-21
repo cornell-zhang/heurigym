@@ -6,19 +6,47 @@ import re
 import math
 import shutil
 import argparse
+import importlib.util
 from collections import defaultdict
 
-def find_iteration_dirs(base_dir):
-    """Find all iteration directories."""
-    iteration_dirs = []
-    for root, dirs, files in os.walk(base_dir):
-        # Skip hidden directories
-        dirs[:] = [d for d in dirs if not d.startswith(".")]
+def load_metric_module(metric_path):
+    """Dynamically load metric module from the given path or fall back to scripts directory."""
+    if os.path.exists(metric_path):
+        # Load from problem-specific path
+        spec = importlib.util.spec_from_file_location("metric", metric_path)
+        metric_module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(metric_module)
+        return metric_module
+    else:
+        # Fall back to scripts directory
+        scripts_metric_path = os.path.join(os.path.dirname(__file__), "metric.py")
+        spec = importlib.util.spec_from_file_location("metric", scripts_metric_path)
+        metric_module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(metric_module)
+        return metric_module
 
+def find_iteration_dirs(base_dir):
+    """Find all iteration directories and their sample subdirectories."""
+    iteration_dirs = set()  # Use set to prevent duplications
+    
+    # First, find all iteration directories
+    for root, dirs, files in os.walk(base_dir):
+        # Skip hidden directories and unnecessary subdirectories
+        dirs[:] = [d for d in dirs if not d.startswith(".") and d not in ["__pycache__", "output"]]
+        
         # Look for iteration directories
         if "iteration" in root:
-            iteration_dirs.append(root)
-    return iteration_dirs
+            # If this is a main iteration directory, check for sample subdirectories
+            if not any("sample" in d for d in dirs):
+                iteration_dirs.add(root)
+            # If it has sample subdirectories, add those instead
+            else:
+                for dir_name in dirs:
+                    if dir_name.startswith("sample"):
+                        sample_dir = os.path.join(root, dir_name)
+                        iteration_dirs.add(sample_dir)
+
+    return sorted(list(iteration_dirs))  # Convert set to sorted list for consistent order
 
 def get_stage_number(error_type):
     """Get the stage number from error type."""
@@ -81,7 +109,7 @@ def extract_errors(iteration_dir):
     return errors
 
 def find_run_files(base_dir):
-    """Find all run.py files in iteration directories."""
+    """Find all run.py files in iteration directories and their sample subdirectories."""
     run_files = []
     for root, dirs, files in os.walk(base_dir):
         # Skip hidden directories
@@ -89,7 +117,12 @@ def find_run_files(base_dir):
 
         # Look for iteration directories
         if "iteration" in root and "run.py" in files:
-            run_files.append(os.path.join(root, "run.py"))
+            # Check if this is a sample subdirectory
+            if "sample" in root:
+                run_files.append(os.path.join(root, "run.py"))
+            # If this is a main iteration directory without samples, add it
+            elif not any("sample" in d for d in dirs):
+                run_files.append(os.path.join(root, "run.py"))
     return run_files
 
 def run_optimization(run_file, dataset_path, timeout=10, num_cores=8):
@@ -118,48 +151,90 @@ def run_optimization(run_file, dataset_path, timeout=10, num_cores=8):
         print(f"Error running {run_file}: {e}")
         return None
 
-def calculate_geomean(results, max_values):
-    """Calculate geometric mean for an iteration's results."""
+def read_baseline_values(baseline_path):
+    """Read baseline values from baseline.json in the problem folder."""
+    if not os.path.exists(baseline_path):
+        print(f"Warning: Baseline file not found at {baseline_path}")
+        return {}
+    
+    try:
+        with open(baseline_path, 'r') as f:
+            baseline_data = json.load(f)
+            return baseline_data
+    except Exception as e:
+        print(f"Error reading baseline file: {e}")
+        return {}
+
+def calculate_geomean(results, baseline_values, normalize_score):
+    """Calculate geometric mean, coverage, and QCI for an iteration's results using baseline values."""
     valid_values = []
+    total_datasets = len(results)
+    valid_datasets = 0
+
     for dataset, value in results.items():
-        # Skip datasets where all iterations failed
-        if dataset not in max_values:
+        # Skip if no baseline value available
+        if dataset not in baseline_values:
+            raise ValueError(f"Baseline value not found for dataset: {dataset}")
+        # Skip "X" cases
+        if value == "X":
             continue
-        # Use max_value for "X" cases
-        cost = float(value) if value != "X" else max_values[dataset]
-        valid_values.append(cost)
+        # Normalize the score using the baseline value
+        normalized_score = normalize_score(float(value), baseline_values[dataset])
+        valid_values.append(normalized_score)
+        valid_datasets += 1
 
     if not valid_values:
-        return float('inf')
+        return float('inf'), 0.0, 0.0
 
-    mapped_values = []
-    for x in valid_values:
-        if x == 0:
-            mapped_values.append(1e-4)
-        elif x < 0:
-            mapped_values.append(-1/x)
-        else:
-            mapped_values.append(x)
+    # Calculate geometric mean of normalized scores (quality)
+    quality = math.exp(sum(math.log(x) for x in valid_values) / len(valid_values))
+    
+    # Calculate coverage (pass rate)
+    coverage = valid_datasets / total_datasets
+    
+    # Calculate QCI (Quality-Coverage Index) using F1-like formula
+    if quality + coverage == 0:
+        qci = 0.0
+    else:
+        qci = 2 * quality * coverage / (quality + coverage)
 
-    # Calculate geometric mean
-    return math.exp(sum(math.log(x) for x in mapped_values) / len(valid_values))
+    return quality, coverage, qci
 
 def calculate_solve_at_i(all_errors, i):
     """Calculate solve@i metrics for the first i iterations."""
-    # Get the first i iterations
-    first_i_iterations = sorted(all_errors.keys())[:i]
+    # Get the first i iterations (grouped by iteration number, ignoring samples)
+    iteration_groups = defaultdict(list)
+    for key in sorted(all_errors.keys()):
+        # Extract iteration number from key (e.g., "iteration0/sample0" -> "iteration0")
+        iteration_num = key.split('/')[0]
+        iteration_groups[iteration_num].append(key)
+    
+    # Get the first i iteration groups
+    first_i_iterations = sorted(iteration_groups.keys())[:i]
 
     # Track the best stage each test case passes in the first i iterations
     test_case_best_stages = defaultdict(int)
 
-    # For each test case, look at its performance across the first i iterations
+    # For each iteration group, look at all its samples
     for iteration in first_i_iterations:
-        iteration_errors = all_errors[iteration]
-        for test_case, error_info in iteration_errors.items():
-            error_type = error_info.get("error_type", "Unknown Error")
-            stage_num = get_stage_number(error_type)
-            if stage_num > 0:  # If it's a valid stage
-                test_case_best_stages[test_case] = max(test_case_best_stages[test_case], stage_num - 1)
+        # Get all samples for this iteration
+        samples = iteration_groups[iteration]
+        
+        # For each test case, check if any sample passes each stage
+        test_case_stages = defaultdict(int)
+        
+        # First, find the best stage achieved by any sample for each test case
+        for sample in samples:
+            iteration_errors = all_errors[sample]
+            for test_case, error_info in iteration_errors.items():
+                error_type = error_info.get("error_type", "Unknown Error")
+                stage_num = get_stage_number(error_type)
+                if stage_num > 0:  # If it's a valid stage
+                    test_case_stages[test_case] = max(test_case_stages[test_case], stage_num - 1)
+        
+        # Update the overall best stages with this iteration's results
+        for test_case, stage in test_case_stages.items():
+            test_case_best_stages[test_case] = max(test_case_best_stages[test_case], stage)
 
     # Calculate stage pass statistics
     stage_pass_stats = defaultdict(int)
@@ -204,6 +279,20 @@ def main():
     base_dir = args.llm_solutions_dir
     dataset_path = os.path.abspath(args.dataset_path)
 
+    # Read baseline values
+    problem_name = os.path.basename(dataset_path)
+    metric_path = os.path.join(problem_name, "program", "metric.py")
+    baseline_path = os.path.join(problem_name, "baseline", "baseline.json")
+    
+    # Load metric module
+    metric_module = load_metric_module(metric_path)
+    normalize_score = metric_module.normalize_score
+    
+    baseline_values = read_baseline_values(baseline_path)
+    if not baseline_values:
+        print("Error: No baseline values found. Exiting.")
+        sys.exit(1)
+
     if args.clean:
         removed_count = remove_output_folders(base_dir)
         print(f"\nRemoved {removed_count} output folders")
@@ -222,8 +311,7 @@ def main():
     print(f"Using CPU cores: {args.num_cores}")
 
     # Initialize data structures
-    iteration_results = {}  # Store results for each iteration
-    max_values = {}  # Store max value for each dataset
+    iteration_results = {}  # Store results for each iteration and sample
     all_errors = defaultdict(dict)
     error_stats = defaultdict(lambda: defaultdict(int))
     test_case_stats = defaultdict(lambda: defaultdict(int))
@@ -238,57 +326,73 @@ def main():
     for run_file in run_files:
         print(f"Processing optimization in {run_file}...")
         results = run_optimization(run_file, dataset_path, args.timeout, args.num_cores)
-        iteration_name = os.path.basename(os.path.dirname(run_file))
+        
+        # Get iteration name and sample number from path
+        path_parts = run_file.split(os.sep)
+        # Find the iteration directory index
+        iteration_idx = next(i for i, p in enumerate(path_parts) if p.startswith("iteration"))
+        iteration_name = path_parts[iteration_idx]
+        
+        # Check if this is a sample run by looking at the next directory
+        if iteration_idx + 1 < len(path_parts) and path_parts[iteration_idx + 1].startswith("sample"):
+            sample_name = path_parts[iteration_idx + 1]
+            iteration_key = f"{iteration_name}/{sample_name}"
+        else:
+            iteration_key = iteration_name
 
         if results:
             # Store results for this iteration
-            iteration_results[iteration_name] = results
-
-            # Update max values for each dataset
-            for dataset, value in results.items():
-                if value != "X":
-                    current_max = max_values.get(dataset, float('-inf'))
-                    max_values[dataset] = max(current_max, float(value))
+            iteration_results[iteration_key] = results
         else:
-            iteration_results[iteration_name] = {}
+            iteration_results[iteration_key] = {}
 
     # Calculate geomean for each iteration and find the best one
-    best_geomean = float('inf')
+    best_qci = 0.0
     best_iteration = None
-    iteration_geomeans = {}
+    iteration_metrics = {}  # Changed from iteration_geomeans to iteration_metrics
 
-    print("\nGeometric Mean Results:")
-    print("=" * 80)
-    print(f"{'Iteration':<30} | {'Geometric Mean':<15}")
-    print("-" * 80)
+    print("\nResults Summary:")
+    print("=" * 100)
+    print(f"{'Iteration':<30} | {'Quality':<10} | {'Coverage':<10} | {'QCI':<10}")
+    print("-" * 100)
 
     for iteration, results in iteration_results.items():
-        geomean = calculate_geomean(results, max_values)
-        iteration_geomeans[iteration] = geomean
-        print(f"{iteration:<30} | {geomean:<15.4f}")
+        quality, coverage, qci = calculate_geomean(results, baseline_values, normalize_score)
+        iteration_metrics[iteration] = {
+            'quality': quality,
+            'coverage': coverage,
+            'qci': qci
+        }
+        print(f"{iteration:<30} | {quality:<10.4f} | {coverage:<10.4f} | {qci:<10.4f}")
 
-        if geomean < best_geomean:
-            best_geomean = geomean
+        if qci >= best_qci: # take the last best iteration
+            best_qci = qci
             best_iteration = iteration
 
-    print("=" * 80)
+    print("=" * 100)
     
-    # If all iterations have infinite geometric means, use the last iteration
-    if best_geomean == float('inf'):
+    # If all iterations have zero QCI, use the last iteration
+    if best_qci == 0.0:  # Changed condition to check for zero QCI
         best_iteration = list(iteration_results.keys())[-1]
-        best_geomean = iteration_geomeans[best_iteration]
-        print(f"All iterations have infinite geometric means. Using last iteration: {best_iteration}")
+        best_qci = iteration_metrics[best_iteration]['qci']
+        print(f"All iterations have zero QCI. Using last iteration: {best_iteration}")
     
-    print(f"Best iteration: {best_iteration} with geomean: {best_geomean:.4f}")
+    print(f"Best iteration: {best_iteration} with QCI: {best_qci:.4f}")
 
     # Use results from the best iteration
     best_results = defaultdict(lambda: {"cost": float("inf"), "source": None})
     if best_iteration:
         for dataset, value in iteration_results[best_iteration].items():
-            cost = float(value) if value != "X" else max_values.get(dataset, float("inf"))
+            cost = float(value) if value != "X" else float("inf")
+            # Get the full path to the run.py file
+            if "/" in best_iteration:  # This is a sample directory
+                iteration_name, sample_name = best_iteration.split("/")
+                source_path = os.path.join(iteration_name, sample_name, "run.py")
+            else:
+                source_path = os.path.join(best_iteration, "run.py")
             best_results[dataset] = {
                 "cost": cost,
-                "source": os.path.join(best_iteration, "run.py")
+                "source": source_path
             }
 
     # Print summary of best results
@@ -309,16 +413,28 @@ def main():
     # Then, process each iteration directory for errors
     print("\nCollecting error information...")
     for iteration_dir in iteration_dirs:
-        iteration_name = os.path.basename(iteration_dir)
+        # Get iteration name and sample number from path
+        path_parts = iteration_dir.split(os.sep)
+        # Find the iteration directory index
+        iteration_idx = next(i for i, p in enumerate(path_parts) if p.startswith("iteration"))
+        iteration_name = path_parts[iteration_idx]
+        
+        # Check if this is a sample directory by looking at the next directory
+        if iteration_idx + 1 < len(path_parts) and path_parts[iteration_idx + 1].startswith("sample"):
+            sample_name = path_parts[iteration_idx + 1]
+            iteration_key = f"{iteration_name}/{sample_name}"
+        else:
+            iteration_key = iteration_name
+
         errors = extract_errors(iteration_dir)
 
         if errors:
-            all_errors[iteration_name] = errors
+            all_errors[iteration_key] = errors
 
             # Update error statistics and track best passed stages
             for test_case, error_info in errors.items():
                 error_type = error_info.get("error_type", "Unknown Error")
-                error_stats[iteration_name][error_type] += 1
+                error_stats[iteration_key][error_type] += 1
                 test_case_stats[test_case][error_type] += 1
 
     # Print error statistics
@@ -331,7 +447,7 @@ def main():
         all_error_types.update(stats.keys())
 
     # Print header
-    header = "Iteration".ljust(15)
+    header = "Iteration".ljust(30)
     for error_type in sorted(all_error_types):
         header += f" | {error_type.ljust(20)}"
     print(header)
@@ -339,7 +455,7 @@ def main():
 
     # Print statistics for each iteration
     for iteration in sorted(error_stats.keys()):
-        line = iteration.ljust(15)
+        line = iteration.ljust(30)
         for error_type in sorted(all_error_types):
             count = error_stats[iteration].get(error_type, 0)
             line += f" | {str(count).ljust(20)}"
@@ -387,7 +503,9 @@ def main():
         json.dump({
             dataset: {
                 "cost": result["cost"],
-                "source": os.path.relpath(result["source"], base_dir) if result["source"] else None
+                "source": os.path.relpath(result["source"], base_dir) if result["source"] else None,
+                "iteration": best_iteration,
+                "metrics": iteration_metrics[best_iteration]  # Add metrics to the output
             }
             for dataset, result in sorted(best_results.items())
         }, f, indent=2)
@@ -399,8 +517,8 @@ def main():
         for dataset, result in sorted(best_results.items()):
             f.write(f"{result['cost']:.4f}\n")
 
-        # Write best cost
-        f.write(f"{best_geomean:.4f}\n")
+        # Write best QCI
+        f.write(f"{best_qci:.4f}\n")
 
         # Write current solution directory (timestamp)
         f.write(f"{sys.argv[1].split('/')[1]}\n")
@@ -420,9 +538,18 @@ def main():
             "iteration_statistics": error_stats,
             "test_case_statistics": test_case_stats,
             "total_statistics": total_stats,
-            "iteration_geomeans": iteration_geomeans,
+            "iteration_metrics": iteration_metrics,  # Changed from iteration_geomeans
             "best_iteration": best_iteration,
-            "solve_at_i_metrics": solve_at_i_metrics
+            "solve_at_i_metrics": solve_at_i_metrics,
+            "best_results": {
+                dataset: {
+                    "cost": result["cost"],
+                    "source": os.path.relpath(result["source"], base_dir) if result["source"] else None,
+                    "iteration": best_iteration,
+                    "metrics": iteration_metrics[best_iteration]  # Add metrics to the output
+                }
+                for dataset, result in sorted(best_results.items())
+            }
         }, f, indent=2)
 
     print(f"\nBest results saved to {results_output}")
