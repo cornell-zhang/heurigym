@@ -1,12 +1,12 @@
 # Global Routing for VLSI Circuits
 
-## 1. Background
+## Background
 
 Global routing is a critical step in Very Large Scale Integration (VLSI) physical design. It involves determining the approximate paths for interconnecting signal nets across a chip layout. The quality of global routing significantly impacts circuit performance metrics such as timing delay, power consumption, and overall manufacturability (routability). The chip layout is typically represented as a 3D grid, and the task is to find paths for each net within this grid, connecting all its required points (pins) while respecting resource limitations and design rules. Due to the massive number of nets and complex interactions, global routing is computationally challenging (NP-hard) and relies on effective heuristics to find high-quality solutions within reasonable runtime.
 
-## 2. Formalization
+## Formalization
 
-### 2.1 Routing Grid Graph
+### Routing Grid Graph
 
 The routing space is modeled as a 3D grid graph $\mathcal{G}(\mathcal{V}, \mathcal{E})$.
 
@@ -17,7 +17,7 @@ The routing space is modeled as a 3D grid graph $\mathcal{G}(\mathcal{V}, \mathc
     * **Vertical Edges ($\mathcal{E}_V$):** An edge $e = ((x, y, z), (x, y+1, z))$ exists if and only if layer $z$ has a **vertical** preferred routing direction (specified in the input `.cap` file) and $0 \le x < xSize$, $0 \le y < ySize-1$.
     * **Via Edges ($\mathcal{E}_Z$):** An edge $e = ((x, y, z), (x, y, z+1))$ exists for all $0 \le x < xSize$, $0 \le y < ySize$, $0 \le z < nLayers-1$. These represent potential locations for vias connecting adjacent layers.
 
-### 2.2 Edge Attributes
+### Edge Attributes
 
 Each edge $e \in \mathcal{E}$ has associated properties:
 
@@ -32,17 +32,17 @@ Each edge $e \in \mathcal{E}$ has associated properties:
     * For $e \in \mathcal{E}_Z$, $len(e) = 0$. Wire length cost applies only to horizontal and vertical segments.
 * **Layer Index ($l(e)$):** For $e \in \mathcal{E}_H \cup \mathcal{E}_V$, $l(e)$ is the layer index $z$ associated with the edge.
 
-### 2.3 Nets and Pins
+### Nets and Pins
 
 * The input defines a set of nets $\mathcal{N}$.
 * Each net $N \in \mathcal{N}$ consists of a set of pins $P_N = \{p_1, p_2, ..., p_{k_N}\}$.
 * Each pin $p_i$ has one or more possible **access points**, represented as a set of GCells $A_{p_i} \subset \mathcal{V}$. An access point is specified by its coordinates $(z, x, y)$, corresponding to the GCell $(x, y, z)$.
 
-### 2.4 Routing Solution
+### Routing Solution
 
 A routing solution consists of assigning a path $Path_N \subseteq \mathcal{G}$ to each net $N \in \mathcal{N}$. $Path_N$ is represented by the set of edges $E(Path_N) \subseteq \mathcal{E}$ used by the net.
 
-### 2.5 Constraints
+### Constraints
 
 A valid routing solution must satisfy the following constraints:
 
@@ -50,7 +50,7 @@ A valid routing solution must satisfy the following constraints:
 2.  **Layer 0 Restriction (Metal 1):** Layer 0 (metal layer with index $z=0$) cannot be used for routing segments. No horizontal ($e \in \mathcal{E}_H$ with $z=0$) or vertical ($e \in \mathcal{E}_V$ with $z=0$) edges can be part of any $Path_N$. Pins with access points on layer 0 (e.g., $(x, y, 0) \in A_{p_i}$) *must* be connected to the rest of the net via a via edge starting at that location, i.e., using the edge $((x, y, 0), (x, y, 1))$.
 3.  **Preferred Direction:** Paths must only utilize edges present in the graph $\mathcal{G}$ as defined in Section 2.1, inherently respecting the preferred routing direction of each layer.
 
-### 2.6 Scoring Objective
+### Scoring Objective
 
 The goal is to find a valid routing solution that minimizes the total weighted score $S$:
 
@@ -73,11 +73,11 @@ Where:
 
 The objective is to find the set of paths $\{Path_N\}_{N \in \mathcal{N}}$ that satisfies all constraints and yields the minimum score $S$.
 
-## 3. Input Format
+## Input Format
 
 Two input files are provided for each test case: a routing resource file (`.cap`) and a net information file (`.net`).
 
-### 3.1 Routing Resource File (`.cap`)
+### Routing Resource File (`.cap`)
 
 This file describes the grid graph structure and resources. Values are newline-separated unless specified otherwise.
 
@@ -95,7 +95,7 @@ This file describes the grid graph structure and resources. Values are newline-s
         * If `layerDirection` is 0 (Horizontal), `capacity[x][y]` applies to edge $((x, y, l), (x+1, y, l))$ for $0 \le x < xSize-1$. The capacity values provided for $x = xSize-1$ (the last column in the input line) are **ignored** for horizontal layers.
         * If `layerDirection` is 1 (Vertical), `capacity[x][y]` applies to edge $((x, y, l), (x, y+1, l))$ for $0 \le y < ySize-1$. The capacity values provided for $y = ySize-1$ (the last row of capacity data for this layer) are **ignored** for vertical layers.
 
-### 3.2 Net Information File (`.net`)
+### Net Information File (`.net`)
 
 This file lists the nets and their pin access points.
 
@@ -125,7 +125,7 @@ NetName1
 * Inside the `[...]`, one or more access points are listed as tuples `(layer, x, y)`, separated by commas.
 * `layer`, `x`, `y` are integer coordinates corresponding to GCell $(x, y, layer)$.
 
-### 3.3 Example Input Files
+### Example Input Files
 
 #### Example `.cap` file (simplified):
 
@@ -181,7 +181,7 @@ NetB
     * Pin 1 has two access points: GCell $(1,1,1)$ and GCell $(2,1,1)$.
     * Pin 2 has one access point: GCell $(0,1,1)$.
 
-## 4. Output Format
+## Output Format
 
 The output file should describe the routing path for each net as a sequence of connected segments.
 
@@ -213,7 +213,7 @@ NetName1
 * The collection of segments for a given net must form a single connected component satisfying all constraints defined in Section 2.5.
 * The output ends with `)` for each net.
 
-### 4.1 Example Output
+### Example Output
 
 For `NetA` from the example `.net` file, assuming Layer 0 and 2 are Horizontal, and Layer 1 is Vertical.
 A possible path connecting pin $(0,0,0)$ on Layer 0 to pin $(3,2,2)$ on Layer 2 could be:
