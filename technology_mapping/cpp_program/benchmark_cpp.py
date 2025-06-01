@@ -1,21 +1,17 @@
+'''
+python benchmark_cpp.py --base-path <path_to_heurigen_workspace>
+'''
+
 import os
 import subprocess
 import glob
 import json
 import time
+import argparse
 from pathlib import Path
 from ..program.verifier import verify
 from ..program.evaluator import evaluate
 import logging
-
-# Paths
-BASE_PATH = "/work/shared/users/phd/jl4257/Project/heurigen"
-DATASETS_DIR = f"{BASE_PATH}/_datasets/technology_mapping"
-OUTPUT_DIR = f"{BASE_PATH}/llm_solutions/tech_mapping_cpp/gemini-2.5-pro-preview-05-06"
-LOGS_DIR = f"{OUTPUT_DIR}/logs"
-MAIN_EXECUTABLE = f"{BASE_PATH}/technology_mapping/cpp_program/main"
-VERIFIER_SCRIPT = f"{BASE_PATH}/technology_mapping/program/verifier.py"
-EVALUATOR_SCRIPT = f"{BASE_PATH}/technology_mapping/program/evaluator.py"
 
 
 class Result:
@@ -25,12 +21,12 @@ class Result:
         self.elapsed_time = elapsed_time # float: seconds
 
 
-def setup_logging():
+def setup_logging(logs_dir):
     # Create logs directory
-    os.makedirs(LOGS_DIR, exist_ok=True)
+    os.makedirs(logs_dir, exist_ok=True)
     
     # Configure logging
-    log_file = f"{LOGS_DIR}/benchmark_cpp.log"
+    log_file = f"{logs_dir}/benchmark_cpp.log"
     
     # Remove existing log file if it exists
     if os.path.exists(log_file):
@@ -50,19 +46,33 @@ def setup_logging():
 
 
 def main():
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(description='Benchmark C++ technology mapping program')
+    parser.add_argument('--base-path', default='.', 
+                       help='Base path for the project (default: current directory)')
+    args = parser.parse_args()
+    
+    # Set up paths based on the base path argument
+    base_path = args.base_path
+    datasets_dir = f"{base_path}/_datasets/technology_mapping"
+    output_dir = f"{base_path}/llm_solutions/tech_mapping_cpp/gemini-2.5-pro-preview-05-06"
+    logs_dir = f"{output_dir}/logs"
+    main_executable = f"{base_path}/technology_mapping/cpp_program/main"
+    verifier_script = f"{base_path}/technology_mapping/program/verifier.py"
+    evaluator_script = f"{base_path}/technology_mapping/program/evaluator.py"
 
     # Setup logging
-    logger = setup_logging()
+    logger = setup_logging(logs_dir)
     
     # result is a dictionary of benchmark_name -> Result
     results = {}
 
 
     # Create output directory if it doesn't exist
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    os.makedirs(output_dir, exist_ok=True)
 
     # Find all .blif files in the datasets directory and its subdirectories
-    blif_files = glob.glob(f"{DATASETS_DIR}/**/*.blif", recursive=True)
+    blif_files = glob.glob(f"{datasets_dir}/**/*.blif", recursive=True)
     results = {}
 
     logger.info(f"Found {len(blif_files)} BLIF files to process")
@@ -77,7 +87,7 @@ def main():
         logger.info(f"Input file: {input_file}")
         
         # Define output file path
-        output_file = f"{OUTPUT_DIR}/{benchmark_name}.blif"
+        output_file = f"{output_dir}/{benchmark_name}.blif"
         logger.info(f"Output file: {output_file}")
         
         # Run main executable
@@ -87,7 +97,7 @@ def main():
             # Record start time
             start_time = time.time()
             
-            main_result = subprocess.run([MAIN_EXECUTABLE, input_file, output_file], 
+            main_result = subprocess.run([main_executable, input_file, output_file], 
                         check=True, capture_output=True, text=True)
             
             # Record end time and calculate elapsed time
@@ -100,7 +110,7 @@ def main():
             # Run verifier
             logger.info("Running verifier...")
             verifier_result = subprocess.run(
-                ["python", VERIFIER_SCRIPT, input_file, output_file],
+                ["python", verifier_script, input_file, output_file],
                 check=True, capture_output=True, text=True
             )
             logger.info(f"Verifier stdout:\n{verifier_result.stdout}")
@@ -110,7 +120,7 @@ def main():
             # Run evaluator
             logger.info("Running evaluator...")
             evaluator_result = subprocess.run(
-                ["python", EVALUATOR_SCRIPT, output_file],
+                ["python", evaluator_script, output_file],
                 check=True, capture_output=True, text=True
             )
             logger.info(f"Evaluator stdout:\n{evaluator_result.stdout}")
@@ -136,10 +146,10 @@ def main():
         logger.info("-" * 50)
 
     # Save results to JSON file
-    with open(f"{OUTPUT_DIR}/best_results.json", "w") as f:
+    with open(f"{output_dir}/best_results.json", "w") as f:
         json.dump(results, f, indent=2)
 
-    logger.info(f"Benchmark complete. Results saved to {OUTPUT_DIR}/best_results.json")
+    logger.info(f"Benchmark complete. Results saved to {output_dir}/best_results.json")
 
 
 if __name__ == "__main__":
