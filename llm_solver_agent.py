@@ -389,7 +389,7 @@ class LLMInterface:
             "deepseek": {
                 "api_key": os.getenv('DEEPSEEK_API_KEY'),
                 "base_url": "https://api.deepseek.com/v1",
-                "max_tokens": 8192
+                "max_tokens": 65536
             },
             "anthropic": {
                 "api_key": os.getenv('ANTHROPIC_API_KEY'),
@@ -688,6 +688,7 @@ Your goal is to improve the solution for as many test cases as possible, with sp
             "total_tokens": prompt_tokens + completion_tokens,
             "estimated_cost": round(total_cost, 4),
             "temperature": self.temperature,
+            "history_rounds": self.history_rounds,
             "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         }
         
@@ -762,6 +763,8 @@ Your goal is to improve the solution for as many test cases as possible, with sp
         client = self.clients[provider]
         actual_model = self._get_actual_model_name(model)
         max_tokens = self.model_configs[provider]["max_tokens"]
+        if actual_model == "deepseek-chat":
+            max_tokens = 8192
         
         try:
             # Prepare API call parameters
