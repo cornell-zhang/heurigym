@@ -1,5 +1,6 @@
 import math
 from utils import get_allele_maps_0_indexed, get_n_alleles_from_sources
+from typing import Tuple
 
 def verify(input_file: str, output_file: str) -> Tuple[bool, str]:
     individuals_data = {}
