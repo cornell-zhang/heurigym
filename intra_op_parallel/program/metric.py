@@ -1,6 +1,6 @@
 import numpy as np
 
-def normalize_score_iopddl(score, baseline):
+def normalize_score(score, baseline):
     if np.isnan(score) or np.isnan(baseline):
         raise ValueError("Invalid score or baseline")
     if baseline == 0:
