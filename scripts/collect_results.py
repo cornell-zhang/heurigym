@@ -94,11 +94,15 @@ def extract_errors(iteration_dir):
                 try:
                     with open(cost_file, "r") as f:
                         cost_data = json.load(f)
+                        # Limit message to 10000 characters and add truncation indicator
+                        message = cost_data.get("message", "")
+                        if len(message) > 10000:
+                            message = message[:10000] + "(truncated)"
                         errors[test_case] = {
                             "validity": cost_data.get("validity", False),
                             "cost": cost_data.get("cost", None),
-                            "message": cost_data.get("message", ""),
-                            "error_type": classify_error(cost_data.get("message", "")) if not cost_data.get("validity", False) else "Stage IV: No Error!!"
+                            "message": message,
+                            "error_type": classify_error(message) if not cost_data.get("validity", False) else "Stage IV: No Error!!"
                         }
                 except Exception as e:
                     errors[test_case] = {
@@ -131,22 +135,25 @@ def run_optimization(run_file, dataset_path, timeout=10, num_cores=8):
         # Get the directory containing run.py
         run_dir = os.path.dirname(run_file)
 
-        # Run the script with dataset path and timeout
+        # Run the script with dataset path and timeout, streaming output to terminal
         result = subprocess.run(
             ["python3", "run.py", dataset_path, "--timeout", str(timeout), "--num_cores", str(num_cores)],
             cwd=run_dir,
-            capture_output=True,
             text=True,
-            check=True
+            check=True,
+            stdout=subprocess.PIPE,  # Stream stdout to terminal
+            stderr=subprocess.PIPE   # Stream stderr to terminal
         )
-
+        print(result.stdout)
+        print(result.stderr)
         # Look for results.json in the output directory
         results_file = os.path.join(run_dir, "results.json")
 
         if os.path.exists(results_file):
             with open(results_file, "r") as f:
                 return json.load(f)
-        return None
+        else:
+            raise Exception(f"Results file not found at {results_file}")
     except Exception as e:
         print(f"Error running {run_file}: {e}")
         return None
@@ -325,7 +332,7 @@ def main():
     print("\nRunning optimizations...")
     for run_file in run_files:
         print(f"Processing optimization in {run_file}...")
-        results = run_optimization(run_file, dataset_path, args.timeout, args.num_cores)
+        results = run_optimization(run_file, os.path.abspath(dataset_path), args.timeout, args.num_cores)
         
         # Get iteration name and sample number from path
         path_parts = run_file.split(os.sep)
