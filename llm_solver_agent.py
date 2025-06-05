@@ -91,13 +91,14 @@ class ProblemReader:
 class ProgramExecutor:
     """Handles program execution and result extraction."""
     
-    def __init__(self, problem_folder: Path, solution_folder: Path, dataset: Dict, timeout: int = 10, num_cores: int = 8):
+    def __init__(self, problem_folder: Path, solution_folder: Path, dataset: Dict, timeout: int = 10, num_cores: int = 8, few_shots: int = None):
         self.problem_folder = problem_folder
         self.program_folder = problem_folder / "program"
         self.solution_folder = solution_folder
         self.dataset = dataset
         self.timeout = timeout
         self.num_cores = num_cores
+        self.few_shots = few_shots
         
     def save_program(self, program: str, iteration: int = 0) -> Tuple[Path, str]:
         """Saves the LLM's program to solver.py in the solution folder and copies all necessary Python files."""
@@ -174,6 +175,10 @@ class ProgramExecutor:
             file_paths = self.dataset["train"]["file_path"]
             if not file_paths:
                 return False, f"No test cases found in the dataset for {self.problem_folder.name}"
+            
+            # Apply few_shots limit if specified
+            if self.few_shots is not None:
+                file_paths = file_paths[:self.few_shots]
             
             # Group files by base name
             file_groups = {}
@@ -368,13 +373,14 @@ class ProgramExecutor:
 class LLMInterface:
     """Interface for interacting with different LLM providers using unified OpenAI API format."""
     
-    def __init__(self, models_to_use: List[str], dataset: Dict, timeout: int = 10, temperature: float = 0.7, stream: bool = False, history_rounds: int = None):
+    def __init__(self, models_to_use: List[str], dataset: Dict, timeout: int = 10, temperature: float = 0.7, stream: bool = False, history_rounds: int = None, few_shots: int = None):
         self.timeout = timeout
         self.temperature = temperature
         self.stream = stream
         self.conversation_history = {}  # Store conversation history for each model
         self.dataset = dataset
         self.history_rounds = history_rounds  # Number of previous rounds to keep in history
+        self.few_shots = few_shots  # Number of training examples to provide
         
         # Initialize clients for each provider
         self.clients = {}
@@ -579,6 +585,9 @@ These are the test cases and results from the previous iteration:
                 prompt += f"\nNo test cases found in the dataset for {problem_desc['name']}\n\n"
             else:
                 file_paths = self.dataset["train"]["file_path"]
+                # Apply few_shots limit if specified
+                if self.few_shots is not None:
+                    file_paths = file_paths[:self.few_shots]
                 if not file_paths:
                     prompt += f"\nNo test cases found in the dataset for {problem_desc['name']}\n\n"
                 else:
@@ -689,6 +698,7 @@ Your goal is to improve the solution for as many test cases as possible, with sp
             "estimated_cost": round(total_cost, 4),
             "temperature": self.temperature,
             "history_rounds": self.history_rounds,
+            "few_shots": self.few_shots,
             "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         }
         
@@ -1053,6 +1063,9 @@ def parse_arguments():
     parser.add_argument('--num_cores', type=int, default=8,
                         help='Number of CPU cores to use for program execution (default: 8)')
     
+    parser.add_argument('--few_shots', type=int, default=None,
+                        help='Number of training examples to provide to LLMs (default: None, use all examples)')
+    
     args = parser.parse_args()
     
     # Set stream to True by default if any Qwen model is in the list
@@ -1084,7 +1097,7 @@ def main():
     print(f"Loaded dataset from HuggingFace: {HF_REPO_ID}/{args.problem}")
     
     # Initialize LLM interface with dataset and history_rounds
-    llm_interface = LLMInterface(args.models, dataset, args.timeout, args.temperature, args.stream, args.history_rounds)
+    llm_interface = LLMInterface(args.models, dataset, args.timeout, args.temperature, args.stream, args.history_rounds, args.few_shots)
     
     # Get problem folders
     problem_folders = problem_reader.get_problem_folders()
@@ -1120,7 +1133,7 @@ def main():
                 solution_dir.mkdir(parents=True, exist_ok=True)
                 
                 # Initialize program executor with the solution directory
-                executor = ProgramExecutor(workspace_root / problem_desc['name'], solution_dir, dataset, args.timeout, args.num_cores)
+                executor = ProgramExecutor(workspace_root / problem_desc['name'], solution_dir, dataset, args.timeout, args.num_cores, args.few_shots)
                 
                 # Get iterative program
                 logger.info(f"Getting iterative program from {model}")
