@@ -564,37 +564,51 @@ bool NVR_DB::read_gr_solution(const char *input)
       } else { //wire
         NVR_GridGraph2D &plane = m_graph.plane(zl);
         if(plane.is_hor()) {
-          if (yh != yl || xh <= xl) {
+          if(xh > xl && yh == yl) {
+            for(unsigned x = xl; x < xh; x++) {
+              flag[zl][x][yl] = net->idx();
+              wire_counter[zl][x][yl]++;
+            }
+            flag[zl][xh][yl] = net->idx();
+          } else {
             fprintf(stderr, "Invalid horizontal wire coordinates:\n");
             fprintf(stderr, "  Start point: (%d,%d,%d)\n", xl, yl, zl);
             fprintf(stderr, "  End point:   (%d,%d,%d)\n", xh, yh, zh);
-            if (yh != yl) {
-              fprintf(stderr, "  y coordinates differ: %d != %d\n", yl, yh);
-            }
             if (xh <= xl) {
               fprintf(stderr, "  x end coordinate (%d) must be greater than x start coordinate (%d)\n", xh, xl);
+            }
+            if (yh != yl) {
+              fprintf(stderr, "  y coordinates differ: %d != %d\n", yl, yh);
             }
             NVR_ASSERT(0);
             has_connectivity_violation = true;
           }
         } else if(plane.is_ver()) {
-          if (xh != xl || yh <= yl) {
+          if(yh > yl && xh == xl) {
+            for(unsigned y = yl; y < yh; y++) {
+              flag[zl][xl][y] = net->idx();
+              wire_counter[zl][xl][y]++;
+            }
+            flag[zl][xl][yh] = net->idx();
+          } else {
             fprintf(stderr, "Invalid vertical wire coordinates:\n");
             fprintf(stderr, "  Start point: (%d,%d,%d)\n", xl, yl, zl);
             fprintf(stderr, "  End point:   (%d,%d,%d)\n", xh, yh, zh);
-            if (xh != xl) {
-              fprintf(stderr, "  x coordinates differ: %d != %d\n", xl, xh);
-            }
             if (yh <= yl) {
               fprintf(stderr, "  y end coordinate (%d) must be greater than y start coordinate (%d)\n", yh, yl);
             }
-            NVR_ASSERT(0);
-            has_connectivity_violation = true;
-          } else { //unroutable layer
-            fprintf(stderr, "Invalid layer type - attempting to route on non-routing layer: layer=%d\n", zl);
+            if (xh != xl) {
+              fprintf(stderr, "  x coordinates differ: %d != %d\n", xl, xh);
+            }
             NVR_ASSERT(0);
             has_connectivity_violation = true;
           }
+        } else { //unroutable layer
+          fprintf(stderr, "Invalid layer type - attempting to route on non-routing layer: layer=%d\n", zl);
+          fprintf(stderr, "  Start point: (%d,%d,%d)\n", xl, yl, zl);
+          fprintf(stderr, "  End point:   (%d,%d,%d)\n", xh, yh, zh);
+          NVR_ASSERT(0);
+          has_connectivity_violation = true;
         }
       }
     }
