@@ -9,22 +9,26 @@
     <a href="#-citation">📜Citation</a> •
 </p>
 
-## 📙 About
+## 📘 About
 
-**Why HeuriGym?** 
+**HeuriGym** is a benchmark for evaluating how well LLMs generate and refine heuristics for real-world combinatorial optimization (CO) tasks through agentic, code-driven interaction.
 
-Current LLM benchmarks fall into two categories with distinct limitations.
+### 🔍 Why HeuriGym?
 
-- **Ground-truth-based objective benchmarks** rely on closed-form questions (e.g., multiple-choice mathematics problems) that have become susceptible to rapid performance saturation. Widely used benchmarks (AIME, HumanEval, and GPQA Diamond) now exhibit ceiling effects with high LLM performance (Pass@1 > 80%). Moreover, their closed-end nature fails to reflect real-world problem-solving. 
+Existing LLM benchmarks fall short:
 
-- **Judge-preference-based subjective evaluations** assess model quality through pairwise comparisons by humans or LLM-based proxies, such as Chatbot Arena. However, this flexibility leads to high variance and reliability issues, which is critical for assessing technical tasks.
+- 🎯 **Closed-form tasks** (e.g., AIME, HumanEval): Saturated, too simplistic for real-world reasoning.
+- 🤖 **Subjective evaluations** (e.g., Chatbot Arena): Noisy, inconsistent, and unreliable for technical tasks.
 
 
-**HeuriGym** fills this gap with open-ended combinatorial optimization challenges that have:
-- **Open-Ended Problems**: well-defined optimization objectives with large solution spaces. 
-- **Real-World Impact**: domains where improved solutions yield significant societal or industrial benefits.
-- **Gap to Expert Solutions**: metrics that measure the gap between LLM solutions and expert solutions provided.
-- **Agentic Framework**: LLM generates heuristic solutions, receive execution feedback from a code environment, and iteratively refine their solutions.
+**HeuriGym** fills this gap with:
+
+- 🧩 **Open-ended problems**: Well-defined objectives with large solution spaces.  
+- 🤖 **Agentic interaction**: LLMs improve heuristics through feedback-driven code execution.  
+- 📏 **Expert comparison metrics**: Measure both pass rate and quality relative to expert solutions.
+
+
+Let LLMs think, code, and improve—just like real solvers.
 
 
 ## 📚 Problems
@@ -34,9 +38,9 @@ The initial release of the HeuriGym benchmark includes nine distinct optimizatio
 
 | Domain | Problem | Difficulty |
 | :--: | :--: | :--: |
-| Electronic Design Automation (EDA) | [Operator scheduling](operator_scheduling) | ★ |
-| Electronic Design Automation (EDA) | [Technology mapping](technology_mapping) | ★★ |
-| Electronic Design Automation (EDA) | [Global routing](global_routing) | ★★★ |
+| EDA | [Operator scheduling](operator_scheduling) | ★ |
+| EDA | [Technology mapping](technology_mapping) | ★★ |
+| EDA | [Global routing](global_routing) | ★★★ |
 | Compilers | [E-graph extraction](egraph_extraction) | ★ |
 | Compilers | [Intra-operator parallelism](intra_op_parallel) | ★★ |
 | Computational Biology | [Protein sequence design](protein_sequence_design) | ★ |
@@ -54,8 +58,8 @@ pip install -r requirements.txt
 
 2. Clone the repository:
 ```bash
-git clone https://github.com/heurgym/heurgym.git
-cd heurgym
+git clone https://github.com/cornell-zhang/heurigym.git
+cd heurigym
 ```
 
 3. Setup API keys:
@@ -146,9 +150,9 @@ Options:
 - `--timeout TIMEOUT`: Timeout in seconds for program execution (default: 10)
 - `--temperature TEMPERATURE`: Temperature for LLM generation (default: 0.0)
 - `--stream`: Enable streaming output from LLM (default: False, but True for Qwen models)
-- `--history_rounds N`: Number of previous rounds to keep in conversation history (default: None, keep all history)
-- `--num_cores N`: Number of CPU cores to use for program execution (default: 8)
-- `--few_shots N`: Number of training examples to provide to LLMs (default: None, use all examples)
+- `--history_rounds H`: Number of previous rounds to keep in conversation history (default: None, keep all history)
+- `--num_cores C`: Number of CPU cores to use for program execution (default: 8)
+- `--few_shots S`: Number of training examples to provide to LLMs (default: None, use all examples)
 
 
 
@@ -183,6 +187,13 @@ You can copy the `template` folder as a starting point. There are several files 
 
 
 ## 📜 Citation
-To be updated
+```bibtex
+@article{chen2025heurigym,
+    title={HeuriGym: An Agentic Benchmark for LLM-Crafted Heuristics in Combinatorial Optimization}, 
+    author={Hongzheng Chen and Yingheng Wang and Yaohui Cai and Hins Hu and Jiajie Li and Shirley Huang and Chenhui Deng and Rongjian Liang and Shufeng Kong and Haoxing Ren and Samitha Samaranayake and Carla P. Gomes and Zhiru Zhang},
+    journal={arXiv preprint arXiv:2506.07972},
+    year={2025}
+}
+```
 
 
