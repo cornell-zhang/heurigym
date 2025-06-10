@@ -5,7 +5,6 @@
     <a href="#-problems">📚Problems</a> •
     <a href="#-quick-start">🔥Quick Start</a> •
     <a href="#-llm-solver-agent">🚀LLM Solver Agent</a> •
-    <a href="#-documents">📚Documents</a> •
     <a href="#-contribute">🤝Contribute</a> •
     <a href="#-citation">📜Citation</a> •
 </p>
@@ -161,9 +160,6 @@ The agent will:
 
 
 
-
-## 📚 Documents
-To be updated
 
 
 
