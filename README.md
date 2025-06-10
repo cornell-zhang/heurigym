@@ -4,8 +4,9 @@
     <a href="#-about">📙About</a> •
     <a href="#-problems">📚Problems</a> •
     <a href="#-quick-start">🔥Quick Start</a> •
-    <a href="#-llm-backends">🚀LLM Backends</a> •
+    <a href="#-llm-solver-agent">🚀LLM Solver Agent</a> •
     <a href="#-documents">📚Documents</a> •
+    <a href="#-contribute">🤝Contribute</a> •
     <a href="#-citation">📜Citation</a> •
 </p>
 
@@ -78,7 +79,7 @@ Best results are saved in `best_results.json` and error analysis is saved in `er
 
 
 
-## 🚀 LLM Solver Agent with Different LLM backends
+## 🚀 LLM Solver Agent
 
 Create a `.env` file in the root directory with the API keys for the models you want to use:
 ```
@@ -166,7 +167,9 @@ To be updated
 
 
 
-## 🤝 Contribute by Adding New Problems
+## 🤝 Contribute
+We welcome contributions to the HeuriGym benchmark! 
+
 To add a new problem to the benchmark suite, you need to create a new folder in the `problems` directory.
 The folder should have two subfolders:
 * `dataset`: A folder for problem instances
