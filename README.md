@@ -59,10 +59,11 @@ cd heurgym
 ```
 
 3. Setup API keys:
+
 ```bash
 # you need to have a HuggingFace token to download the dataset.
 export HUGGINGFACE_TOKEN=<your_huggingface_key_here>
-# If you are using OpenAI models, you need to have a Google API key.
+# If you are using Google models, you need to have a Google API key. 
 export GOOGLE_API_KEY=<your_google_key_here>
 ```
 
