@@ -1,12 +1,18 @@
 # HeuriGym
 
 <p align="center">
+    <a href="https://cornell-zhang.github.io/heurigym/"><img src="https://img.shields.io/badge/%F0%9F%8F%86-leaderboard-8A2BE2"></a>
+    <a href="https://arxiv.org/abs/2506.07972"><img src="http://img.shields.io/badge/cs.LG-arXiv%3A2506.07972-B31B1B.svg?logo=arxiv&logoColor=red"></a>
+    <a href="https://huggingface.co/datasets/heurigen/heurigen-data"><img src="https://img.shields.io/badge/🤗%20Hugging%20Face-heurigym-%23ff8811.svg"></a>
+</p>
+
+<p align="center">
     <a href="#-about">📙About</a> •
     <a href="#-problems">📚Problems</a> •
     <a href="#-quick-start">🔥Quick Start</a> •
     <a href="#-llm-solver-agent">🚀LLM Solver Agent</a> •
     <a href="#-contribute">🤝Contribute</a> •
-    <a href="#-citation">📜Citation</a> •
+    <a href="#-citation">📜Citation</a>
 </p>
 
 ## 📘 About
@@ -43,8 +49,8 @@ The initial release of the HeuriGym benchmark includes nine distinct optimizatio
 | EDA | [Global routing](global_routing) | ★★★ |
 | Compilers | [E-graph extraction](egraph_extraction) | ★ |
 | Compilers | [Intra-operator parallelism](intra_op_parallel) | ★★ |
-| Computational Biology | [Protein sequence design](protein_sequence_design) | ★ |
-| Computational Biology | [Mendelian error detection](pedigree) | ★★ |
+| Comp Biology | [Protein sequence design](protein_sequence_design) | ★ |
+| Comp Biology | [Mendelian error detection](pedigree) | ★★ |
 | Logistics | [Airline crew pairing](crew_pairing) | ★★ |
 | Logistics | [Pickup and delivery w/ time windows](pickup_delivery_time_windows) | ★★★ |
 
