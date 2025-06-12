@@ -1,6 +1,10 @@
 # HeuriGym
 
 <p align="center">
+    <img src="https://github.com/cornell-zhang/heurigym/blob/gh-pages/assets/logo.svg" width="70%">
+</p>
+
+<p align="center">
     <a href="https://cornell-zhang.github.io/heurigym/"><img src="https://img.shields.io/badge/%F0%9F%8F%86-leaderboard-8A2BE2"></a>
     <a href="https://arxiv.org/abs/2506.07972"><img src="http://img.shields.io/badge/cs.LG-arXiv%3A2506.07972-B31B1B.svg?logo=arxiv&logoColor=red"></a>
     <a href="https://huggingface.co/datasets/heurigen/heurigen-data"><img src="https://img.shields.io/badge/🤗%20Hugging%20Face-heurigym-%23ff8811.svg"></a>
@@ -18,6 +22,8 @@
 ## 📘 About
 
 **HeuriGym** is a benchmark for evaluating how well LLMs generate and refine heuristics for real-world combinatorial optimization (CO) tasks through agentic, code-driven interaction.
+
+![overview](https://github.com/cornell-zhang/heurigym/blob/gh-pages/assets/overview.png)
 
 ### 🔍 Why HeuriGym?
 
