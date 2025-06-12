@@ -1,7 +1,7 @@
-# HeuriGym
-
 <p align="center">
-    <img src="https://github.com/cornell-zhang/heurigym/blob/gh-pages/assets/logo.svg" width="70%">
+    <a href="https://github.com/cornell-zhang/heurigym">
+        <img src="https://github.com/cornell-zhang/heurigym/blob/gh-pages/assets/logo.svg" width="70%">
+    </a>
 </p>
 
 <p align="center">
