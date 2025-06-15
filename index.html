@@ -133,6 +133,41 @@
       pointer-events: none;
       opacity: 0;
     }
+    .citation-box {
+      background-color: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 4px;
+      padding: 1rem;
+      margin: 1rem 0;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9rem;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      overflow-x: auto;
+      position: relative;
+    }
+    .copy-button {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      padding: 0.25rem 0.5rem;
+      background-color: #e9ecef;
+      border: 1px solid #dee2e6;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      transition: background-color 0.2s;
+    }
+    .copy-button:hover {
+      background-color: #dee2e6;
+    }
+    .citation-box code {
+      display: block;
+      padding: 0.5rem;
+      background-color: #fff;
+      border: 1px solid #dee2e6;
+      border-radius: 3px;
+    }
   </style>
 </head>
 <body>
@@ -173,14 +208,12 @@
     </p>
 
     <h2>📚 Citation</h2>
-    <code>
-      @article{chen2025heurigym,<br>
-      &nbsp;&nbsp;title={HeuriGym: An Agentic Benchmark for LLM-Crafted Heuristics in Combinatorial Optimization},<br>
-      &nbsp;&nbsp;author={Hongzheng Chen and Yingheng Wang and Yaohui Cai and Hins Hu and Jiajie Li and Shirley Huang and Chenhui Deng and Rongjian Liang and Shufeng Kong and Haoxing Ren and Samitha Samaranayake and Carla P. Gomes and Zhiru Zhang},<br>
-      &nbsp;&nbsp;journal={arXiv preprint arXiv:2506.07972},<br>
-      &nbsp;&nbsp;year={2025}<br>
-      }
-    </code>
+    <div class="citation-box">@article{chen2025heurigym,
+    title={HeuriGym: An Agentic Benchmark for LLM-Crafted Heuristics in Combinatorial Optimization},
+    author={Hongzheng Chen and Yingheng Wang and Yaohui Cai and Hins Hu and Jiajie Li and Shirley Huang and Chenhui Deng and Rongjian Liang and Shufeng Kong and Haoxing Ren and Samitha Samaranayake and Carla P. Gomes and Zhiru Zhang},
+    journal={arXiv preprint arXiv:2506.07972},
+    year={2025}
+}<button class="copy-button" onclick="copyCitation()">Copy</button></div>
   </div>
 
   <script>
@@ -381,6 +414,23 @@
           });
       });
     });
+
+    function copyCitation() {
+      const citationText = `@article{chen2025heurigym,
+  title={HeuriGym: An Agentic Benchmark for LLM-Crafted Heuristics in Combinatorial Optimization},
+  author={Hongzheng Chen and Yingheng Wang and Yaohui Cai and Hins Hu and Jiajie Li and Shirley Huang and Chenhui Deng and Rongjian Liang and Shufeng Kong and Haoxing Ren and Samitha Samaranayake and Carla P. Gomes and Zhiru Zhang},
+  journal={arXiv preprint arXiv:2506.07972},
+  year={2025}
+}`;
+      navigator.clipboard.writeText(citationText).then(() => {
+        const button = document.querySelector('.copy-button');
+        const originalText = button.textContent;
+        button.textContent = 'Copied!';
+        setTimeout(() => {
+          button.textContent = originalText;
+        }, 2000);
+      });
+    }
   </script>
 </body>
 </html>
