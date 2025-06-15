@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HeuriGym Leaderboard</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    body {
+      font-family: 'Open Sans', sans-serif;
+      margin: 0;
+      background-color: white;
+      color: #333;
+    }
+    .header {
+      text-align: center;
+      padding: 2.5rem 1rem 0.5rem;
+      font-size: 2.5rem;
+      font-weight: 600;
+    }
+    .subheader {
+      text-align: center;
+      font-size: 1.2rem;
+      color: #666;
+      margin-top: 0.2rem;
+      margin-bottom: 1.5rem;
+    }
+    .authors {
+      text-align: center;
+      font-size: 0.9rem;
+      color: #999;
+      margin-bottom: 1rem;
+    }
+    .links {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    .links a {
+      color: #666;
+      text-decoration: none;
+      margin: 0 1rem;
+      font-size: 1.5rem;
+      transition: color 0.2s;
+    }
+    .links a:hover {
+      color: #0066cc;
+    }
+    .links .emoji {
+      font-size: 1.3rem;
+      vertical-align: middle;
+    }
+    .section {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 0 1rem 2rem;
+    }
+    .section h2 {
+      margin-top: 2rem;
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #333;
+    }
+    .section p, .section code {
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+    .leaderboard-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1.5rem;
+    }
+    .leaderboard-table th, .leaderboard-table td {
+      padding: 0.75rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    .leaderboard-table th {
+      background-color: #f0f0f0;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+    }
+    .leaderboard-table th:hover {
+      background-color: #e0e0e0;
+    }
+    .leaderboard-table th.sort-asc::after {
+      content: " ▲";
+      font-size: 0.8em;
+    }
+    .leaderboard-table th.sort-desc::after {
+      content: " ▼";
+      font-size: 0.8em;
+    }
+    .model-name {
+      font-family: 'Courier New', monospace;
+    }
+    .model-name a {
+      color: #0066cc;
+      text-decoration: none;
+    }
+    .model-name a:hover {
+      text-decoration: underline;
+    }
+    .star-note {
+      color: #666;
+      font-size: 0.9rem;
+      margin-top: 0.5rem;
+    }
+    .chart-container {
+      background: white;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .chart-container h2 {
+      align-self: flex-start;
+      margin-bottom: 1rem;
+      width: 100%;
+    }
+    #scatter-chart {
+      display: flex;
+      justify-content: center;
+    }
+    .tooltip {
+      position: absolute;
+      background-color: white;
+      border: 1px solid #ccc;
+      padding: 8px;
+      font-size: 12px;
+      pointer-events: none;
+      opacity: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">HeuriGym Leaderboard</div>
+  <div class="subheader">An Agentic Benchmark for LLM-Crafted Heuristics in Combinatorial Optimization</div>
+  <div class="links">
+    <a href="https://github.com/cornell-zhang/heurigym" target="_blank" title="GitHub"><i class="fab fa-github"></i> Github</a>
+    <a href="https://arxiv.org/abs/2506.07972" target="_blank" title="arXiv"><i class="fas fa-file-alt"></i> ArXiv</a>
+    <a href="https://huggingface.co/datasets/heurigen/heurigen-data" target="_blank" title="Hugging Face"><span class="emoji">🤗</span> Dataset</a>
+  </div>
+
+  <div class="section chart-container">
+    <h2>📈 Overall Performance</h2>
+    <div id="scatter-chart"></div>
+  </div>
+
+  <div class="section">
+    <h2>📊 Leaderboard (T=0)</h2>
+    <table class="leaderboard-table" id="leaderboard">
+      <thead>
+        <tr>
+          <th data-column="Rank">Rank</th>
+          <th data-column="Model">Model</th>
+          <th data-column="Weighted_Yield">Yield</th>
+          <th data-column="Weighted_Quality">Quality</th>
+          <th data-column="Weighted_QYI">QYI</th>
+          <th data-column="Cost">Cost ($)</th>
+          <th data-column="Release_Date">Release Date</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <p style="color: #666; font-size: 0.9rem; margin-top: 1rem;">
+      Note: All Yield, Quality, and QYI values are weighted across the problem sets.
+    </p>
+    <p class="star-note">
+      * GPT-o4-mini:high was measured under T=0 since o-series models only support T=1.
+    </p>
+
+    <h2>📚 Citation</h2>
+    <code>
+      @article{chen2025heurigym,<br>
+      &nbsp;&nbsp;title={HeuriGym: An Agentic Benchmark for LLM-Crafted Heuristics in Combinatorial Optimization},<br>
+      &nbsp;&nbsp;author={Hongzheng Chen and Yingheng Wang and Yaohui Cai and Hins Hu and Jiajie Li and Shirley Huang and Chenhui Deng and Rongjian Liang and Shufeng Kong and Haoxing Ren and Samitha Samaranayake and Carla P. Gomes and Zhiru Zhang},<br>
+      &nbsp;&nbsp;journal={arXiv preprint arXiv:2506.07972},<br>
+      &nbsp;&nbsp;year={2025}<br>
+      }
+    </code>
+  </div>
+
+  <script>
+    const width = 800, height = 400, margin = { top: 20, right: 60, bottom: 50, left: 60 };
+    const svg = d3.select("#scatter-chart")
+      .append("svg")
+      .attr("width", width)
+      .attr("height", height);
+
+    const x = d3.scaleLinear().domain([0.2, 1]).range([margin.left, width - margin.right]);
+    const y = d3.scaleLinear().domain([0.2, 1]).range([height - margin.bottom, margin.top]);
+
+    // Add grid lines
+    const xGrid = d3.axisBottom(x)
+      .ticks(10)
+      .tickSize(-(height - margin.top - margin.bottom))
+      .tickFormat("");
+
+    const yGrid = d3.axisLeft(y)
+      .ticks(10)
+      .tickSize(-(width - margin.left - margin.right))
+      .tickFormat("");
+
+    svg.append("g")
+      .attr("class", "grid")
+      .attr("transform", `translate(0,${height - margin.bottom})`)
+      .call(xGrid)
+      .attr("stroke", "#e0e0e0")
+      .attr("stroke-opacity", 0.3)
+      .attr("stroke-dasharray", "2,2");
+
+    svg.append("g")
+      .attr("class", "grid")
+      .attr("transform", `translate(${margin.left},0)`)
+      .call(yGrid)
+      .attr("stroke", "#e0e0e0")
+      .attr("stroke-opacity", 0.3)
+      .attr("stroke-dasharray", "2,2");
+
+    svg.append("g")
+      .attr("transform", `translate(0,${height - margin.bottom})`)
+      .call(d3.axisBottom(x))
+      .append("text")
+      .attr("x", width / 2)
+      .attr("y", 40)
+      .attr("fill", "black")
+      .attr("text-anchor", "middle")
+      .attr("font-size", "14px")
+      .text("Yield");
+
+    svg.append("g")
+      .attr("transform", `translate(${margin.left},0)`)
+      .call(d3.axisLeft(y))
+      .append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("x", -height / 2)
+      .attr("y", -40)
+      .attr("fill", "black")
+      .attr("text-anchor", "middle")
+      .attr("font-size", "14px")
+      .text("Quality");
+
+    // Style the axis ticks
+    svg.selectAll(".tick text")
+      .attr("font-size", "12px");
+
+    const tooltip = d3.select("body")
+      .append("div")
+      .attr("class", "tooltip");
+
+    const qyiLevels = [0.8, 0.6, 0.4];
+    
+    qyiLevels.forEach(qyi => {
+      const curve = d3.range(0.01, 1.01, 0.01).map(yieldVal => {
+        const qualityVal = (qyi * yieldVal) / (2 * yieldVal - qyi);
+        return qualityVal >= 0 && qualityVal <= 1 ? [yieldVal, qualityVal] : null;
+      }).filter(d => d);
+
+      svg.append("path")
+        .datum(curve)
+        .attr("fill", "none")
+        .attr("stroke", "#aaa")
+        .attr("stroke-dasharray", "4 2")
+        .attr("stroke-width", 1)
+        .attr("d", d3.line().x(d => x(d[0])).y(d => y(d[1])));
+
+      svg.append("text")
+        .attr("x", x(curve[curve.length - 1][0]) - 10)
+        .attr("y", y(curve[curve.length - 1][1]) + 5)
+        .text(`QYI=${qyi}`)
+        .attr("font-size", "14px")
+        .attr("fill", "#777");
+    });
+
+    d3.csv("overall_qyi_t0.csv").then(performanceData => {
+      // Load metadata
+      d3.csv("model_metadata.csv").then(metadata => {
+        // Create a map of model metadata
+        const metadataMap = new Map(metadata.map(d => [d.Model, d]));
+        
+        // Combine the data
+        const data = performanceData.map(d => {
+          const meta = metadataMap.get(d.Model);
+          return {
+            ...d,
+            Weighted_Yield: +d.Weighted_Yield,
+            Weighted_Quality: +d.Weighted_Quality,
+            Weighted_QYI: +d.Weighted_QYI,
+            Cost: +d.Cost,
+            URL: meta ? meta.URL : "#",
+            Release_Date: meta ? new Date(meta.Release_Date) : new Date()
+          };
+        });
+
+        let currentSort = { column: 'Weighted_QYI', direction: 'desc' };
+
+        function sortData() {
+          data.sort((a, b) => {
+            let comparison = 0;
+            if (currentSort.column === 'Model') {
+              comparison = a[currentSort.column].localeCompare(b[currentSort.column]);
+            } else if (currentSort.column === 'Release_Date') {
+              comparison = a[currentSort.column] - b[currentSort.column];
+            } else {
+              comparison = a[currentSort.column] - b[currentSort.column];
+            }
+            return currentSort.direction === 'asc' ? comparison : -comparison;
+          });
+          updateTable();
+        }
+
+        function updateTable() {
+          const tbody = d3.select("#leaderboard tbody");
+          tbody.selectAll("tr").remove();
+          
+          data.forEach((d, i) => {
+            const row = tbody.append("tr");
+            row.append("td").text(i + 1);
+            const modelCell = row.append("td").attr("class", "model-name");
+            const modelLink = modelCell.append("a")
+              .attr("href", d.URL)
+              .attr("target", "_blank")
+              .text(d.Model);
+            if (d.Model === "GPT-o4-mini:high") {
+              modelLink.append("span").text(" *");
+            }
+            row.append("td").text(d.Weighted_Yield.toFixed(3));
+            row.append("td").text(d.Weighted_Quality.toFixed(3));
+            row.append("td").text(d.Weighted_QYI.toFixed(3));
+            row.append("td").text(d.Cost.toFixed(2));
+            row.append("td").text(d.Release_Date.toLocaleDateString());
+          });
+        }
+
+        // Add click handlers to table headers
+        d3.selectAll("#leaderboard th").on("click", function() {
+          const column = this.getAttribute("data-column");
+          if (currentSort.column === column) {
+            currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+          } else {
+            currentSort.column = column;
+            currentSort.direction = 'asc';
+          }
+          
+          // Update sort indicators
+          d3.selectAll("#leaderboard th")
+            .classed("sort-asc", false)
+            .classed("sort-desc", false);
+          d3.select(this)
+            .classed(`sort-${currentSort.direction}`, true);
+          
+          sortData();
+        });
+
+        // Initial sort
+        sortData();
+
+        const color = d3.scaleOrdinal(d3.schemeTableau10)
+          .domain(data.map(d => d.Model));
+
+        svg.selectAll("circle")
+          .data(data)
+          .enter()
+          .append("circle")
+          .attr("cx", d => x(d.Weighted_Yield))
+          .attr("cy", d => y(d.Weighted_Quality))
+          .attr("r", 6)
+          .style("fill", d => color(d.Model))
+          .style("stroke", "#333")
+          .on("mouseover", function (event, d) {
+            tooltip.transition().duration(100).style("opacity", 1);
+            tooltip.html(`<strong>${d.Model}</strong><br>Yield: ${d.Weighted_Yield.toFixed(3)}<br>Quality: ${d.Weighted_Quality.toFixed(3)}<br>QYI: ${d.Weighted_QYI.toFixed(3)}`)
+              .style("left", (event.pageX + 10) + "px")
+              .style("top", (event.pageY - 28) + "px");
+          })
+          .on("mouseout", function () {
+            tooltip.transition().duration(200).style("opacity", 0);
+          });
+      });
+    });
+  </script>
+</body>
+</html>

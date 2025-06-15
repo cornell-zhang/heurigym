@@ -1,0 +1,10 @@
+Model,URL,Release_Date
+Claude-3.7-Sonnet,https://www.anthropic.com/news/claude-3-7-sonnet,2025-02-24
+DeepSeek-R1,https://api-docs.deepseek.com/news/news250120,2025-01-20
+DeepSeek-V3-0304,https://api-docs.deepseek.com/news/news250325,2025-03-25
+GPT-o4-mini:high,https://openai.com/index/introducing-o3-and-o4-mini/,2025-04-16
+Gemini-2.5-Flash-0417,https://developers.googleblog.com/en/start-building-with-gemini-25-flash/,2025-04-17
+Gemini-2.5-Pro-0506,https://blog.google/products/gemini/gemini-2-5-pro-updates/,2025-05-06
+LLaMA-3.3-70B-Instruct,https://www.llama.com/docs/model-cards-and-prompt-formats/llama3_3/,2024-12-06
+LLaMA-4-Maverick-17B-128E-Instruct,https://ai.meta.com/blog/llama-4-multimodal-intelligence/,2025-04-05
+Qwen3-235B-A22B,https://qwenlm.github.io/blog/qwen3/,2025-04-29
