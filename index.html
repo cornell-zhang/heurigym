@@ -393,7 +393,7 @@
 
     // Function to load data for a specific temperature
     async function loadData(temperature) {
-      const tempFile = `overall_qyi_t${temperature}.csv`;
+      const tempFile = `results/overall_qyi_t${temperature}.csv`;
       try {
         performanceData = await d3.csv(tempFile);
         updateVisualization();
@@ -560,7 +560,7 @@
             .attr("target", "_blank")
             .text(d.Model);
           if (d.Model === "GPT-o4-mini:high") {
-            modelLink.append("span").text(" *");
+            modelLink.append("span").text("*");
           }
           row.append("td").text(d.Weighted_Yield.toFixed(3));
           row.append("td").text(d.Weighted_Quality.toFixed(3));
@@ -641,7 +641,7 @@
     });
 
     // Initial data loading
-    d3.csv("model_metadata.csv").then(data => {
+    d3.csv("results/model_metadata.csv").then(data => {
       metadata = data;
       loadData(currentTemperature);
     });
