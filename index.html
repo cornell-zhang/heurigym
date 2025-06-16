@@ -168,6 +168,27 @@
       border: 1px solid #dee2e6;
       border-radius: 3px;
     }
+    .temperature-buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+    }
+    .temp-btn {
+      padding: 0.5rem 1rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      background-color: white;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .temp-btn:hover {
+      background-color: #f0f0f0;
+    }
+    .temp-btn.active {
+      background-color: #0066cc;
+      color: white;
+      border-color: #0066cc;
+    }
   </style>
 </head>
 <body>
@@ -181,11 +202,16 @@
 
   <div class="section chart-container">
     <h2>📈 Overall Performance</h2>
+    <div class="temperature-buttons" style="margin-bottom: 1rem;">
+      <button class="temp-btn active" data-temp="0">T=0</button>
+      <button class="temp-btn" data-temp="0.5">T=0.5</button>
+      <button class="temp-btn" data-temp="1.0">T=1.0</button>
+    </div>
     <div id="scatter-chart"></div>
   </div>
 
   <div class="section">
-    <h2>📊 Leaderboard (T=0)</h2>
+    <h2>📊 Leaderboard (<span id="current-temp">T=0</span>)</h2>
     <table class="leaderboard-table" id="leaderboard">
       <thead>
         <tr>
@@ -218,201 +244,255 @@
 
   <script>
     const width = 800, height = 400, margin = { top: 20, right: 60, bottom: 50, left: 60 };
-    const svg = d3.select("#scatter-chart")
-      .append("svg")
-      .attr("width", width)
-      .attr("height", height);
+    let currentTemperature = 0;
+    let performanceData = null;
+    let metadata = null;
 
-    const x = d3.scaleLinear().domain([0.2, 1]).range([margin.left, width - margin.right]);
-    const y = d3.scaleLinear().domain([0.2, 1]).range([height - margin.bottom, margin.top]);
+    // Function to load data for a specific temperature
+    async function loadData(temperature) {
+      const tempFile = `overall_qyi_t${temperature}.csv`;
+      try {
+        performanceData = await d3.csv(tempFile);
+        updateVisualization();
+      } catch (error) {
+        console.error(`Error loading data for temperature ${temperature}:`, error);
+        // If data file doesn't exist, show a message
+        if (error.status === 404) {
+          alert(`Data for temperature ${temperature} is not available yet.`);
+          // Reset to previous temperature
+          const prevTemp = currentTemperature;
+          currentTemperature = temperature;
+          updateTemperatureButtons();
+          currentTemperature = prevTemp;
+          updateTemperatureButtons();
+        }
+      }
+    }
 
-    // Add grid lines
-    const xGrid = d3.axisBottom(x)
-      .ticks(10)
-      .tickSize(-(height - margin.top - margin.bottom))
-      .tickFormat("");
+    // Function to update the visualization
+    function updateVisualization() {
+      if (!performanceData || !metadata) return;
 
-    const yGrid = d3.axisLeft(y)
-      .ticks(10)
-      .tickSize(-(width - margin.left - margin.right))
-      .tickFormat("");
+      // Clear existing visualization
+      d3.select("#scatter-chart svg").remove();
+      
+      // Create new SVG
+      const svg = d3.select("#scatter-chart")
+        .append("svg")
+        .attr("width", width)
+        .attr("height", height);
 
-    svg.append("g")
-      .attr("class", "grid")
-      .attr("transform", `translate(0,${height - margin.bottom})`)
-      .call(xGrid)
-      .attr("stroke", "#e0e0e0")
-      .attr("stroke-opacity", 0.3)
-      .attr("stroke-dasharray", "2,2");
+      const x = d3.scaleLinear().domain([0.2, 1]).range([margin.left, width - margin.right]);
+      const y = d3.scaleLinear().domain([0.2, 1]).range([height - margin.bottom, margin.top]);
 
-    svg.append("g")
-      .attr("class", "grid")
-      .attr("transform", `translate(${margin.left},0)`)
-      .call(yGrid)
-      .attr("stroke", "#e0e0e0")
-      .attr("stroke-opacity", 0.3)
-      .attr("stroke-dasharray", "2,2");
+      // Add grid lines
+      const xGrid = d3.axisBottom(x)
+        .ticks(10)
+        .tickSize(-(height - margin.top - margin.bottom))
+        .tickFormat("");
 
-    svg.append("g")
-      .attr("transform", `translate(0,${height - margin.bottom})`)
-      .call(d3.axisBottom(x))
-      .append("text")
-      .attr("x", width / 2)
-      .attr("y", 40)
-      .attr("fill", "black")
-      .attr("text-anchor", "middle")
-      .attr("font-size", "14px")
-      .text("Yield");
+      const yGrid = d3.axisLeft(y)
+        .ticks(10)
+        .tickSize(-(width - margin.left - margin.right))
+        .tickFormat("");
 
-    svg.append("g")
-      .attr("transform", `translate(${margin.left},0)`)
-      .call(d3.axisLeft(y))
-      .append("text")
-      .attr("transform", "rotate(-90)")
-      .attr("x", -height / 2)
-      .attr("y", -40)
-      .attr("fill", "black")
-      .attr("text-anchor", "middle")
-      .attr("font-size", "14px")
-      .text("Quality");
+      svg.append("g")
+        .attr("class", "grid")
+        .attr("transform", `translate(0,${height - margin.bottom})`)
+        .call(xGrid)
+        .attr("stroke", "#e0e0e0")
+        .attr("stroke-opacity", 0.3)
+        .attr("stroke-dasharray", "2,2");
 
-    // Style the axis ticks
-    svg.selectAll(".tick text")
-      .attr("font-size", "12px");
+      svg.append("g")
+        .attr("class", "grid")
+        .attr("transform", `translate(${margin.left},0)`)
+        .call(yGrid)
+        .attr("stroke", "#e0e0e0")
+        .attr("stroke-opacity", 0.3)
+        .attr("stroke-dasharray", "2,2");
 
-    const tooltip = d3.select("body")
-      .append("div")
-      .attr("class", "tooltip");
-
-    const qyiLevels = [0.8, 0.6, 0.4];
-    
-    qyiLevels.forEach(qyi => {
-      const curve = d3.range(0.01, 1.01, 0.01).map(yieldVal => {
-        const qualityVal = (qyi * yieldVal) / (2 * yieldVal - qyi);
-        return qualityVal >= 0 && qualityVal <= 1 ? [yieldVal, qualityVal] : null;
-      }).filter(d => d);
-
-      svg.append("path")
-        .datum(curve)
-        .attr("fill", "none")
-        .attr("stroke", "#aaa")
-        .attr("stroke-dasharray", "4 2")
-        .attr("stroke-width", 1)
-        .attr("d", d3.line().x(d => x(d[0])).y(d => y(d[1])));
-
-      svg.append("text")
-        .attr("x", x(curve[curve.length - 1][0]) - 10)
-        .attr("y", y(curve[curve.length - 1][1]) + 5)
-        .text(`QYI=${qyi}`)
+      svg.append("g")
+        .attr("transform", `translate(0,${height - margin.bottom})`)
+        .call(d3.axisBottom(x))
+        .append("text")
+        .attr("x", width / 2)
+        .attr("y", 40)
+        .attr("fill", "black")
+        .attr("text-anchor", "middle")
         .attr("font-size", "14px")
-        .attr("fill", "#777");
+        .text("Yield");
+
+      svg.append("g")
+        .attr("transform", `translate(${margin.left},0)`)
+        .call(d3.axisLeft(y))
+        .append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("x", -height / 2)
+        .attr("y", -40)
+        .attr("fill", "black")
+        .attr("text-anchor", "middle")
+        .attr("font-size", "14px")
+        .text("Quality");
+
+      // Style the axis ticks
+      svg.selectAll(".tick text")
+        .attr("font-size", "12px");
+
+      const tooltip = d3.select("body")
+        .append("div")
+        .attr("class", "tooltip");
+
+      const qyiLevels = [0.8, 0.6, 0.4];
+      
+      qyiLevels.forEach(qyi => {
+        const curve = d3.range(0.01, 1.01, 0.01).map(yieldVal => {
+          const qualityVal = (qyi * yieldVal) / (2 * yieldVal - qyi);
+          return qualityVal >= 0 && qualityVal <= 1 ? [yieldVal, qualityVal] : null;
+        }).filter(d => d);
+
+        svg.append("path")
+          .datum(curve)
+          .attr("fill", "none")
+          .attr("stroke", "#aaa")
+          .attr("stroke-dasharray", "4 2")
+          .attr("stroke-width", 1)
+          .attr("d", d3.line().x(d => x(d[0])).y(d => y(d[1])));
+
+        svg.append("text")
+          .attr("x", x(curve[curve.length - 1][0]) - 10)
+          .attr("y", y(curve[curve.length - 1][1]) + 5)
+          .text(`QYI=${qyi}`)
+          .attr("font-size", "14px")
+          .attr("fill", "#777");
+      });
+
+      // Combine the data
+      const data = performanceData.map(d => {
+        const meta = metadata.find(m => m.Model === d.Model);
+        return {
+          ...d,
+          Weighted_Yield: +d.Weighted_Yield,
+          Weighted_Quality: +d.Weighted_Quality,
+          Weighted_QYI: +d.Weighted_QYI,
+          Cost: +d.Cost,
+          URL: meta ? meta.URL : "#",
+          Release_Date: meta ? new Date(meta.Release_Date) : new Date()
+        };
+      });
+
+      let currentSort = { column: 'Weighted_QYI', direction: 'desc' };
+
+      function sortData() {
+        data.sort((a, b) => {
+          let comparison = 0;
+          if (currentSort.column === 'Model') {
+            comparison = a[currentSort.column].localeCompare(b[currentSort.column]);
+          } else if (currentSort.column === 'Release_Date') {
+            comparison = a[currentSort.column] - b[currentSort.column];
+          } else {
+            comparison = a[currentSort.column] - b[currentSort.column];
+          }
+          return currentSort.direction === 'asc' ? comparison : -comparison;
+        });
+        updateTable();
+      }
+
+      function updateTable() {
+        const tbody = d3.select("#leaderboard tbody");
+        tbody.selectAll("tr").remove();
+        
+        data.forEach((d, i) => {
+          const row = tbody.append("tr");
+          row.append("td").text(i + 1);
+          const modelCell = row.append("td").attr("class", "model-name");
+          const modelLink = modelCell.append("a")
+            .attr("href", d.URL)
+            .attr("target", "_blank")
+            .text(d.Model);
+          if (d.Model === "GPT-o4-mini:high") {
+            modelLink.append("span").text(" *");
+          }
+          row.append("td").text(d.Weighted_Yield.toFixed(3));
+          row.append("td").text(d.Weighted_Quality.toFixed(3));
+          row.append("td").text(d.Weighted_QYI.toFixed(3));
+          row.append("td").text(d.Cost.toFixed(2));
+          row.append("td").text(d.Release_Date.toLocaleDateString());
+        });
+      }
+
+      // Add click handlers to table headers
+      d3.selectAll("#leaderboard th").on("click", function() {
+        const column = this.getAttribute("data-column");
+        if (currentSort.column === column) {
+          currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+        } else {
+          currentSort.column = column;
+          currentSort.direction = 'asc';
+        }
+        
+        // Update sort indicators
+        d3.selectAll("#leaderboard th")
+          .classed("sort-asc", false)
+          .classed("sort-desc", false);
+        d3.select(this)
+          .classed(`sort-${currentSort.direction}`, true);
+        
+        sortData();
+      });
+
+      // Initial sort
+      sortData();
+
+      const color = d3.scaleOrdinal(d3.schemeTableau10)
+        .domain(data.map(d => d.Model));
+
+      svg.selectAll("circle")
+        .data(data)
+        .enter()
+        .append("circle")
+        .attr("cx", d => x(d.Weighted_Yield))
+        .attr("cy", d => y(d.Weighted_Quality))
+        .attr("r", 6)
+        .style("fill", d => color(d.Model))
+        .style("stroke", "#333")
+        .on("mouseover", function (event, d) {
+          tooltip.transition().duration(100).style("opacity", 1);
+          tooltip.html(`<strong>${d.Model}</strong><br>Yield: ${d.Weighted_Yield.toFixed(3)}<br>Quality: ${d.Weighted_Quality.toFixed(3)}<br>QYI: ${d.Weighted_QYI.toFixed(3)}`)
+            .style("left", (event.pageX + 10) + "px")
+            .style("top", (event.pageY - 28) + "px");
+        })
+        .on("mouseout", function () {
+          tooltip.transition().duration(200).style("opacity", 0);
+        });
+
+      // Update the leaderboard title
+      document.getElementById("current-temp").textContent = `T=${temperature}`;
+    }
+
+    // Function to update temperature buttons
+    function updateTemperatureButtons() {
+      document.querySelectorAll('.temp-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.temp == currentTemperature);
+      });
+    }
+
+    // Add click handlers for temperature buttons
+    document.querySelectorAll('.temp-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const newTemp = parseFloat(btn.dataset.temp);
+        if (newTemp !== currentTemperature) {
+          currentTemperature = newTemp;
+          updateTemperatureButtons();
+          loadData(currentTemperature);
+        }
+      });
     });
 
-    d3.csv("overall_qyi_t0.csv").then(performanceData => {
-      // Load metadata
-      d3.csv("model_metadata.csv").then(metadata => {
-        // Create a map of model metadata
-        const metadataMap = new Map(metadata.map(d => [d.Model, d]));
-        
-        // Combine the data
-        const data = performanceData.map(d => {
-          const meta = metadataMap.get(d.Model);
-          return {
-            ...d,
-            Weighted_Yield: +d.Weighted_Yield,
-            Weighted_Quality: +d.Weighted_Quality,
-            Weighted_QYI: +d.Weighted_QYI,
-            Cost: +d.Cost,
-            URL: meta ? meta.URL : "#",
-            Release_Date: meta ? new Date(meta.Release_Date) : new Date()
-          };
-        });
-
-        let currentSort = { column: 'Weighted_QYI', direction: 'desc' };
-
-        function sortData() {
-          data.sort((a, b) => {
-            let comparison = 0;
-            if (currentSort.column === 'Model') {
-              comparison = a[currentSort.column].localeCompare(b[currentSort.column]);
-            } else if (currentSort.column === 'Release_Date') {
-              comparison = a[currentSort.column] - b[currentSort.column];
-            } else {
-              comparison = a[currentSort.column] - b[currentSort.column];
-            }
-            return currentSort.direction === 'asc' ? comparison : -comparison;
-          });
-          updateTable();
-        }
-
-        function updateTable() {
-          const tbody = d3.select("#leaderboard tbody");
-          tbody.selectAll("tr").remove();
-          
-          data.forEach((d, i) => {
-            const row = tbody.append("tr");
-            row.append("td").text(i + 1);
-            const modelCell = row.append("td").attr("class", "model-name");
-            const modelLink = modelCell.append("a")
-              .attr("href", d.URL)
-              .attr("target", "_blank")
-              .text(d.Model);
-            if (d.Model === "GPT-o4-mini:high") {
-              modelLink.append("span").text(" *");
-            }
-            row.append("td").text(d.Weighted_Yield.toFixed(3));
-            row.append("td").text(d.Weighted_Quality.toFixed(3));
-            row.append("td").text(d.Weighted_QYI.toFixed(3));
-            row.append("td").text(d.Cost.toFixed(2));
-            row.append("td").text(d.Release_Date.toLocaleDateString());
-          });
-        }
-
-        // Add click handlers to table headers
-        d3.selectAll("#leaderboard th").on("click", function() {
-          const column = this.getAttribute("data-column");
-          if (currentSort.column === column) {
-            currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
-          } else {
-            currentSort.column = column;
-            currentSort.direction = 'asc';
-          }
-          
-          // Update sort indicators
-          d3.selectAll("#leaderboard th")
-            .classed("sort-asc", false)
-            .classed("sort-desc", false);
-          d3.select(this)
-            .classed(`sort-${currentSort.direction}`, true);
-          
-          sortData();
-        });
-
-        // Initial sort
-        sortData();
-
-        const color = d3.scaleOrdinal(d3.schemeTableau10)
-          .domain(data.map(d => d.Model));
-
-        svg.selectAll("circle")
-          .data(data)
-          .enter()
-          .append("circle")
-          .attr("cx", d => x(d.Weighted_Yield))
-          .attr("cy", d => y(d.Weighted_Quality))
-          .attr("r", 6)
-          .style("fill", d => color(d.Model))
-          .style("stroke", "#333")
-          .on("mouseover", function (event, d) {
-            tooltip.transition().duration(100).style("opacity", 1);
-            tooltip.html(`<strong>${d.Model}</strong><br>Yield: ${d.Weighted_Yield.toFixed(3)}<br>Quality: ${d.Weighted_Quality.toFixed(3)}<br>QYI: ${d.Weighted_QYI.toFixed(3)}`)
-              .style("left", (event.pageX + 10) + "px")
-              .style("top", (event.pageY - 28) + "px");
-          })
-          .on("mouseout", function () {
-            tooltip.transition().duration(200).style("opacity", 0);
-          });
-      });
+    // Initial data loading
+    d3.csv("model_metadata.csv").then(data => {
+      metadata = data;
+      loadData(currentTemperature);
     });
 
     function copyCitation() {
