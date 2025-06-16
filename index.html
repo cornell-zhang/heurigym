@@ -643,7 +643,7 @@
         .style("stroke", "#333")
         .on("mouseover", function (event, d) {
           tooltip.transition().duration(100).style("opacity", 1);
-          tooltip.html(`<strong>${d.Model}</strong><br>Yield: ${d.Weighted_Yield.toFixed(3)}<br>Quality: ${d.Weighted_Quality.toFixed(3)}<br>QYI: ${d.Weighted_QYI.toFixed(3)}`)
+          tooltip.html(`<strong>${d.Model}</strong><br>Weighted Yield: ${d.Weighted_Yield.toFixed(3)}<br>Weighted Quality: ${d.Weighted_Quality.toFixed(3)}<br>Weighted QYI: ${d.Weighted_QYI.toFixed(3)}`)
             .style("left", (event.pageX + 10) + "px")
             .style("top", (event.pageY - 28) + "px");
         })
