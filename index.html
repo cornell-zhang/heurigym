@@ -210,6 +210,18 @@
       color: white;
       border-color: #0066cc;
     }
+    .leaderboard-table th[colspan] {
+      text-align: center;
+    }
+    .leaderboard-table th[data-column] {
+      text-align: center;
+    }
+    .leaderboard-table td {
+      text-align: center;
+    }
+    .leaderboard-table td.model-name {
+      text-align: left;
+    }
 
     /* Media queries for responsive design */
     @media screen and (max-width: 768px) {
@@ -375,6 +387,30 @@
     <p class="star-note">
       * GPT-o4-mini:high was measured under T=1 since o-series models only support T=1.
     </p>
+
+    <h2>📊 solve<sub>s</sub>@i Metrics (T=0)</h2>
+    <table class="leaderboard-table" id="solve-metrics">
+      <thead>
+        <tr>
+          <th rowspan="2" data-column="Model">Model</th>
+          <th colspan="3">Stage 3 (Verification)</th>
+          <th colspan="3">Stage 2 (Solution Gen.)</th>
+          <th colspan="3">Stage 1 (Execution)</th>
+        </tr>
+        <tr>
+          <th data-column="solve@10 stage3" class="sort-desc">@10</th>
+          <th data-column="solve@5 stage3">@5</th>
+          <th data-column="solve@1 stage3">@1</th>
+          <th data-column="solve@10 stage2">@10</th>
+          <th data-column="solve@5 stage2">@5</th>
+          <th data-column="solve@1 stage2">@1</th>
+          <th data-column="solve@10 stage1">@10</th>
+          <th data-column="solve@5 stage1">@5</th>
+          <th data-column="solve@1 stage1">@1</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
 
     <h2>📚 Citation</h2>
     <div class="citation-box">@article{chen2025heurigym,
@@ -644,7 +680,76 @@
     d3.csv("results/model_metadata.csv").then(data => {
       metadata = data;
       loadData(currentTemperature);
+      loadSolveMetrics();
     });
+
+    function loadSolveMetrics() {
+      d3.csv("results/solve_metrics_summary.csv").then(data => {
+        const tbody = d3.select("#solve-metrics tbody");
+        tbody.selectAll("tr").remove();
+        
+        // Sort data by stage 3@10 by default
+        data.sort((a, b) => d3.descending(+a["solve@10 stage3"], +b["solve@10 stage3"]));
+        
+        // Store the data in a variable accessible to the click handler
+        window.solveMetricsData = data;
+        
+        function updateTable(sortedData) {
+          tbody.selectAll("tr").remove();
+          
+          sortedData.forEach(d => {
+            const row = tbody.append("tr");
+            const modelCell = row.append("td").attr("class", "model-name");
+            const modelLink = modelCell.append("a")
+              .attr("href", metadata.find(m => m.Model === d.Model)?.URL || "#")
+              .attr("target", "_blank")
+              .text(d.Model);
+            
+            // Add all solve metrics with percentage formatting
+            const metrics = [
+              "solve@10 stage3", "solve@5 stage3", "solve@1 stage3",
+              "solve@10 stage2", "solve@5 stage2", "solve@1 stage2",
+              "solve@10 stage1", "solve@5 stage1", "solve@1 stage1"
+            ];
+            
+            metrics.forEach(metric => {
+              row.append("td").text((d[metric] * 100).toFixed(2) + "%");
+            });
+          });
+        }
+
+        // Initial table render
+        updateTable(data);
+
+        // Add click handlers to table headers
+        d3.selectAll("#solve-metrics th[data-column]").on("click", function() {
+          const column = this.getAttribute("data-column");
+          const isAscending = this.classList.contains("sort-asc");
+          
+          // Sort the data
+          const sortedData = [...window.solveMetricsData].sort((a, b) => {
+            if (column === "Model") {
+              return isAscending ? 
+                b[column].localeCompare(a[column]) : 
+                a[column].localeCompare(b[column]);
+            }
+            return isAscending ? 
+              d3.descending(+a[column], +b[column]) : 
+              d3.ascending(+a[column], +b[column]);
+          });
+          
+          // Update sort indicators
+          d3.selectAll("#solve-metrics th")
+            .classed("sort-asc", false)
+            .classed("sort-desc", false);
+          d3.select(this)
+            .classed(isAscending ? "sort-desc" : "sort-asc", true);
+          
+          // Update the table with sorted data
+          updateTable(sortedData);
+        });
+      });
+    }
 
     function copyCitation() {
       const citationText = `@article{chen2025heurigym,
