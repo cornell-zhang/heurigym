@@ -208,6 +208,9 @@
       <button class="temp-btn" data-temp="1.0">T=1.0</button>
     </div>
     <div id="scatter-chart"></div>
+    <p style="color: #666; font-size: 0.9rem; margin-top: 1rem; text-align: left;">
+      Note: Yield and QYI values are weighted across the problem sets. Quality is calculated as (QYI * Yield) / (2 * Yield - QYI) since weighted QYI is not the harmonic mean of weighted Yield and weighted Quality.
+    </p>
   </div>
 
   <div class="section">
@@ -217,9 +220,9 @@
         <tr>
           <th data-column="Rank">Rank</th>
           <th data-column="Model">Model</th>
-          <th data-column="Weighted_Yield">Yield</th>
-          <th data-column="Weighted_Quality">Quality</th>
-          <th data-column="Weighted_QYI">QYI</th>
+          <th data-column="Weighted_Yield">Weighted Yield</th>
+          <th data-column="Weighted_Quality">Weighted Quality</th>
+          <th data-column="Weighted_QYI">Weighted QYI</th>
           <th data-column="Cost">Cost ($)</th>
           <th data-column="Release_Date">Release Date</th>
         </tr>
@@ -227,10 +230,10 @@
       <tbody></tbody>
     </table>
     <p style="color: #666; font-size: 0.9rem; margin-top: 1rem;">
-      Note: All Yield, Quality, and QYI values are weighted across the problem sets.
+      Note: All Yield, Quality, and QYI values are weighted across the problem sets in this table.
     </p>
     <p class="star-note">
-      * GPT-o4-mini:high was measured under T=0 since o-series models only support T=1.
+      * GPT-o4-mini:high was measured under T=1 since o-series models only support T=1.
     </p>
 
     <h2>📚 Citation</h2>
@@ -321,7 +324,7 @@
         .attr("fill", "black")
         .attr("text-anchor", "middle")
         .attr("font-size", "14px")
-        .text("Yield");
+        .text("Weighted Yield");
 
       svg.append("g")
         .attr("transform", `translate(${margin.left},0)`)
@@ -370,11 +373,17 @@
       // Combine the data
       const data = performanceData.map(d => {
         const meta = metadata.find(m => m.Model === d.Model);
+        const originalQuality = +d.Weighted_Quality;
+        const yield = +d.Weighted_Yield;
+        const qyi = +d.Weighted_QYI;
+        // Calculate quality for scatter plot using the formula
+        const calculatedQuality = (qyi * yield) / (2 * yield - qyi);
         return {
           ...d,
-          Weighted_Yield: +d.Weighted_Yield,
-          Weighted_Quality: +d.Weighted_Quality,
-          Weighted_QYI: +d.Weighted_QYI,
+          Weighted_Yield: yield,
+          Weighted_Quality: originalQuality, // Keep original quality for table
+          Calculated_Quality: calculatedQuality, // Add calculated quality for scatter plot
+          Weighted_QYI: qyi,
           Cost: +d.Cost,
           URL: meta ? meta.URL : "#",
           Release_Date: meta ? new Date(meta.Release_Date) : new Date()
@@ -452,7 +461,7 @@
         .enter()
         .append("circle")
         .attr("cx", d => x(d.Weighted_Yield))
-        .attr("cy", d => y(d.Weighted_Quality))
+        .attr("cy", d => y(d.Calculated_Quality)) // Use calculated quality for y-position
         .attr("r", 6)
         .style("fill", d => color(d.Model))
         .style("stroke", "#333")
@@ -467,7 +476,7 @@
         });
 
       // Update the leaderboard title
-      document.getElementById("current-temp").textContent = `T=${temperature}`;
+      document.getElementById("current-temp").textContent = `T=${currentTemperature}`;
     }
 
     // Function to update temperature buttons
@@ -484,6 +493,8 @@
         if (newTemp !== currentTemperature) {
           currentTemperature = newTemp;
           updateTemperatureButtons();
+          // Update the leaderboard title immediately
+          document.getElementById("current-temp").textContent = `T=${currentTemperature}`;
           loadData(currentTemperature);
         }
       });
