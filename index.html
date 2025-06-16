@@ -13,6 +13,7 @@
       margin: 0;
       background-color: white;
       color: #333;
+      min-width: 320px; /* Minimum width to prevent layout breaking */
     }
     .header {
       text-align: center;
@@ -36,13 +37,17 @@
     .links {
       text-align: center;
       margin-bottom: 1rem;
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 1rem;
     }
     .links a {
       color: #666;
       text-decoration: none;
-      margin: 0 1rem;
       font-size: 1.5rem;
       transition: color 0.2s;
+      white-space: nowrap;
     }
     .links a:hover {
       color: #0066cc;
@@ -55,6 +60,8 @@
       max-width: 1000px;
       margin: 0 auto;
       padding: 0 1rem 2rem;
+      width: 100%;
+      box-sizing: border-box;
     }
     .section h2 {
       margin-top: 2rem;
@@ -70,11 +77,14 @@
       width: 100%;
       border-collapse: collapse;
       margin-top: 1.5rem;
+      overflow-x: auto;
+      display: block;
     }
     .leaderboard-table th, .leaderboard-table td {
       padding: 0.75rem 1rem;
       text-align: left;
       border-bottom: 1px solid #e0e0e0;
+      white-space: nowrap;
     }
     .leaderboard-table th {
       background-color: #f0f0f0;
@@ -114,6 +124,8 @@
       display: flex;
       flex-direction: column;
       align-items: center;
+      width: 100%;
+      box-sizing: border-box;
     }
     .chart-container h2 {
       align-self: flex-start;
@@ -123,6 +135,16 @@
     #scatter-chart {
       display: flex;
       justify-content: center;
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 0;
+    }
+    #scatter-chart svg {
+      min-width: 800px;
+      max-width: 100%;
+      height: auto;
+      margin: 0;
     }
     .tooltip {
       position: absolute;
@@ -172,6 +194,8 @@
       display: flex;
       gap: 1rem;
       justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
     }
     .temp-btn {
       padding: 0.5rem 1rem;
@@ -180,6 +204,7 @@
       background-color: white;
       cursor: pointer;
       transition: all 0.2s;
+      white-space: nowrap;
     }
     .temp-btn:hover {
       background-color: #f0f0f0;
@@ -188,6 +213,125 @@
       background-color: #0066cc;
       color: white;
       border-color: #0066cc;
+    }
+
+    /* Media queries for responsive design */
+    @media screen and (max-width: 768px) {
+      .header {
+        font-size: 2rem;
+        padding: 1.5rem 1rem 0.5rem;
+      }
+      .subheader {
+        font-size: 1rem;
+        padding: 0 1rem;
+      }
+      .section {
+        padding: 0 1rem 1rem;
+        width: 100%;
+        box-sizing: border-box;
+      }
+      .chart-container {
+        padding: 1rem 0;
+        width: 100%;
+        box-sizing: border-box;
+      }
+      .leaderboard-table {
+        width: 100%;
+        margin: 1.5rem 0;
+      }
+      .leaderboard-table th, .leaderboard-table td {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.9rem;
+      }
+      .links {
+        padding: 0 1rem;
+        gap: 1rem;
+      }
+      .links a {
+        font-size: 1.2rem;
+      }
+      .temp-btn {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.9rem;
+      }
+      #scatter-chart {
+        width: 100%;
+        padding: 0;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        justify-content: flex-start;
+      }
+      #scatter-chart svg {
+        min-width: 800px;
+        max-width: none;
+        margin: 0;
+      }
+      .citation-box {
+        margin: 1rem;
+      }
+    }
+
+    @media screen and (max-width: 480px) {
+      .header {
+        font-size: 1.5rem;
+        padding: 1rem 1rem 0.5rem;
+      }
+      .subheader {
+        font-size: 0.9rem;
+        padding: 0 1rem;
+      }
+      .section {
+        padding: 0 1rem 1rem;
+      }
+      .chart-container {
+        padding: 1rem 0;
+      }
+      .links {
+        padding: 0 1rem;
+        gap: 0.75rem;
+      }
+      .links a {
+        font-size: 1rem;
+      }
+      .temperature-buttons {
+        gap: 0.5rem;
+        padding: 0 1rem;
+      }
+      .temp-btn {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.8rem;
+      }
+      .leaderboard-table th, .leaderboard-table td {
+        padding: 0.5rem;
+      }
+      .citation-box {
+        margin: 1rem;
+      }
+      p {
+        padding: 0 1rem;
+      }
+      #scatter-chart {
+        width: 100%;
+        padding: 0;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        justify-content: flex-start;
+      }
+      #scatter-chart svg {
+        min-width: 800px;
+        max-width: none;
+        margin: 0;
+      }
+    }
+
+    /* Media query for screens where plot needs to be scrollable */
+    @media screen and (max-width: 900px) {
+      #scatter-chart {
+        justify-content: flex-start;
+      }
+      #scatter-chart svg {
+        max-width: none;
+      }
     }
   </style>
 </head>
