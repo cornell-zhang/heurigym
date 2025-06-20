@@ -8,6 +8,7 @@ import argparse
 import subprocess
 import shutil
 import sys
+import requests
 from pathlib import Path
 from typing import Dict, List, Tuple
 from dotenv import load_dotenv
@@ -390,37 +391,30 @@ class LLMInterface:
             "openai": {
                 "api_key": os.getenv('OPENAI_API_KEY'),
                 "base_url": "https://api.openai.com/v1",
-                "max_tokens": 65536 # 16384
             },
             "deepseek": {
                 "api_key": os.getenv('DEEPSEEK_API_KEY'),
                 "base_url": "https://api.deepseek.com/v1",
-                "max_tokens": 65536
             },
             "anthropic": {
                 "api_key": os.getenv('ANTHROPIC_API_KEY'),
                 "base_url": "https://api.anthropic.com/v1",
-                "max_tokens": 64000
             },
             "google": {
                 "api_key": os.getenv('GOOGLE_API_KEY'),
                 "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
-                "max_tokens": 65536
             },
             "openrouter": {
                 "api_key": os.getenv('OPENROUTER_API_KEY'),
                 "base_url": "https://openrouter.ai/api/v1",
-                "max_tokens": 32768
             },
             "alibaba": {
                 "api_key": os.getenv('DASHSCOPE_API_KEY'),
                 "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
-                "max_tokens": 16384
             },
             "sambanova": {
                 "api_key": os.getenv('SAMBANOVA_API_KEY'),
                 "base_url": "https://api.sambanova.ai/v1",
-                "max_tokens": 32768
             }
         }
         
@@ -705,6 +699,32 @@ Your goal is to improve the solution for as many test cases as possible, with sp
         # Save to JSON file
         with open(json_file, 'w') as f:
             json.dump(api_info, f, indent=2)
+
+    def get_model_max_tokens(self, base_url: str, api_key: str, model_name: str):
+        url = f"{base_url.rstrip('/')}/chat/completions"
+        headers = {'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'}
+    
+        for max_tokens in [200000, 100000, 65536, 32768, 16384, 8192, 4096, 2048]:
+            data = {
+                "model": model_name,
+                "messages": [{"role": "user", "content": "Hello"}],
+                "max_tokens": 1
+            }
+        
+            if any(x in model_name for x in ['o1', 'o3', 'o4']):
+                data["max_completion_tokens"] = max_tokens
+                del data["max_tokens"]
+            else:
+                data["max_tokens"] = max_tokens
+        
+            try:
+                response = requests.post(url, headers=headers, json=data, timeout=10)
+                if response.status_code == 200:
+                    return max_tokens
+            except:
+                continue
+
+        return 2048
             
     def get_program(self, 
                     problem_desc: Dict[str, str], 
@@ -772,9 +792,7 @@ Your goal is to improve the solution for as many test cases as possible, with sp
         
         client = self.clients[provider]
         actual_model = self._get_actual_model_name(model)
-        max_tokens = self.model_configs[provider]["max_tokens"]
-        if actual_model == "deepseek-chat":
-            max_tokens = 8192
+        max_tokens = self.get_model_max_tokens(self.model_configs[provider]["base_url"], self.model_configs[provider]["api_key"], actual_model)
         
         try:
             # Prepare API call parameters
