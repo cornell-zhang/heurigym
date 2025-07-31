@@ -55,8 +55,8 @@ The initial release of the HeuriGym benchmark includes nine distinct optimizatio
 | EDA | [Global routing](global_routing) | ★★★ |
 | Compilers | [E-graph extraction](egraph_extraction) | ★ |
 | Compilers | [Intra-operator parallelism](intra_op_parallel) | ★★ |
-| Comp Biology | [Protein sequence design](protein_sequence_design) | ★ |
-| Comp Biology | [Mendelian error detection](pedigree) | ★★ |
+| CompBio | [Protein sequence design](protein_sequence_design) | ★ |
+| CompBio | [Mendelian error detection](pedigree) | ★★ |
 | Logistics | [Airline crew pairing](crew_pairing) | ★★ |
 | Logistics | [Pickup and delivery w/ time windows](pickup_delivery_time_windows) | ★★★ |
 
