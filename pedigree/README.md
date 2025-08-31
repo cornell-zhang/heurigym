@@ -17,29 +17,29 @@ The problem is structured around a set of cost functions that evaluate an assign
 2.  **Binary Costs $C_{ij}(x_j, x_i)$:**
     For each specified parent-child pair $(j \to i)$, where $j$ is a known parent of $i$, a function $C_{ij}:D \times D \to \{0,\infty\}$ enforces allele sharing. If $x_j$ and $x_i$ represent the sets of alleles for individuals $j$ and $i$ respectively:
 
-    $
-    C_{ij}(x_j,x_i)=
-    \begin{cases}
-    0, & x_i \cap x_j \neq \emptyset \quad \text{(i.e., child } i \text{ shares at least one allele with parent } j\text{)},\\
-    \infty, & \text{otherwise.}
-    \end{cases}
-    $
+$$
+C_{ij}(x_j,x_i)=
+\begin{cases}
+0, & x_i \cap x_j \neq \emptyset \quad \text{(i.e., child } i \text{ shares at least one allele with parent } j\text{)},\\
+\infty, & \text{otherwise.}
+\end{cases}
+$$
 
 3.  **Ternary Costs $C_{jki}(x_j, x_k, x_i)$:**
     For each specified nuclear family $(j, k \to i)$, where $j$ and $k$ are the parents of $i$, a function $C_{jki}:D \times D \times D \to \{0,\infty\}$ enforces Mendel’s law of segregation. If $x_i$ consists of the alleles $\{a,b\}$, and $x_j, x_k$ represent the allele sets of the parents:
 
-    $
-    C_{jki}(x_j,x_k,x_i)=
-    \begin{cases}
-    0, & \text{if } (a \in x_j \land b \in x_k) \lor (a \in x_k \land b \in x_j) \quad \text{(i.e., one allele of } x_i \text{ is from } x_j \text{ and the other from } x_k\text{)},\\
-    \infty, & \text{otherwise.}
-    \end{cases}
-    $
+$$
+C_{jki}(x_j,x_k,x_i)=
+\begin{cases}
+0, & \text{if } (a \in x_j \land b \in x_k) \lor (a \in x_k \land b \in x_j) \quad \text{(i.e., one allele of } x_i \text{ is from } x_j \text{ and the other from } x_k\text{)},\\
+\infty, & \text{otherwise.}
+\end{cases}
+$$
 
 The total cost of an assignment $X=(x_i)_{i\in I}$ is defined by the objective function:
-$
+$$
 V(X) = \sum_{i\in I} C_i(x_i) + \sum_{(j\to i)}C_{ij}(x_j,x_i) + \sum_{(j,k\to i)}C_{jki}(x_j,x_k,x_i).
-$
+$$
 Any assignment $X$ for which $V(X) < \infty$ must satisfy all binary and ternary Mendelian inheritance constraints (i.e., these constraints contribute $0$ to the sum). Such an assignment is termed **Mendelian-consistent**. Let $\mathcal{X}_{all}$ denote the set of all possible genotype assignments.
 
 The computational task associated with this problem is **Minimum Cost Assignment (Error Localization & Optimal Assignment Retrieval)**, which is to compute the minimum possible total cost $V^* = \min_{X \in \mathcal{X}_{all}} V(X)$ and to identify an assignment $X^*$ such that $V(X^*) = V^*$. The value $V^*$ (a non-negative integer) indicates the minimum number of genotype-data conflicts (unary costs of 1) that must be incurred for a Mendelian-consistent assignment. If $V^*=0$, the pedigree and genotype data are perfectly consistent. The assignment $X^*$ is a specific configuration of genotypes for all individuals $i \in I$ that achieves this minimum total cost. If multiple such assignments exist, one such $X^*$ is returned.
