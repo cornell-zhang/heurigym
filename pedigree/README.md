@@ -37,12 +37,14 @@ C_{jki}(x_j,x_k,x_i)=
 $$
 
 The total cost of an assignment $X=(x_i)_{i\in I}$ is defined by the objective function:
+
 $$
 V(X) = \sum_{i\in I} C_i(x_i) + \sum_{(j\to i)}C_{ij}(x_j,x_i) + \sum_{(j,k\to i)}C_{jki}(x_j,x_k,x_i).
 $$
+
 Any assignment $X$ for which $V(X) < \infty$ must satisfy all binary and ternary Mendelian inheritance constraints (i.e., these constraints contribute $0$ to the sum). Such an assignment is termed **Mendelian-consistent**. Let $\mathcal{X}_{all}$ denote the set of all possible genotype assignments.
 
-The computational task associated with this problem is **Minimum Cost Assignment (Error Localization & Optimal Assignment Retrieval)**, which is to compute the minimum possible total cost $V^* = \min_{X \in \mathcal{X}_{all}} V(X)$ and to identify an assignment $X^*$ such that $V(X^*) = V^*$. The value $V^*$ (a non-negative integer) indicates the minimum number of genotype-data conflicts (unary costs of 1) that must be incurred for a Mendelian-consistent assignment. If $V^*=0$, the pedigree and genotype data are perfectly consistent. The assignment $X^*$ is a specific configuration of genotypes for all individuals $i \in I$ that achieves this minimum total cost. If multiple such assignments exist, one such $X^*$ is returned.
+The computational task associated with this problem is **Minimum Cost Assignment (Error Localization & Optimal Assignment Retrieval)**, which is to compute the minimum possible total cost $V^* = \min_{X \in \mathcal{X}_{all}} V(X)$ and to identify an assignment $X^\*$ such that $V(X^\*) = V^\*$. The value $V^\*$ (a non-negative integer) indicates the minimum number of genotype-data conflicts (unary costs of 1) that must be incurred for a Mendelian-consistent assignment. If $V^\*=0$, the pedigree and genotype data are perfectly consistent. The assignment $X^\*$ is a specific configuration of genotypes for all individuals $i \in I$ that achieves this minimum total cost. If multiple such assignments exist, one such $X^\*$ is returned.
 
 ## Input Format
 
@@ -85,4 +87,5 @@ An example output file looks like this:
 4. Wijsman, Ellen M. "The role of large pedigrees in an era of high-throughput sequencing." Human genetics 131 (2012): 1555-1563.
 5. Stringham, Heather M., and Michael Boehnke. "Identifying marker typing incompatibilities in linkage analysis." American journal of human genetics 59.4 (1996): 946.
 6. Aceto, Luca, et al. "The complexity of checking consistency of pedigree information and related problems." Journal of Computer Science and Technology 19 (2004): 42-59.
+
 7. De Givry, Simon. "toulbar2, an exact cost function network solver." 24ème édition du congrès annuel de la Société Française de Recherche Opérationnelle et d'Aide à la Décision ROADEF 2023. 2023.
