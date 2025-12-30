@@ -32,19 +32,28 @@ def get_residue_coordinates_and_sequence(pdb_file):
         for residue in chain:
             if is_aa(residue, standard=True) and residue.id[0] == ' ':
                 res_name = residue.get_resname().upper()
+                
+                # 1. Attempt to find the standard bead center (CB for non-GLY, CA for GLY)
                 atom_name = 'CA' if res_name == 'GLY' else ('CB' if 'CB' in residue else 'CA')
+                
                 if atom_name in residue:
                     coord = residue[atom_name].get_coord()
-                    residue_data.append({'residue': residue, 'coord': coord})
+                else:
+                    # 2. FALLBACK: Use the first available atom (e.g., 'N') to avoid skipping the residue
+                    atoms = list(residue.get_atoms())
+                    coord = atoms[0].get_coord() if atoms else np.zeros(3)
 
-                    # seq1 will map ALA→A, etc., and unknown→X
-                    one_letter = seq1(res_name)
-                    if one_letter == 'X':
-                        warnings.warn(
-                            f"seq1 could not map {res_name}; using 'X'.",
-                            UserWarning
-                        )
-                    sequence.append(one_letter)
+                # Append data for EVERY residue to ensure length matches n
+                residue_data.append({'residue': residue, 'coord': coord})
+
+                # seq1 will map ALA→A, etc., and unknown→X
+                one_letter = seq1(res_name)
+                if one_letter == 'X':
+                    warnings.warn(
+                        f"seq1 could not map {res_name}; using 'X'.",
+                        UserWarning
+                    )
+                sequence.append(one_letter)
 
     if not residue_data:
         print("Error: No suitable standard residues with coordinates found.")
@@ -219,4 +228,5 @@ def main():
     print(f"Natural H/P Counts    : H={h_nat}, P={p_nat}")
 
 if __name__ == "__main__":
+
     main()
