@@ -200,11 +200,11 @@ You can copy the `template` folder as a starting point. There are several files 
 
 ## 📜 Citation
 ```bibtex
-@article{chen2025heurigym,
+@article{chen-heurigym-iclr2026,
     title={HeuriGym: An Agentic Benchmark for LLM-Crafted Heuristics in Combinatorial Optimization}, 
     author={Hongzheng Chen and Yingheng Wang and Yaohui Cai and Hins Hu and Jiajie Li and Shirley Huang and Chenhui Deng and Rongjian Liang and Shufeng Kong and Haoxing Ren and Samitha Samaranayake and Carla P. Gomes and Zhiru Zhang},
-    journal={arXiv preprint arXiv:2506.07972},
-    year={2025}
+    journal={International Conference on Learning Representations (ICLR)},
+    year={2026}
 }
 ```
 
