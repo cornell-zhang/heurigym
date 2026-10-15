@@ -7,16 +7,17 @@ Protein sequence design (or inverse protein folding) aims to find an amino acid 
 ## Formalization
 
 * **Structure Representation:**
-    * A target structure with $n$ residues.
-    * Each residue position $i$ has a calculated solvent-accessible area $s_i$.
-    * Pairwise distances $d_{ij}$ between residue side chain centers are known.
+    * A target structure with $n$ residues: the standard amino acid residues of the first model in the PDB file, in file order. Waters, ligands and other models are ignored.
+    * Each residue position $i$ has a calculated solvent-accessible area $s_i$ (Shrake-Rupley, 1.4 Å probe, 100 points per atom, summed over the residue's atoms, computed on the $n$ residues only).
+    * Pairwise distances $d_{ij}$ between residue side chain centers are known (the CB atom, or CA for glycine and residues without CB).
 * **Fitness Function:**
     * A sequence $S$ is an element of `{H, P}`$^n$. $S_H$ denotes the set of indices $k$ where $S_k = H$.
-    * The fitness $\Phi(S)$ is given by: $\Phi(S) = \alpha \sum_{i,j \in S_H} g(d_{ij}) + \beta \sum_{i \in S_H} s_i$.
-    * $\alpha < 0$ weights favorable H-H contacts, $\beta > 0$ penalizes solvent exposure of H residues.
-    * $g(d_{ij})$ is a contact function (e.g., sigmoidal or step) rewarding small distances between H residues.
+    * The fitness $\Phi(S)$ is given by: $\Phi(S) = \alpha \sum_{i,j \in S_H, j - i \geq 3} g(d_{ij}) + \beta \sum_{i \in S_H} s_i$.
+    * $\alpha = -2$ weights favorable H-H contacts, $\beta = 1/3$ penalizes solvent exposure of H residues.
+    * $g(d) = 1 / (1 + e^{d - 6.5})$ for $d \leq 6.5$ Å and $g(d) = 0$ otherwise is a sigmoidal contact function rewarding small distances between H residues. Only pairs with $|i - j| \geq 3$ count.
 * **Optimization Goal:**
     * Find a sequence $S \in$ `{H, P}`$^n$ that *minimizes* $\Phi(S)$.
+    * The evaluator returns $\Phi(S)$. The all-P sequence has $\Phi = 0$, and any sequence with $\Phi(S) \geq 0$ gets the worst score. The baseline is the exact optimum found by the min-cut algorithm of [4] (`baseline/min_cut_baseline.py`).
 
 ## Input Format
 
